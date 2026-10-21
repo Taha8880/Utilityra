@@ -1,0 +1,26 @@
+<!-- Publish only after deploying the Worker. Replace WORKER_BASE_URL with your deployed Cloudflare Worker URL. -->
+<section class="utilityra-tool" lang="en" aria-labelledby="uai-title">
+  <h2 id="uai-title">Utilityra AI Assistant</h2>
+  <p>Ask for help understanding an error or planning a code fix. Do not send passwords, API keys, or private personal data.</p>
+  <label for="uai-provider">AI provider</label>
+  <select id="uai-provider"><option value="openai">OpenAI</option><option value="gemini">Google Gemini</option></select>
+  <label for="uai-message" style="display:block;margin-top:10px">Your question</label>
+  <textarea id="uai-message" rows="6" maxlength="8000" placeholder="Describe the problem…" style="display:block;width:100%;box-sizing:border-box;padding:12px;margin:8px 0;border:1px solid #bbb;border-radius:10px"></textarea>
+  <button type="button" id="uai-send">Ask AI</button>
+  <p id="uai-status" role="status" aria-live="polite"></p>
+  <pre id="uai-answer" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre>
+</section>
+<script>
+(function(){
+ const WORKER_BASE_URL='https://REPLACE-WITH-YOUR-WORKER.workers.dev';
+ const $=id=>document.getElementById(id);const button=$('uai-send'),status=$('uai-status'),answer=$('uai-answer');
+ button.addEventListener('click',async()=>{
+   const message=$('uai-message').value.trim();if(!message){status.textContent='Enter a question first.';return}
+   if(WORKER_BASE_URL.includes('REPLACE-WITH-YOUR-WORKER')){status.textContent='The AI service has not been configured yet.';return}
+   button.disabled=true;status.textContent='Waiting for AI…';answer.textContent='';
+   try{const response=await fetch(WORKER_BASE_URL+'/api/ai',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({provider:$('uai-provider').value,message})});const data=await response.json();if(!response.ok)throw new Error(data.message||data.error||'Request failed');answer.textContent=data.reply||'No response returned.';status.textContent='Response ready.'}
+   catch(e){status.textContent='Could not reach the AI service. Check its setup and try again.'}
+   finally{button.disabled=false}
+ });
+})();
+</script>
