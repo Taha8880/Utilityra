@@ -1,0 +1,12 @@
+{
+  "pages": [
+    {
+      "title": "Word Counter | Utilityra",
+      "file": "word-counter.html"
+    },
+    {
+      "title": "JSON Formatter and Validator | Utilityra",
+      "file": "json-formatter.html"
+    }
+  ]
+}
