@@ -1,0 +1,34 @@
+name: Blogger page sync
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Publish/update pages live. Leave unchecked to create drafts only."
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Sync Blogger pages
+        env:
+          BLOGGER_BLOG_ID: ${{ secrets.BLOGGER_BLOG_ID }}
+          GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.BLOGGER_CLIENT_ID }}
+          GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.BLOGGER_CLIENT_SECRET }}
+          GOOGLE_OAUTH_REFRESH_TOKEN: ${{ secrets.BLOGGER_REFRESH_TOKEN }}
+          PUBLISH_MODE: ${{ inputs.publish == true && 'publish' || 'draft' }}
+        run: node scripts/blogger-sync.mjs
