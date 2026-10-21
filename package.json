@@ -1,0 +1,14 @@
+{
+  "name": "utilityra-rebuild",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Utilityra website validation and browser tests",
+  "scripts": {
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:syntax": "node --check worker/src/index.js"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0"
+  }
+}
