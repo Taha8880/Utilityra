@@ -1,0 +1,27 @@
+<!-- Paste into a Blogger Page using HTML view. Set the Blogger page title to: Word Counter | Utilityra -->
+<section class="utilityra-tool" lang="en" aria-labelledby="uwc-title">
+  <h2 id="uwc-title">Word and Character Counter</h2>
+  <p>Count words, characters, sentences, and paragraphs instantly. Your text stays in this browser.</p>
+  <label for="uwc-input">Enter or paste your text</label>
+  <textarea id="uwc-input" rows="10" maxlength="200000" placeholder="Start typing here…" style="display:block;width:100%;box-sizing:border-box;padding:12px;margin:8px 0;border:1px solid #bbb;border-radius:10px"></textarea>
+  <div id="uwc-stats" aria-live="polite" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px">
+    <p>Words: <strong id="uwc-words">0</strong></p><p>Characters: <strong id="uwc-chars">0</strong></p><p>No spaces: <strong id="uwc-no-spaces">0</strong></p><p>Sentences: <strong id="uwc-sentences">0</strong></p><p>Paragraphs: <strong id="uwc-paragraphs">0</strong></p>
+  </div>
+  <button id="uwc-clear" type="button">Clear text</button>
+</section>
+<script>
+(function(){
+  const input=document.getElementById('uwc-input'); if(!input) return;
+  const set=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=String(value)};
+  function update(){
+    const t=input.value; const trimmed=t.trim();
+    const words=trimmed ? (trimmed.match(/\S+/gu)||[]).length : 0;
+    const sentences=trimmed ? (trimmed.match(/[^.!?。！？]+[.!?。！？]*/gu)||[]).filter(s=>s.trim()).length : 0;
+    const paragraphs=trimmed ? trimmed.split(/\n\s*\n/u).filter(p=>p.trim()).length : 0;
+    set('uwc-words',words);set('uwc-chars',t.length);set('uwc-no-spaces',t.replace(/\s/gu,'').length);set('uwc-sentences',sentences);set('uwc-paragraphs',paragraphs);
+  }
+  input.addEventListener('input',update);
+  document.getElementById('uwc-clear')?.addEventListener('click',()=>{input.value='';update();input.focus()});
+  update();
+})();
+</script>
