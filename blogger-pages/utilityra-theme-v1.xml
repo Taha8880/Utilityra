@@ -17,7 +17,7 @@
   <meta content='website' property='og:type'/>
   <meta expr:content='data:blog.canonicalUrl' property='og:url'/>
   <meta expr:content='data:blog.pageTitle' property='og:title'/>
-  <meta expr:content='data:blog.metaDescription' property='og:description'/>
+  <b:if cond='data:blog.metaDescription'><meta expr:content='data:blog.metaDescription' property='og:description'/><b:else/><meta content='Practical tools for study, office work, software development and file workflows.' property='og:description'/></b:if>
   <meta content='summary' name='twitter:card'/>
   <b:include data='blog' name='all-head-content'/>
   <script><![CDATA[
