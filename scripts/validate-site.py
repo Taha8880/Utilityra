@@ -98,7 +98,7 @@ for index, script in enumerate(re.findall(r"<script\b[^>]*>(.*?)</script\s*>", a
 
 theme_text = THEME.read_text(encoding="utf-8")
 for index, script in enumerate(re.findall(r"<script\b[^>]*>(.*?)</script\s*>", theme_text, flags=re.I | re.S), 1):
-    script = re.sub(r"^\\s*<!\\[CDATA\\[|\\]\\]>\\s*$", "", script.strip())
+    script = re.sub(r"^\s*<!\[CDATA\[|\]\]>\s*$", "", script.strip())
     if not script.strip():
         continue
     with tempfile.NamedTemporaryFile("w", suffix=".js", encoding="utf-8", delete=False) as tmp:
