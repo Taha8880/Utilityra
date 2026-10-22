@@ -48,3 +48,24 @@ Build a useful tools-and-data platform, not a collection of thin keyword pages. 
 4. Inspect drafts in Blogger; do not publish all pages automatically.
 5. Upload a theme only after export/backup and a human visual review.
 6. Never promise Google indexing, ranking, traffic, or AdSense approval.
+
+
+## Integration decisions: use the right source, not a list of logos
+
+The named integrations are not all appropriate as runtime dependencies for a student/office/developer tools website. Do not claim a connector is active unless a working authenticated test proves it.
+
+| Requested integration | Decision for Utilityra v1 | Practical replacement / use |
+|---|---|---|
+| Context7 | Optional developer-time documentation lookup; not a public-site feature | Prefer official provider documentation and versioned links in the build workflow. No Context7 connection is configured in this repository. |
+| Strix | Not connected or run; never scan production without authorization | CI syntax/unit/browser tests first; add a scoped security scanner and dependency audit before release. |
+| ScrapeGraphAI | Not connected; can require a hosted key and incur costs | Official APIs and publisher RSS/Atom feeds first. Use extraction only for an allowlisted source with a documented license and tests. |
+| Scrapling | Not connected; a Python crawling tool is not a Cloudflare Worker dependency | If needed later, run a separate controlled ingestion job with robots/terms checks, rate limits, timeouts and deduplication. |
+| MCP Agent Reach | Not connected; not needed for the public runtime | Use the GitHub Actions, Blogger API and official source APIs that are already part of the repository workflow. |
+| GDELT | Not connected; a news/event dataset does not measure demand for utility tools well | Prioritize first-party failed searches and, after property authorization, Google Search Console query/impression/click data. Add RSS/Atom only for a genuinely useful public data catalog. |
+
+## Demand-driven tool roadmap
+1. Aggregate the site's successful tool opens/actions and failed internal searches without storing raw tool input.
+2. Once at least 20 eligible events exist, let the AI propose up to eight new tools with the exact observed evidence, confidence and a test plan.
+3. Add a Search Console integration only after the owner authorizes the correct verified property and read-only access; do not confuse on-site search with Google search volume.
+4. Human review decides whether an idea merits implementation. Every new tool needs a distinct use case, accessible input/output, client-side privacy where practical, error handling, mobile tests and a regression test before publication.
+5. AI responses must be calibrated: no fabricated sources, no claims of browsing without retrieval, no guarantee that every problem can be solved, and no autonomous public deployment.
