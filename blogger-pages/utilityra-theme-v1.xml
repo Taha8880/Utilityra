@@ -10,14 +10,14 @@
   <meta content='width=device-width, initial-scale=1, viewport-fit=cover' name='viewport'/>
   <meta content='#10162f' name='theme-color'/>
   <meta content='index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1' name='robots'/>
-  <meta content='Practical online tools for study, office work, developers, files, image editing and AI-assisted problem solving.' name='description'/>
+  <b:if cond='data:blog.metaDescription'><meta expr:content='data:blog.metaDescription' name='description'/><b:else/><meta content='Practical online tools for study, office work, developers, files, image editing and AI-assisted problem solving.' name='description'/></b:if>
   <link expr:href='data:blog.canonicalUrl' rel='canonical'/>
-  <title><data:blog.pageTitle/> | Toolora</title>
+  <title><data:blog.pageTitle/></title>
   <meta content='Toolora' property='og:site_name'/>
   <meta content='website' property='og:type'/>
   <meta expr:content='data:blog.canonicalUrl' property='og:url'/>
   <meta expr:content='data:blog.pageTitle' property='og:title'/>
-  <meta content='Practical tools for study, office work, software development and file workflows.' property='og:description'/>
+  <meta expr:content='data:blog.metaDescription' property='og:description'/>
   <meta content='summary' name='twitter:card'/>
   <b:include data='blog' name='all-head-content'/>
   <script><![CDATA[
