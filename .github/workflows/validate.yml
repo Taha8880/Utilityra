@@ -17,5 +17,7 @@ jobs:
         run: node --check worker/src/index.js
       - name: Validate theme XML, tool scripts, and manifest
         run: python scripts/validate-site.py
+      - name: Test Worker API behavior
+        run: node --test tests/worker.test.mjs
       - name: Check required pages exist
         run: test -s blogger-pages/word-counter.html && test -s blogger-pages/json-formatter.html && test -s blogger-pages/utilityra-theme-v1.xml
