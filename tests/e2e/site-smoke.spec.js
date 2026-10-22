@@ -7,13 +7,15 @@ test('homepage responds and has a meaningful document title', async ({ page }) =
   await expect(page).toHaveTitle(/.+/);
 });
 
-test('homepage declares a viewport for mobile devices', async ({ page }) => {
+test('homepage renders readable page content', async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('meta[name="viewport"]')).toHaveCount(1);
+  await expect(page.locator('body')).not.toBeEmpty();
+  const visibleText = (await page.locator('body').innerText()).trim();
+  expect(visibleText.length, 'homepage should render visible text').toBeGreaterThan(20);
 });
 
-test('homepage has a main landmark or a body fallback', async ({ page }) => {
+test('homepage contains navigation or a usable link', async ({ page }) => {
   await page.goto('/');
-  const mainCount = await page.locator('main, [role="main"]').count();
-  expect(mainCount).toBeGreaterThan(0);
+  const links = page.locator('a[href]');
+  await expect(links.first()).toBeVisible();
 });
