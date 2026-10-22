@@ -108,7 +108,7 @@ test('HTML entity encoder escapes markup rather than executing it', async ({ pag
 
 test('image compressor processes an image locally and offers a downloadable result', async ({ page }) => {
   await loadTool(page, 'image-compressor.html');
-  const pixel = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jZkAAAAASUVORK5CYII=', 'base64');
+  const pixel = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR4nGP4DwQACfsD/fteaysAAAAASUVORK5CYII=', 'base64');
   await page.locator('#uic-file').setInputFiles({ name: 'pixel.png', mimeType: 'image/png', buffer: pixel });
   await page.locator('#uic-run').click();
   await expect(page.locator('#uic-download')).toBeVisible();
