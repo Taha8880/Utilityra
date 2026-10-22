@@ -18,7 +18,7 @@ Build a useful tools-and-data platform, not a collection of thin keyword pages. 
 - Any crawler must use an allowlist, rate limits, timeouts, robots/terms checks and deduplication. Never expose an arbitrary URL-fetch endpoint.
 
 ## AI provider integrations
-- OpenAI and Gemini are optional providers behind the Worker. Each can be absent; tools must fail with a helpful message and never leak secrets.
+- OpenAI, Gemini and Cloudflare Workers AI are optional providers behind the Worker. Each can be absent; tools must fail with a helpful message and never leak secrets. Workers AI requires an explicit Cloudflare AI binding and may be subject to account usage limits or charges; it is not activated on the live site by this PR.
 - Add provider budgets, request limits and abuse controls before enabling public AI.
 - AI can suggest content or patches but cannot publish, modify theme settings or deploy code autonomously.
 
@@ -35,7 +35,7 @@ Build a useful tools-and-data platform, not a collection of thin keyword pages. 
 | MCP Agent Reach | Agent access to supported search/RSS/GitHub sources | Optional developer environment integration; verify upstream package and permissions |
 | GDELT | News/event discovery | Planned server-side adapter; source attribution and validation required |
 | RSS/Atom | Efficient publisher feed ingestion | Planned; allowlist and caching required |
-| OpenAI / Gemini | AI assistance and transformations | Gateway code exists; keys/configuration must be verified separately |
+| OpenAI / Gemini / Workers AI | AI assistance and transformations | Gateway code supports these providers; keys/bindings/configuration must be verified separately |
 | Dependabot / npm audit | Dependency risk alerts | Recommended CI hardening |
 
 ## Release gates
