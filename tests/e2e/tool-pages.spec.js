@@ -80,7 +80,7 @@ test('timestamp converter handles Unix seconds correctly', async ({ page }) => {
   await loadTool(page, 'timestamp-converter.html');
   await page.locator('#uts-input').fill('0');
   await page.locator('#uts-to-date').click();
-  await expect(page.locator('#uts-output')).toContainText('1970-01-01T00:00:00.000Z');
+  await expect(page.locator('#uts-output')).toHaveValue(/1970-01-01T00:00:00.000Z/);
 });
 
 test('percentage calculator handles discount and rejects zero denominator', async ({ page }) => {
@@ -89,7 +89,7 @@ test('percentage calculator handles discount and rejects zero denominator', asyn
   await page.locator('#upc-a').fill('200');
   await page.locator('#upc-b').fill('15');
   await page.locator('#upc-run').click();
-  await expect(page.locator('#upc-output')).toContainText('Final price: 170.00');
+  await expect(page.locator('#upc-output')).toHaveValue(/Final price: 170.00/);
   await page.locator('#upc-mode').selectOption('change');
   await page.locator('#upc-a').fill('0');
   await page.locator('#upc-b').fill('10');
@@ -109,7 +109,7 @@ test('JSON formatter reports malformed JSON and formats valid input', async ({ p
   await loadTool(page, 'json-formatter.html');
   await page.locator('#ujf-input').fill('{"name":"Utilityra","active":true}');
   await page.locator('#ujf-format').click();
-  await expect(page.locator('#ujf-output')).toContainText('Utilityra');
+  await expect(page.locator('#ujf-output')).toHaveValue(/Utilityra/);
   await page.locator('#ujf-input').fill('{bad');
   await page.locator('#ujf-format').click();
   await expect(page.locator('#ujf-status')).toContainText('Invalid JSON');
