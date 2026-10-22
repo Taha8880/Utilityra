@@ -1,6 +1,6 @@
 <section class="ur-tool" data-tool-id="ai-assistant" lang="ar" aria-labelledby="uai-title">
   <p class="ur-eyebrow" data-en="AI WORKSPACE · ASSISTANT" data-ar="مساحة الذكاء الاصطناعي · مساعد">AI WORKSPACE · ASSISTANT</p>
-  <h2 id="uai-title" data-en="Flarivo AI Assistant" data-ar="مساعد Flarivo للذكاء الاصطناعي">مساعد Flarivo للذكاء الاصطناعي</h2>
+  <h2 id="uai-title" data-en="Utilityra AI Assistant" data-ar="مساعد Utilityra للذكاء الاصطناعي">مساعد Utilityra للذكاء الاصطناعي</h2>
   <p data-en="Get practical help with study, office work, programming and problem-solving. For current news questions, the assistant can attach recent public coverage links from GDELT when the service is configured. Review sources yourself; the assistant does not edit or publish your files. Never submit secrets." data-ar="احصل على مساعدة عملية في الدراسة والعمل والبرمجة وحل المشكلات. عند السؤال عن الأخبار الحديثة، يمكن للمساعد إرفاق روابط تغطية عامة من GDELT إذا كانت الخدمة مفعّلة. راجع المصادر بنفسك؛ لا يعدّل المساعد ملفاتك أو ينشرها. لا ترسل أسرارًا.">احصل على مساعدة عملية في الدراسة والعمل والبرمجة وحل المشكلات. عند السؤال عن الأخبار الحديثة، يمكن للمساعد إرفاق روابط تغطية عامة من GDELT إذا كانت الخدمة مفعّلة. راجع المصادر بنفسك؛ لا يعدّل المساعد ملفاتك أو ينشرها. لا ترسل أسرارًا.</p>
   <label for="uai-provider" data-en="AI provider" data-ar="مزود الذكاء الاصطناعي">مزود الذكاء الاصطناعي</label>
   <select id="uai-provider"><option value="workers-ai" selected="selected" data-en="Cloudflare Workers AI" data-ar="Cloudflare Workers AI">Cloudflare Workers AI</option><option value="openai" data-en="OpenAI (optional)" data-ar="OpenAI (اختياري)">OpenAI (اختياري)</option><option value="gemini" data-en="Google Gemini (optional)" data-ar="Google Gemini (اختياري)">Google Gemini (اختياري)</option></select>
@@ -20,7 +20,7 @@
   const $=id=>document.getElementById(id),button=$('uai-send'),status=$('uai-status'),answer=$('uai-answer'),sourcesWrap=$('uai-sources-wrap'),sourcesList=$('uai-sources');
   const t=(ar,en)=>document.documentElement.lang==='en'?en:ar;
   button.addEventListener('click',async()=>{
-    const message=$('uai-message').value.trim(),context=$('uai-context').value.trim(),base=String(window.FLARIVO_API_BASE||'').replace(/\/+$/,'');
+    const message=$('uai-message').value.trim(),context=$('uai-context').value.trim(),base=String(window.UTILITYRA_API_BASE||'').replace(/\/+$/,'');
     if(!message){status.textContent=t('اكتب طلبك أولًا.','Enter your task first.');return;}
     if(!base){status.textContent=t('خدمة الذكاء الاصطناعي لم تُربط بعد بعنوان Worker.','The AI service has not been connected to its Worker URL yet.');return;}
     button.disabled=true;status.textContent=t('جارٍ تحليل الطلب…','Working through your request…');answer.value='';
