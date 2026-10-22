@@ -1,12 +1,8 @@
 name: Flarivo Blogger page sync
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'blogger-pages/**'
-      - 'scripts/blogger-sync.mjs'
-      - '.github/workflows/blogger-sync.yml'
+  # Push-based publishing is handled by publish-utilityra-brand-fix.yml.
+  # Keep this workflow manual to avoid two concurrent Blogger API syncs.
   workflow_dispatch:
     inputs:
       publish:
