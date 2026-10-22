@@ -54,7 +54,7 @@
 <div class='nav-actions'><button class='icon-btn' id='ur-theme' type='button' aria-label='Switch theme'>☼</button><button class='icon-btn' id='ur-language' type='button' aria-label='Change language'>EN</button><a class='btn btn-primary' href='/p/ai-assistant-utilityra.html' data-en='Ask AI' data-ar='اسأل الذكاء الاصطناعي'>اسأل الذكاء الاصطناعي</a><button class='burger' id='burger' type='button' aria-expanded='false' aria-controls='menu' aria-label='Open menu'>☰</button></div>
 <nav class='menu' id='menu' aria-label='Mobile navigation'><a href='/#tools' data-en='All tools' data-ar='كل الأدوات'>كل الأدوات</a><a href='/#students' data-en='Study tools' data-ar='أدوات الدراسة'>أدوات الدراسة</a><a href='/#office' data-en='Office tools' data-ar='أدوات المكاتب'>أدوات المكاتب</a><a href='/#developers' data-en='Developer tools' data-ar='أدوات المطورين'>أدوات المطورين</a><a href='/#files' data-en='Files and images' data-ar='الملفات والصور'>الملفات والصور</a><a href='/p/about-flarivo.html' data-en='About Utilityra' data-ar='عن Utilityra'>عن Utilityra</a></nav>
 </div></header>
-<b:if cond='data:blog.url == data:blog.homepageUrl'>
+<b:if cond='data:view.isHomepage'>
 <main>
 <section class='hero'><div class='wrap hero-grid'>
 <div class='hero-copy'><div class='eyebrow'><span class='dot'></span><span data-en='TOOLS FOR YOUR NEXT BIG IDEA' data-ar='أدوات لخطوتك الكبيرة التالية'>أدوات لخطوتك الكبيرة التالية</span></div>
