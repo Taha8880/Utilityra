@@ -22,6 +22,7 @@
 <b:include data='blog' name='all-head-content'/>
 <script><![CDATA[(function(){var q=new URLSearchParams(location.search);try{if(q.get('utilityra_owner')==='exclude')localStorage.setItem('utilityra-owner-exclude','1');if(q.get('utilityra_owner')==='include')localStorage.removeItem('utilityra-owner-exclude');if(q.get('utilityra_review')==='1')localStorage.setItem('utilityra-review-mode','1')}catch(e){}if(q.has('utilityra_owner')||q.has('utilityra_review')){q.delete('utilityra_owner');q.delete('utilityra_review');history.replaceState(null,'',location.pathname+(q.toString()?'?'+q.toString():'')+location.hash)}})();]]></script>
 <script async='async' crossorigin='anonymous' src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1235197294708204'></script>
+<script><![CDATA[(function(){if(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;document.documentElement.classList.add('anim')})();]]></script>
 <b:skin><![CDATA[
 
 :root{color-scheme:dark;--bg:#0b0b10;--panel:#12131b;--panel2:#191a25;--ink:#f8f8fb;--muted:#a9adbd;--line:rgba(255,255,255,.12);--violet:#6c4de6;--violet2:#8a72ff;--teal:#9ff0e5;--shadow:0 28px 80px #0005;--font:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;--display:"DM Sans",Inter,system-ui,sans-serif}
