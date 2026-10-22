@@ -28,18 +28,19 @@ Build a useful tools-and-data platform, not a collection of thin keyword pages. 
 ## Developer and quality integrations
 | Integration | Purpose | Status in this repo |
 |---|---|---|
-| GitHub + Actions | Version control, validation and draft sync | Connected workflow files exist; verify every run |
-| Playwright | Desktop/mobile interaction tests | CI scaffold exists; expand to actual tool flows |
-| Lighthouse | Performance/accessibility/SEO audit | CI scaffold exists |
-| Context7 | Version-specific developer documentation via MCP | Developer-time documentation aid; not a public-site dependency and not a live visitor integration |
-| Strix | Authorized security review of staging | Not connected or run in this repo; use only against authorized staging, with existing tests as the immediate baseline |
-| ScrapeGraphAI | Structured extraction when a source has no usable API/feed | Not connected; prefer official APIs and RSS first, then add only with a configured provider and cost limits |
-| Scrapling | Crawl/parse approved public sources | Not connected to the public Worker; use a separate allowlisted Python runner only where site terms and robots rules permit |
-| MCP Agent Reach | Agent access to supported search/RSS/GitHub sources | Not connected to the visitor-facing app; use GitHub Actions and documented APIs until the upstream MCP server is configured and permission-reviewed |
-| GDELT | Public news/event discovery | Implemented read-only `/api/trends?q=...` adapter with HTTPS link filtering, a 7-day window, 10-result cap and 5-minute caching |
-| RSS/Atom | Efficient publisher feed ingestion | Planned; allowlist and caching required |
-| OpenAI / Gemini / Workers AI | AI assistance and transformations | Gateway code supports these providers; keys/bindings/configuration must be verified separately |
-| Dependabot / npm audit | Dependency risk alerts | Recommended CI hardening |
+| GitHub + Actions | Version control, validation and draft sync | Connected; validation runs on pull requests and the rebuild branch |
+| Playwright | Desktop/mobile interaction tests | Connected; browser tests cover local tool flows and run in CI |
+| Context7 | Version-specific developer documentation via MCP | Not connected; use official vendor docs as the verified fallback |
+| Strix | Authorized security review of staging | Not connected or run; add only with explicit scope and authorization |
+| ScrapeGraphAI | Structured extraction when an approved source lacks an API/feed | Not connected; prefer official APIs and RSS/Atom before paid extraction |
+| Scrapling | Controlled parsing of approved public sources | Not connected; if needed, run separately from the Worker with robots/terms checks and rate limits |
+| MCP Agent Reach | Agent access to supported search/RSS/GitHub sources | Not connected to the public app; use official APIs and GitHub Actions until permissions are reviewed |
+| GDELT DOC 2.0 | Recent public news discovery | Adapter implemented in this branch at \`GET /api/trends?q=...\`; not live until the Worker is deployed |
+| RSS/Atom | Efficient publisher-feed ingestion | Not yet connected; use an allowlist and cache only if a real data-catalog feature needs it |
+| OpenAI / Gemini / Workers AI | AI assistance and transformations | Gateway supports these providers; live use depends on configured secrets/bindings and Worker deployment |
+| First-party analytics | Aggregate page views, tool opens and failed searches | Client tracking and private dashboard are implemented in this branch; they require the Worker origin and D1 deployment |
+| Google Search Console | Real Google query/impression/click demand | Not connected; requires owner-authorized access to the verified property |
+| Dependabot / npm audit | Dependency risk alerts | Dependabot is configured; add an explicit audit gate before release |
 
 ## Release gates
 1. Keep the current live Blogger theme, settings, and AdSense setup unchanged during development.
@@ -49,19 +50,6 @@ Build a useful tools-and-data platform, not a collection of thin keyword pages. 
 5. Upload a theme only after export/backup and a human visual review.
 6. Never promise Google indexing, ranking, traffic, or AdSense approval.
 
-
-## Integration decisions: use the right source, not a list of logos
-
-The named integrations are not all appropriate as runtime dependencies for a student/office/developer tools website. Do not claim a connector is active unless a working authenticated test proves it.
-
-| Requested integration | Decision for Toolora v1 | Practical replacement / use |
-|---|---|---|
-| Context7 | Optional developer-time documentation lookup; not a public-site feature | Prefer official provider documentation and versioned links in the build workflow. No Context7 connection is configured in this repository. |
-| Strix | Not connected or run; never scan production without authorization | CI syntax/unit/browser tests first; add a scoped security scanner and dependency audit before release. |
-| ScrapeGraphAI | Not connected; can require a hosted key and incur costs | Official APIs and publisher RSS/Atom feeds first. Use extraction only for an allowlisted source with a documented license and tests. |
-| Scrapling | Not connected; a Python crawling tool is not a Cloudflare Worker dependency | If needed later, run a separate controlled ingestion job with robots/terms checks, rate limits, timeouts and deduplication. |
-| MCP Agent Reach | Not connected; not needed for the public runtime | Use the GitHub Actions, Blogger API and official source APIs that are already part of the repository workflow. |
-| GDELT | Not connected; a news/event dataset does not measure demand for utility tools well | Prioritize first-party failed searches and, after property authorization, Google Search Console query/impression/click data. Add RSS/Atom only for a genuinely useful public data catalog. |
 
 ## Demand-driven tool roadmap
 1. Aggregate the site's successful tool opens/actions and failed internal searches without storing raw tool input.
