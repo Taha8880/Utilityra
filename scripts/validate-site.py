@@ -4,6 +4,7 @@ import json
 import re
 import subprocess
 import tempfile
+import sqlite3
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
@@ -61,6 +62,25 @@ for page in pages:
         if result.returncode:
             fail(f"JavaScript syntax error in {filename}, script {index}: {result.stderr.strip()}")
 
+# Execute the schema and seed in an isolated in-memory SQLite database.
+try:
+    connection = sqlite3.connect(":memory:")
+    connection.executescript((ROOT / "worker" / "schema.sql").read_text(encoding="utf-8"))
+    connection.executescript((ROOT / "worker" / "seed.sql").read_text(encoding="utf-8"))
+    seed_count = connection.execute("SELECT COUNT(*) FROM data_records").fetchone()[0]
+    draft_count = connection.execute("SELECT COUNT(*) FROM data_records WHERE status = 'draft'").fetchone()[0]
+    public_count = connection.execute("SELECT COUNT(*) FROM data_collections WHERE is_public = 1").fetchone()[0]
+    fk_errors = connection.execute("PRAGMA foreign_key_check").fetchall()
+    connection.close()
+    if seed_count < 10 or draft_count != seed_count:
+        fail("Seed data must contain at least ten records, all kept in draft status until reviewed")
+    if public_count != 0 or fk_errors:
+        fail("Seed collections must remain private and foreign keys must be valid")
+except SystemExit:
+    raise
+except Exception as exc:
+    fail(f"D1 schema/seed SQL is invalid: {exc}")
+
 theme_text = THEME.read_text(encoding="utf-8")
 # The main tool-card links must correspond to page titles Blogger derives slugs from.
 card_section = theme_text.split("<div class='ur-tool-grid' id='ur-tool-grid'>", 1)[-1].split("</div></div></section>", 1)[0]
@@ -78,4 +98,4 @@ if len(card_hrefs) < 10:
 
 print(f"PASS: Blogger theme XML is well-formed.")
 print(f"PASS: {len(pages)} manifest pages exist and contain syntactically valid JavaScript.")
-print(f"PASS: {len(card_hrefs)} homepage tool-card links map to manifest page titles.")
+print(f"PASS: {len(card_hrefs)} homepage tool-card links map to manifest page titles.")\nprint(f"PASS: D1 schema and seed SQL execute; {seed_count} records remain private drafts.")
