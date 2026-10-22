@@ -6,13 +6,13 @@ on:
   workflow_dispatch:
     inputs:
       publish:
-        description: "Publish/update pages live. Leave unchecked for a no-write dry run."
+        description: "Publish/update pages live. Uncheck for a no-write dry run."
         required: true
         type: boolean
-        default: false
+        default: true
 
 concurrency:
-  group: flarivo-blogger-sync
+  group: utilityra-page-sync
   cancel-in-progress: false
 
 permissions:
