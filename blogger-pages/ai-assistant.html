@@ -1,26 +1,2 @@
-<!-- Publish only after deploying the Worker. Replace WORKER_BASE_URL with your deployed Cloudflare Worker URL. -->
-<section class="utilityra-tool" lang="en" aria-labelledby="uai-title">
-  <h2 id="uai-title">Utilityra AI Assistant</h2>
-  <p>Ask for help understanding an error or planning a code fix. Do not send passwords, API keys, or private personal data.</p>
-  <label for="uai-provider">AI provider</label>
-  <select id="uai-provider"><option value="openai">OpenAI</option><option value="gemini">Google Gemini</option><option value="workers-ai">Cloudflare Workers AI</option></select>
-  <label for="uai-message" style="display:block;margin-top:10px">Your question</label>
-  <textarea id="uai-message" rows="6" maxlength="8000" placeholder="Describe the problem…" style="display:block;width:100%;box-sizing:border-box;padding:12px;margin:8px 0;border:1px solid #bbb;border-radius:10px"></textarea>
-  <button type="button" id="uai-send">Ask AI</button>
-  <p id="uai-status" role="status" aria-live="polite"></p>
-  <pre id="uai-answer" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre>
-</section>
-<script>
-(function(){
- const WORKER_BASE_URL='https://REPLACE-WITH-YOUR-WORKER.workers.dev';
- const $=id=>document.getElementById(id);const button=$('uai-send'),status=$('uai-status'),answer=$('uai-answer');
- button.addEventListener('click',async()=>{
-   const message=$('uai-message').value.trim();if(!message){status.textContent='Enter a question first.';return}
-   if(WORKER_BASE_URL.includes('REPLACE-WITH-YOUR-WORKER')){status.textContent='The AI service has not been configured yet.';return}
-   button.disabled=true;status.textContent='Waiting for AI…';answer.textContent='';
-   try{const response=await fetch(WORKER_BASE_URL+'/api/ai',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({provider:$('uai-provider').value,message})});const data=await response.json();if(!response.ok)throw new Error(data.message||data.error||'Request failed');answer.textContent=data.reply||'No response returned.';status.textContent='Response ready.'}
-   catch(e){status.textContent='Could not reach the AI service. Check its setup and try again.'}
-   finally{button.disabled=false}
- });
-})();
-</script>
+<section class="ur-tool" data-tool-id="ai-assistant" lang="ar" aria-labelledby="uai-title"><p class="ur-eyebrow">AI WORKSPACE · ASSISTANT</p><h2 id="uai-title">Utilityra AI Assistant — مساعد الذكاء الاصطناعي</h2><p>مساعد نصي للدراسة والعمل والبرمجة وشرح الأخطاء. لا يتصفح الإنترنت تلقائيًا ولا يعدّل ملفاتك أو ينشر تغييرات. أرفق نص المصدر أو رسالة الخطأ عند الحاجة، ولا ترسل أسرارًا.</p><label for="uai-provider">مزود الذكاء الاصطناعي</label><select id="uai-provider"><option value="openai">OpenAI</option><option value="gemini">Google Gemini</option><option value="workers-ai">Cloudflare Workers AI</option></select><label for="uai-message">ما المهمة التي تريد حلها؟</label><textarea id="uai-message" rows="6" maxlength="8000" placeholder="اشرح المطلوب بالتفصيل…"></textarea><label for="uai-context">نص إضافي أو مصدر أو رسالة خطأ (اختياري)</label><textarea id="uai-context" rows="4" maxlength="8000" placeholder="ألصق مقتطفًا غير حساس للتحليل…"></textarea><div class="ur-actions"><button type="button" id="uai-send" class="ur-primary">حلل الطلب</button><button type="button" id="uai-clear" class="ur-secondary">مسح</button></div><p id="uai-status" role="status" aria-live="polite"></p><label for="uai-answer">الإجابة</label><textarea id="uai-answer" rows="12" readonly placeholder="ستظهر الإجابة هنا"></textarea><p class="ur-note">قد يخطئ الذكاء الاصطناعي. لا تعتمد على إجاباته وحدها في القرارات الحساسة، وتحقق من المعلومات الحالية من مصادر موثوقة.</p></section>
+<script>(function(){const $=id=>document.getElementById(id),button=$('uai-send'),status=$('uai-status'),answer=$('uai-answer');button.addEventListener('click',async()=>{const message=$('uai-message').value.trim(),context=$('uai-context').value.trim(),base=String(window.UTILITYRA_API_BASE||'').replace(/\/$/,'');if(!message){status.textContent='اكتب طلبك أولًا.';return}if(!base){status.textContent='خدمة الذكاء الاصطناعي لم تُربط بعد بعنوان Worker.';return}button.disabled=true;status.textContent='جارٍ تحليل الطلب…';answer.value='';try{const response=await fetch(base+'/api/ai',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({provider:$('uai-provider').value,message,context})});const data=await response.json();if(!response.ok)throw new Error(data.message||data.error||'تعذر تنفيذ الطلب');answer.value=data.reply||'لم تصل إجابة.';status.textContent='وصلت الإجابة. راجعها وتحقق من المعلومات المهمة.'}catch(e){status.textContent=e&&e.message?e.message:'تعذر الوصول إلى خدمة الذكاء الاصطناعي؛ تحقق من إعدادها.'}finally{button.disabled=false}});$('uai-clear').addEventListener('click',()=>{$('uai-message').value='';$('uai-context').value='';answer.value='';status.textContent=''})})();</script>
