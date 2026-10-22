@@ -12,12 +12,12 @@ WORKERS_AI_MODEL = "@cf/meta/llama-3.1-8b-instruct"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "utilityra-data"
+database_name = "toolora-data"
 database_id = "REPLACE_AFTER_CREATING_D1"
 
-# Optional: uncomment only after checking current account limits and pricing.
-# [ai]
-# binding = "AI"
+# Cloudflare Workers AI powers the default assistant provider. Review account limits and pricing.
+[ai]
+binding = "AI"
 
 [assets]
 directory = "./public"
