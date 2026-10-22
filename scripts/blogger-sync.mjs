@@ -92,27 +92,28 @@ async function listPages(status) {
   } while (pageToken);
   return pages;
 }
-const existing = [];
-for (const status of ["LIVE", "DRAFT"]) {
-  existing.push(...await listPages(status));
-}
+const existing = await listPages("LIVE");
 const uniqueExisting = Array.from(new Map(existing.filter(page => page.id).map(page => [page.id, page])).values());
 
 for (const item of manifest.pages) {
   if (!item.title || !item.file) throw new Error("Every page needs title and file in manifest.json");
   const filename = path.join(root, "blogger-pages", item.file);
-  const content = (await fs.readFile(filename, "utf8")).replaceAll("Utilityra", "Toolora");
+  const content = (await fs.readFile(filename, "utf8")).replaceAll("Flarivo", "Flarivo");
   if (content.includes("REPLACE-WITH-YOUR-WORKER")) {
     console.warn(`WARNING: ${item.file} still contains an unconfigured Worker URL.`);
   }
   const acceptedTitles = [item.title, item.legacyTitle].filter(Boolean);
-  const normalizeTitle = title => String(title || "").replace(/\s*\|\s*(Toolora|Utilityra)$/i, "").trim().toLowerCase();
+  const normalizeTitle = title => String(title || "").replace(/\s*\|\s*(Flarivo|Flarivo)$/i, "").trim().toLowerCase();
   const acceptedNormalizedTitles = acceptedTitles.map(normalizeTitle);
   const match = uniqueExisting.find(page =>
     acceptedTitles.some(title => page.title?.trim().toLowerCase() === title.trim().toLowerCase()) ||
     acceptedNormalizedTitles.includes(normalizeTitle(page.title))
   );
   const body = { title: item.title, content };
+  if (!match && mode === "draft") {
+    console.log("Dry run: would create " + item.title + "; no Blogger page was changed.");
+    continue;
+  }
   if (!match) {
     // Create using the legacy title first so Blogger generates the already-planned stable slug.
     // Then rename the page while it is still a draft; only publish when mode explicitly requests it.
