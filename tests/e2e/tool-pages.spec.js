@@ -117,6 +117,52 @@ test('image compressor processes an image locally and offers a downloadable resu
   await expect(page.locator('#uic-stats')).toContainText('Dimensions: 1 × 1 px');
 });
 
+
+test('number base converter returns binary, octal and hex', async ({ page }) => {
+  await loadTool(page, 'number-base-converter.html');
+  await page.locator('#number-base-converter-input').fill('255');
+  await page.locator('#number-base-converter-run').click();
+  await expect(page.locator('#number-base-converter-output')).toContainText('Binary: 11111111');
+  await expect(page.locator('#number-base-converter-output')).toContainText('Hex: 0xFF');
+});
+
+test('JSON to XML converter escapes text and converts object fields', async ({ page }) => {
+  await loadTool(page, 'json-to-xml.html');
+  await page.locator('#json-to-xml-input').fill('{"name":"<test>","active":true}');
+  await page.locator('#json-to-xml-run').click();
+  await expect(page.locator('#json-to-xml-output')).toContainText('&lt;test&gt;');
+});
+
+test('SHA-256 tool returns the standard digest for abc', async ({ page }) => {
+  await loadTool(page, 'sha256-hash.html');
+  await page.locator('#sha256-hash-input').fill('abc');
+  await page.locator('#sha256-hash-run').click();
+  await expect(page.locator('#sha256-hash-output')).toHaveValue('ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad');
+});
+
+test('color converter handles short HEX notation', async ({ page }) => {
+  await loadTool(page, 'color-converter.html');
+  await page.locator('#color-converter-input').fill('#fff');
+  await page.locator('#color-converter-run').click();
+  await expect(page.locator('#color-converter-output')).toContainText('RGB rgb(255, 255, 255)');
+});
+
+test('unit converter converts kilometres to miles', async ({ page }) => {
+  await loadTool(page, 'unit-converter.html');
+  await page.locator('#unit-converter-input').fill('5 km to mi');
+  await page.locator('#unit-converter-run').click();
+  await expect(page.locator('#unit-converter-output')).toContainText('3.10685596');
+});
+
+test('image filter tool accepts a local image and exports a PNG', async ({ page }) => {
+  await loadTool(page, 'image-filter-studio.html');
+  const pixel = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR4nGP4DwQACfsD/fteaysAAAAASUVORK5CYII=', 'base64');
+  await page.locator('#ifs-file').setInputFiles({ name: 'pixel.png', mimeType: 'image/png', buffer: pixel });
+  await page.locator('#ifs-run').click();
+  await expect(page.locator('#ifs-dl')).toBeVisible();
+  await expect(page.locator('#ifs-dl')).toHaveAttribute('href', /^blob:/);
+});
+
 test('JSON formatter reports malformed JSON and formats valid input', async ({ page }) => {
   await loadTool(page, 'json-formatter.html');
   await page.locator('#ujf-input').fill('{"name":"Utilityra","active":true}');
