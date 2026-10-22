@@ -1,7 +1,15 @@
-name = "utilityra-ai-gateway"
+# Example only. Do not deploy until the D1 database is created and its real ID is filled in.
+name = "utilityra-platform-api"
 main = "src/index.js"
-compatibility_date = "2026-10-01"
+compatibility_date = "2026-10-22"
 
 [vars]
 ALLOWED_ORIGIN = "https://utilityra.blogspot.com"
 MAX_MESSAGE_CHARS = "8000"
+# Configure OPENAI_API_KEY and GEMINI_API_KEY using `wrangler secret put` or the Cloudflare dashboard.
+# Never add provider keys to this file.
+
+[[d1_databases]]
+binding = "DB"
+database_name = "utilityra-data"
+database_id = "REPLACE_AFTER_CREATING_D1"
