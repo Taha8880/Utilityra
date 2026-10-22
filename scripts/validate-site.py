@@ -47,7 +47,7 @@ for page in pages:
     source = path.read_text(encoding="utf-8")
     if "REPLACE-WITH-YOUR-WORKER" in source:
         fail(f"Unconfigured Worker placeholder must not be in draft manifest: {filename}")
-    ids = re.findall(r'\bid=[\'"]([^\'"]+)[\'"]', source, flags=re.I)
+    ids = re.findall(r'<[a-zA-Z][^>]*\bid=[\'"]([^\'"]+)[\'"][^>]*>', source, flags=re.I)
     if len(ids) != len(set(ids)):
         fail(f"Duplicate HTML id in {filename}")
     for index, script in enumerate(re.findall(r"<script\b[^>]*>(.*?)</script\s*>", source, flags=re.I | re.S), 1):
