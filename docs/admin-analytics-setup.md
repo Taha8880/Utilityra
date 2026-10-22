@@ -8,10 +8,10 @@ The private dashboard is served at the Worker origin's `/admin`, is not linked f
    - `CLOUDFLARE_ACCOUNT_ID`: your Cloudflare account ID.
    - `UTILITYRA_ADMIN_PASSWORD`: a unique password with at least 16 characters.
    - `UTILITYRA_ADMIN_SESSION_SECRET`: a different random secret with at least 32 characters.
-   - At least one AI provider key: `UTILITYRA_OPENAI_API_KEY` or `UTILITYRA_GEMINI_API_KEY`. These may have provider usage costs; set usage limits with the provider.
+   - Cloudflare Workers AI is the default provider through the Worker AI binding. `UTILITYRA_OPENAI_API_KEY` and `UTILITYRA_GEMINI_API_KEY` are optional alternatives; if added, they may have provider usage costs, so set usage limits with the provider.
 2. Open Actions → **Deploy Utilityra API and private analytics** → Run workflow. The workflow finds or creates the D1 database, applies the schema and draft seed, writes Worker secrets, and deploys the API. It does not publish Blogger pages or change the live Blogger theme.
 3. Open the successful run log and Cloudflare Workers & Pages to copy the real Worker URL. Do not guess or use a placeholder URL.
-4. The Blogger theme must set `window.UTILITYRA_API_BASE` to that exact Worker URL, then the new theme must be installed in Blogger. This is a one-time platform integration step; Blogger's public API does not provide a supported theme-upload endpoint. Export a theme backup first.
+4. The AI assistant page must set `window.UTILITYRA_API_BASE` to that exact Worker URL, then the new theme must be installed in Blogger. This is a one-time platform integration step; Blogger's public API does not provide a supported theme-upload endpoint. Export a theme backup first.
 
 ## Dashboard and security
 - Visit `https://YOUR-WORKER-ORIGIN/admin` and sign in with the password stored as the Cloudflare Worker secret. The password is checked server-side; the signed session cookie is HttpOnly, Secure, SameSite=Strict and expires after eight hours.
