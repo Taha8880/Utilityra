@@ -93,8 +93,9 @@ expected = {slug(page["title"]) for page in pages if page["file"] not in {"about
 missing = sorted(set(card_hrefs) - expected)
 if missing:
     fail("Tool card URLs have no matching manifest title: " + ", ".join(missing))
-if len(card_hrefs) < 10:
-    fail("Expected at least ten dedicated tool cards on the homepage")
+tool_count = len([page for page in pages if page["file"] not in {"about.html", "privacy-policy.html", "contact.html", "disclaimer.html"}])
+if tool_count < 50 or len(card_hrefs) < 50:
+    fail("Expected at least 50 dedicated tool pages and homepage cards")
 
 print(f"PASS: Blogger theme XML is well-formed.")
 print(f"PASS: {len(pages)} manifest pages exist and contain syntactically valid JavaScript.")
