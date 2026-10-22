@@ -1,19 +1,17 @@
-name: Blogger page sync
+name: Flarivo Blogger page sync
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'blogger-pages/**'
-      - 'scripts/blogger-sync.mjs'
-      - '.github/workflows/blogger-sync.yml'
   workflow_dispatch:
     inputs:
       publish:
-        description: "Publish/update pages live. Leave unchecked to create drafts only."
+        description: "Publish/update pages live. Leave unchecked for a no-write dry run."
         required: true
         type: boolean
         default: false
+
+concurrency:
+  group: flarivo-blogger-sync
+  cancel-in-progress: false
 
 permissions:
   contents: read
@@ -28,7 +26,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
 
       - name: Sync Blogger pages
         env:
