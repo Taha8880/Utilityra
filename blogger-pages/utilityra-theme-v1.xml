@@ -20,22 +20,14 @@
   <meta content='Practical tools for study, office work, software development and file workflows.' property='og:description'/>
   <meta content='summary' name='twitter:card'/>
   <b:include data='blog' name='all-head-content'/>
-  <script async='async' src='https://www.googletagmanager.com/gtag/js?id=G-RVP9Q52085'></script>
   <script><![CDATA[
-    // Set this one value to the deployed Worker origin after setup; keep blank while staging.
     window.UTILITYRA_API_BASE=window.UTILITYRA_API_BASE||'';
-    window.dataLayer=window.dataLayer||[];
-    function gtag(){window.dataLayer.push(arguments);}
     (function(){
       const q=new URLSearchParams(location.search);
-      let owner=false;
       try{
         if(q.get('utilityra_owner')==='exclude')localStorage.setItem('ur-owner-exclude','1');
         if(q.get('utilityra_owner')==='include')localStorage.removeItem('ur-owner-exclude');
-        owner=localStorage.getItem('ur-owner-exclude')==='1';
       }catch(e){}
-      const review=q.has('utilityra_review')||q.has('preview')||navigator.webdriver||/bot|crawler|spider|headless|playwright|puppeteer|lighthouse|google-inspectiontool|chatgpt|openai|anthropic|claude|perplexity|gemini|bingpreview/i.test(navigator.userAgent);
-      if(!owner&&!review){gtag('js',new Date());gtag('config','G-RVP9Q52085');}
       if(q.has('utilityra_owner')){q.delete('utilityra_owner');const clean=location.pathname+(q.toString()?'?'+q.toString():'')+location.hash;history.replaceState(null,'',clean);}
     })();
   ]]></script>
@@ -439,7 +431,8 @@ html[data-theme=light] .post-body{color:#454b60}
     if(grid)grid.setAttribute('aria-label',language==='ar'?'نتائج الأدوات':'Tool results');
   }
   if(search)search.addEventListener('input',function(){query=search.value.trim();filterTools();});
-  if(form)form.addEventListener('submit',function(e){e.preventDefault();query=search?search.value.trim():'';filterTools();document.getElementById('tools')?.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});});
+  if(form)form.addEventListener('submit',function(e){e.preventDefault();query=search?search.value.trim():'';filterTools();if(query.length>=2){const visible=cards.some(function(card){return !card.hidden;});track(visible?'tool_search':'search_miss',{searchTerm:query});}document.getElementById('tools')?.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});});
+  if(grid)grid.addEventListener('click',function(e){const link=e.target.closest('.ur-card-foot');if(!link)return;const card=link.closest('.ur-card');if(card)track('tool_open',{toolId:card.dataset.id||'',toolCategory:card.dataset.cat||''});});
   if(grid){grid.setAttribute('aria-label','Tool catalog');cards.forEach(function(card){card.classList.add('to-reveal');});}
   if(!reduce){
     root.classList.add('motion-ready');
@@ -451,6 +444,21 @@ html[data-theme=light] .post-body{color:#454b60}
   }else{
     document.querySelectorAll('.to-reveal,.ur-card').forEach(function(el){el.classList.add('is-visible');});
   }
+
+  const params=new URLSearchParams(location.search);
+  let ownerExcluded=false;
+  try{ownerExcluded=localStorage.getItem('ur-owner-exclude')==='1';}catch(e){}
+  const reviewMode=params.has('utilityra_review')||params.has('preview')||Boolean(navigator.webdriver)||/bot|crawler|spider|headless|playwright|puppeteer|lighthouse|google-inspectiontool|chatgpt|openai|anthropic|claude|perplexity|gemini|bingpreview/i.test(navigator.userAgent);
+  const apiBase=String(window.UTILITYRA_API_BASE||'').replace(/\/+$/,'');
+  let visitorKey='';
+  try{visitorKey=sessionStorage.getItem('toolora-visitor')||'';if(!visitorKey){visitorKey=crypto.randomUUID?crypto.randomUUID():(String(Date.now())+'-'+Math.random().toString(36).slice(2));sessionStorage.setItem('toolora-visitor',visitorKey);}}catch(e){visitorKey='';}
+  function track(eventType,extra){
+    if(ownerExcluded||reviewMode||!apiBase||!visitorKey)return;
+    const payload=Object.assign({visitorKey:visitorKey,eventType:eventType,path:location.pathname,referrer:document.referrer,reviewMode:reviewMode},extra||{});
+    fetch(apiBase+'/api/analytics/event',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload),keepalive:true}).catch(function(){});
+  }
+  track('page_view');
+
   const year=document.getElementById('to-year');if(year)year.textContent=String(new Date().getFullYear());
   renderCategories(activeCategory);filterTools();applyLanguage(language);
   const a=document.getElementById('toVideoA'),b=document.getElementById('toVideoB');
