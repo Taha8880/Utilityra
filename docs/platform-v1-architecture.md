@@ -1,13 +1,15 @@
 # Utilityra Platform v1 — implementation blueprint
 
 ## Product direction
-Build a useful tools-and-data platform, not a collection of thin keyword pages. Start with a compact set of reliable tools that solve distinct jobs. Every public tool should have a stable Blogger Page URL, a unique title and description, plain-language instructions, error states, and internal links to related tools.
+Build a useful tools-and-data platform, not a collection of thin keyword pages. The current staging catalog has 63 standalone utility pages spanning study, office, developer, design, time, calculations and image editing; keep tools distinct and tested rather than padding the count. Every public tool should have a stable Blogger Page URL, a unique title and description, plain-language instructions, error states, and internal links to related tools.
 
 ## Public site
 - Blogger remains the public content and SEO host at `https://utilityra.blogspot.com/`.
 - A new theme candidate is stored separately and must be reviewed on a backup/test copy before any manual Blogger theme upload.
 - Each tool page is a separate Blogger Page. The GitHub workflow creates drafts by default; publishing requires an explicit workflow input.
 - Local tools should work without AI credentials or backend availability.
+- The theme uses GSAP Core for subtle entrance/stagger animations, with CSS fallback and `prefers-reduced-motion` support.
+- A separate Worker-hosted `/admin` dashboard provides signed-session protection, aggregate analytics and owner/review exclusion. Configure it using `docs/admin-analytics-setup.md`.
 - Do not claim a file stays local unless its code actually processes it in the browser.
 
 ## Backend and data
@@ -20,7 +22,8 @@ Build a useful tools-and-data platform, not a collection of thin keyword pages. 
 ## AI provider integrations
 - OpenAI, Gemini and Cloudflare Workers AI are optional providers behind the Worker. Each can be absent; tools must fail with a helpful message and never leak secrets. Workers AI requires an explicit Cloudflare AI binding and may be subject to account usage limits or charges; it is not activated on the live site by this PR.
 - Add provider budgets, request limits and abuse controls before enabling public AI.
-- AI can suggest content or patches but cannot publish, modify theme settings or deploy code autonomously.
+- The admin AI opportunity report analyzes on-site tool usage and failed internal searches; it is not external keyword volume until Search Console or a licensed trend source is connected.
+- AI can suggest tools but must not invent sources or publish untested code. Recommendations are not automatically merged or published; owner review and CI checks are required.
 
 ## Developer and quality integrations
 | Integration | Purpose | Status in this repo |
