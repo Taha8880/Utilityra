@@ -22,8 +22,7 @@ jobs:
         run: npx playwright test tests/e2e/tool-pages.spec.js --project=chromium-desktop --project=chromium-mobile
         env:
           CI: true
-      - name: Smoke test the live Blogger site (manual runs only)
-        if: github.event_name == 'workflow_dispatch'
+      - name: Smoke test the live Blogger site
         run: npx playwright test tests/e2e/site-smoke.spec.js --project=chromium-desktop --project=chromium-mobile
         env:
           CI: true
