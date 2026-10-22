@@ -45,7 +45,7 @@ html[data-theme=dark]{color-scheme:dark;--bg:#0d1222;--surface:#151c30;--ink:#ed
     <main>
       <section class='ur-hero'><div class='ur-wrap ur-hero-grid'><div>
         <span class='ur-kicker'><span class='ur-dot'></span><span data-en='A smarter toolkit for everyday work' data-ar='أدوات أذكى لإنجاز مهامك اليومية'>أدوات أذكى لإنجاز مهامك اليومية</span></span>
-        <h1 data-en-html='Useful tools.<br/><em>Clear answers.</em>' data-ar-html='أدوات مفيدة.<br/><em>نتائج واضحة.</em>'>أدوات مفيدة.<br/><em>نتائج واضحة.</em></h1>
+        <h1 data-en-html='Useful tools.&lt;br/&gt;&lt;em&gt;Clear answers.&lt;/em&gt;' data-ar-html='أدوات مفيدة.&lt;br/&gt;&lt;em&gt;نتائج واضحة.&lt;/em&gt;'>أدوات مفيدة.<br/><em>نتائج واضحة.</em></h1>
         <p data-en='Convert, clean, calculate and validate with practical tools designed to be fast, transparent and privacy-conscious.' data-ar='حوّل البيانات ونظّف النصوص واحسب وتحقق من النتائج بأدوات عملية سريعة وواضحة وتحترم خصوصيتك.'>حوّل البيانات ونظّف النصوص واحسب وتحقق من النتائج بأدوات عملية سريعة وواضحة وتحترم خصوصيتك.</p>
         <form class='ur-search' id='ur-search-form' role='search'><input id='ur-search' type='search' placeholder='ابحث عن أداة، مثل JSON أو كلمة أو نسبة مئوية' aria-label='Search tools'/><button type='submit' data-en='Find a tool' data-ar='ابحث عن أداة'>ابحث عن أداة</button></form>
         <div class='ur-trust'><span data-en='No signup for browser tools' data-ar='لا تحتاج الأدوات المحلية إلى حساب'>لا تحتاج الأدوات المحلية إلى حساب</span><span data-en='Works on mobile' data-ar='يعمل على الهاتف'>يعمل على الهاتف</span><span data-en='Clear error messages' data-ar='رسائل خطأ واضحة'>رسائل خطأ واضحة</span></div>
