@@ -24,6 +24,7 @@ function allowedOrigin(request, env) {
   const allowed = (env.ALLOWED_ORIGIN || "https://utilityra.blogspot.com")
     .split(",").map(value => value.trim()).filter(Boolean);
   if (!requestOrigin) return allowed[0] || "null";
+  if (requestOrigin === new URL(request.url).origin) return requestOrigin;
   return allowed.includes(requestOrigin) ? requestOrigin : null;
 }
 
