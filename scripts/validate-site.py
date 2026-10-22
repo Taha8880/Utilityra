@@ -82,6 +82,17 @@ except Exception as exc:
     fail(f"D1 schema/seed SQL is invalid: {exc}")
 
 theme_text = THEME.read_text(encoding="utf-8")
+for index, script in enumerate(re.findall(r"<script\\b[^>]*>(.*?)</script\\s*>", theme_text, flags=re.I | re.S), 1):
+    script = re.sub(r"^\\s*<!\\[CDATA\\[|\\]\\]>\\s*$", "", script.strip())
+    if not script.strip():
+        continue
+    with tempfile.NamedTemporaryFile("w", suffix=".js", encoding="utf-8", delete=False) as tmp:
+        tmp.write(script)
+        temp_name = tmp.name
+    result = subprocess.run(["node", "--check", temp_name], text=True, capture_output=True)
+    Path(temp_name).unlink(missing_ok=True)
+    if result.returncode:
+        fail(f"JavaScript syntax error in theme script {index}: {result.stderr.strip()}")
 # The main tool-card links must correspond to page titles Blogger derives slugs from.
 card_section = theme_text.split("<div class='ur-tool-grid' id='ur-tool-grid'>", 1)[-1].split("</div></div></section>", 1)[0]
 card_hrefs = re.findall(r"<a class='ur-card-foot' href='(/p/[^']+\.html)'", card_section)
