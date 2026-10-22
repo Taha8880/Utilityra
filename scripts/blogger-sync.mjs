@@ -26,6 +26,7 @@ if (!Array.isArray(manifest.pages) || manifest.pages.length === 0) {
 async function getAccessToken() {
   const response = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
+    signal: AbortSignal.timeout(10000),
     headers: { "content-type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
       client_id: process.env.GOOGLE_OAUTH_CLIENT_ID,
@@ -49,11 +50,12 @@ const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 let lastRequestAt = 0;
 async function apiRequest(url, options = {}) {
   for (let attempt = 0; attempt < 6; attempt += 1) {
-    const gap = 900 - (Date.now() - lastRequestAt);
+    const gap = 1100 - (Date.now() - lastRequestAt);
     if (gap > 0) await delay(gap);
     lastRequestAt = Date.now();
     const response = await fetch(url, {
       ...options,
+      signal: options.signal || AbortSignal.timeout(15000),
       headers: {
         authorization: "Bearer " + accessToken,
         "content-type": "application/json",
@@ -109,6 +111,12 @@ for (const item of manifest.pages) {
     acceptedTitles.some(title => page.title?.trim().toLowerCase() === title.trim().toLowerCase()) ||
     acceptedNormalizedTitles.includes(normalizeTitle(page.title))
   );
+  const normalizeContent = value => String(value || "").replace(/\r\n/g, "\n").trim();
+  if (match && mode === "publish" && match.title?.trim() === item.title.trim()
+      && normalizeContent(match.content) === normalizeContent(content)) {
+    console.log("Skipped unchanged page: " + item.title + " " + (match.url || ""));
+    continue;
+  }
   const body = { title: item.title, content };
   if (!match && mode === "draft") {
     console.log("Dry run: would create " + item.title + "; no Blogger page was changed.");
