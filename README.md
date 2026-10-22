@@ -1,29 +1,33 @@
 # Utilityra — Platform v1 rebuild
 
-Utilityra is being rebuilt as a practical bilingual tools and structured-data platform. This branch is a **staging candidate**; it does not replace the live Blogger theme or publish new pages automatically.
+Utilityra is being rebuilt as a bilingual, practical tools platform for students, office workers, designers and developers. This branch is a **staging candidate**; it does not replace the live Blogger theme or publish pages automatically.
 
 ## Current staging work
-- `blogger-pages/utilityra-theme-v1.xml`: new responsive Arabic/English Blogger theme candidate with search, category filters, light/dark mode, dedicated tool links, and accessibility states.
-- `blogger-pages/`: 12 standalone browser-local tool pages plus About, Privacy, Contact and Disclaimer drafts.
-- `blogger-pages/manifest.json`: pages for the GitHub Actions Blogger sync. Default workflow mode is draft; do not choose publish until each draft and permalink is reviewed.
-- `worker/src/index.js`: secure AI gateway for OpenAI, Gemini and optional Cloudflare Workers AI; read-only D1 collection/search/record endpoints; origin checks and bounded input.
-- `worker/schema.sql` and `worker/seed.sql`: D1 data-hub schema and initial MIME reference records. Seed records and collections intentionally remain private drafts until verified.
-- `tests/worker.test.mjs`, `tests/e2e/tool-pages.spec.js`, and `scripts/validate-site.py`: API unit tests, browser interaction tests, XML/manifest/script checks and isolated SQL validation.
-- `.github/dependabot.yml`: weekly dependency update checks.
+- `blogger-pages/utilityra-theme-v1.xml`: responsive Arabic/English Blogger theme with search, categories, light/dark mode, progressive tool-card loading, accessible GSAP motion and a reduced-motion fallback.
+- `blogger-pages/`: 63 standalone browser-local utility pages plus an AI assistant draft and About, Privacy, Contact and Disclaimer pages. The homepage has 64 cards including the AI assistant.
+- `blogger-pages/manifest.json`: pages for GitHub Actions Blogger sync. The workflow defaults to drafts; never choose publish until the generated page URLs and content are reviewed.
+- `worker/src/index.js`: AI gateway for OpenAI, Gemini and optional Cloudflare Workers AI; read-only D1 endpoints; private admin sessions; privacy-minimized analytics; AI recommendations based on on-site usage and failed searches.
+- `worker/public/admin.html`: Worker-hosted private analytics dashboard, noindex, password protected through server-side secrets and a signed HttpOnly session.
+- `worker/schema.sql` and `worker/seed.sql`: D1 schema and initial MIME reference records. Data collections and seed records stay private until verified.
+- `docs/admin-analytics-setup.md`: exact Cloudflare setup steps, secret names, owner exclusion and privacy notes.
+- `tests/worker.test.mjs`, `tests/e2e/tool-pages.spec.js`, and `scripts/validate-site.py`: API tests, browser interaction tests, theme/page/admin JavaScript checks and isolated SQL validation.
 
 ## Architecture
-- **Blogger**: public pages, content, and search-engine landing pages.
-- **GitHub + Actions**: source control, checks, browser tests, and safe draft sync.
-- **Cloudflare Worker**: optional AI and data API gateway. Provider keys must be configured as Worker secrets; never commit them.
-- **Cloudflare D1**: planned curated data store. The schema is present, but no database has been created or bound by this PR.
-- **Playwright + Lighthouse**: browser and performance/accessibility/SEO checks.
-- **Context7, Strix, ScrapeGraphAI, Scrapling, MCP Agent Reach, GDELT and RSS/Atom**: developer/data integrations with separate setup and safety requirements. Listing them here does not mean the tools are connected or actively ingesting data.
+- **Blogger**: public pages and SEO landing pages.
+- **GitHub + Actions**: source control, automated checks, browser tests and draft sync.
+- **Cloudflare Worker**: AI/data gateway and private `/admin` dashboard. Provider secrets and admin secrets belong in Cloudflare only.
+- **Cloudflare D1**: planned data store. The schema exists, but no live database has been provisioned by this staging work.
+- **GSAP Core**: subtle hero/card entrance motion; the site respects reduced-motion settings and falls back to CSS if the library is unavailable.
+- **Demand discovery**: first-party analytics reports tool usage and failed internal searches. This is not external Google keyword volume; connect a verified Search Console property or licensed trends source before making external demand claims.
+- **Context7, Strix, ScrapeGraphAI, Scrapling, MCP Agent Reach, GDELT and RSS/Atom**: optional developer/data integrations. Listing them does not mean they are connected or running.
 
 ## Safety and launch gates
 1. Keep the live Blogger theme, existing pages, settings and AdSense configuration unchanged during staging.
-2. Do not merge or upload the theme until Actions are green and the theme is manually reviewed on a test copy and Android.
-3. Review all Blogger draft titles and actual generated URLs. Blogger may derive permalinks from titles; do not assume the file name sets the URL.
-4. Create and bind D1 only after confirming account access and usage limits. Keep seed data private until sources and licensing notes are verified.
-5. Configure Cloudflare rate limiting/abuse protection before exposing public AI endpoints.
-6. Never expose provider secrets, arbitrary URL fetching, raw private tool inputs or unreviewed AI-generated code.
-7. Useful pages and technical SEO improve eligibility for discovery but do not guarantee indexing, rankings, traffic or AdSense approval.
+2. Do not upload the theme or publish tool pages until Actions are green and the theme is visually reviewed on a test copy and Android.
+3. Blogger may normalize page permalinks from titles; inspect actual generated URLs before using homepage links.
+4. Create and bind D1 only after confirming account access and usage limits; verify source and license data before making records public.
+5. Set `ADMIN_PASSWORD` and `ADMIN_SESSION_SECRET` as Cloudflare secrets. Never put them in Git or client-side code.
+6. Configure the actual Worker origin once in `window.UTILITYRA_API_BASE`; do not guess a deployment URL.
+7. AI demand reports create suggestions only. Any generated tool must be reviewed and tested before it is merged or published.
+8. No AI can guarantee correct answers to every question. The assistant must avoid fabricated facts and citations, state uncertainty and recommend verification.
+9. Technical SEO improves eligibility for discovery but does not guarantee indexing, ranking, traffic or AdSense approval.
