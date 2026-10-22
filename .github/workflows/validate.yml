@@ -1,4 +1,4 @@
-name: Validate Utilityra starter
+name: Validate Utilityra rebuild
 on:
   push:
     branches: [main]
@@ -13,7 +13,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Check JavaScript syntax
+      - name: Check Worker JavaScript syntax
         run: node --check worker/src/index.js
-      - name: Check page fragments are present
-        run: test -s blogger-pages/word-counter.html && test -s blogger-pages/json-formatter.html && test -s blogger-pages/ai-assistant.html
+      - name: Validate theme XML, tool scripts, and manifest
+        run: python scripts/validate-site.py
+      - name: Check required pages exist
+        run: test -s blogger-pages/word-counter.html && test -s blogger-pages/json-formatter.html && test -s blogger-pages/utilityra-theme-v1.xml
