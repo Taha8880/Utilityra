@@ -15,5 +15,6 @@ binding = "DB"
 database_name = "utilityra-data"
 database_id = "REPLACE_AFTER_CREATING_D1"
 
-[ai]
-binding = "AI"
+# Optional: uncomment only after checking current account limits and pricing.
+# [ai]
+# binding = "AI"
