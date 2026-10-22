@@ -90,11 +90,29 @@ for (const item of manifest.pages) {
   );
   const body = { title: item.title, content };
   if (!match) {
-    // Default is draft to protect the live site; publishing is an explicit workflow input.
-    const url = new URL(`${api}/pages`);
-    if (mode === "draft") url.searchParams.set("isDraft", "true");
-    const created = await apiRequest(url.toString(), { method: "POST", body: JSON.stringify(body) });
-    console.log(`${mode === "draft" ? "Created draft" : "Created page"}: ${created.title} ${created.url || ""}`);
+    // Create using the legacy title first so Blogger generates the already-planned stable slug.
+    // Then rename the page while it is still a draft; only publish when mode explicitly requests it.
+    const createUrl = new URL(api + "/pages");
+    createUrl.searchParams.set("isDraft", "true");
+    const created = await apiRequest(createUrl.toString(), {
+      method: "POST",
+      body: JSON.stringify({ title: item.legacyTitle || item.title, content })
+    });
+    let prepared = created;
+    if (item.legacyTitle) {
+      prepared = await apiRequest(api + "/pages/" + encodeURIComponent(created.id), {
+        method: "PATCH",
+        body: JSON.stringify({ title: item.title, content })
+      });
+    }
+    if (mode === "publish") {
+      prepared = await apiRequest(api + "/pages/" + encodeURIComponent(created.id) + "?publish=true", {
+        method: "PATCH",
+        body: JSON.stringify({ title: item.title, content })
+      });
+    }
+    console.log((mode === "draft" ? "Created draft" : "Created and published") + ": " + prepared.title + " " + (prepared.url || "") + " (legacy slug preserved where applicable)");
+  }
   } else if (mode === "draft") {
     // Do not overwrite an existing published page automatically in draft mode.
     console.log(`Skipped existing page in draft mode: ${item.title} (ID ${match.id})`);
