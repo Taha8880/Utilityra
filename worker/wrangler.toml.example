@@ -1,5 +1,5 @@
 # Example only. Do not deploy until the D1 database is created and its real ID is filled in.
-name = "utilityra-platform-api"
+name = "toolora-platform-api"
 main = "src/index.js"
 compatibility_date = "2026-10-22"
 

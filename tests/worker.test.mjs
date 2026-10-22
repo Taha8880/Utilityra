@@ -192,6 +192,34 @@ test("analytics drops flagged review traffic and stores only minimized event fie
   assert.equal(writes[0].args[2], "/");
 });
 
+
+test("GDELT trends endpoint validates queries and returns normalized source links", async () => {
+  const originalFetch = globalThis.fetch;
+  let requested = "";
+  globalThis.fetch = async input => {
+    requested = String(input);
+    return new Response(JSON.stringify({ articles: [
+      { title: "Example public report", url: "https://news.example/story", domain: "news.example", seendate: "20261022T010000Z", language: "English", sourceCountry: "United States" },
+      { title: "Unsafe link", url: "javascript:alert(1)", domain: "bad.example" }
+    ] }), { status: 200, headers: { "content-type": "application/json" } });
+  };
+  try {
+    const invalid = await worker.fetch(req("/api/trends?q=x"), {});
+    assert.equal(invalid.status, 400);
+    const response = await worker.fetch(req("/api/trends?q=climate%20policy"), {});
+    const body = await response.json();
+    assert.equal(response.status, 200);
+    assert.equal(body.source, "GDELT DOC 2.0");
+    assert.equal(body.count, 1);
+    assert.equal(body.articles[0].url, "https://news.example/story");
+    assert.match(requested, /api\.gdeltproject\.org\/api\/v2\/doc\/doc/);
+    assert.match(requested, /timespan=7d/);
+    assert.equal(response.headers.get("cache-control"), "public, max-age=300, stale-while-revalidate=300");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("unknown routes return JSON 404", async () => {
   const response = await worker.fetch(req("/not-a-route"), {});
   assert.equal(response.status, 404);

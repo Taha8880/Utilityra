@@ -9,7 +9,7 @@ The private dashboard is served at the Worker origin's `/admin`, is not linked f
    - `UTILITYRA_ADMIN_PASSWORD`: a unique password with at least 16 characters.
    - `UTILITYRA_ADMIN_SESSION_SECRET`: a different random secret with at least 32 characters.
    - At least one AI provider key: `UTILITYRA_OPENAI_API_KEY` or `UTILITYRA_GEMINI_API_KEY`. These may have provider usage costs; set usage limits with the provider.
-2. Open Actions → **Deploy Utilityra API and private analytics** → Run workflow. The workflow finds or creates the D1 database, applies the schema and draft seed, writes Worker secrets, and deploys the API. It does not publish Blogger pages or change the live Blogger theme.
+2. Open Actions → **Deploy Toolora API and private analytics** → Run workflow. The workflow finds or creates the D1 database, applies the schema and draft seed, writes Worker secrets, and deploys the API. It does not publish Blogger pages or change the live Blogger theme.
 3. Open the successful run log and Cloudflare Workers & Pages to copy the real Worker URL. Do not guess or use a placeholder URL.
 4. The Blogger theme must set `window.UTILITYRA_API_BASE` to that exact Worker URL, then the new theme must be installed in Blogger. This is a one-time platform integration step; Blogger's public API does not provide a supported theme-upload endpoint. Export a theme backup first.
 

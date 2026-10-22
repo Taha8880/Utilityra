@@ -1,4 +1,4 @@
-# Utilityra Platform v1 — implementation blueprint
+# Toolora Platform v1 — implementation blueprint
 
 ## Product direction
 Build a useful tools-and-data platform, not a collection of thin keyword pages. The current staging catalog has 69 standalone utility pages spanning study, office, developer, design, time, calculations and image editing, PDF merging/splitting and file metadata inspection; keep tools distinct and tested rather than padding the count. Every public tool should have a stable Blogger Page URL, a unique title and description, plain-language instructions, error states, and internal links to related tools.
@@ -31,12 +31,12 @@ Build a useful tools-and-data platform, not a collection of thin keyword pages. 
 | GitHub + Actions | Version control, validation and draft sync | Connected workflow files exist; verify every run |
 | Playwright | Desktop/mobile interaction tests | CI scaffold exists; expand to actual tool flows |
 | Lighthouse | Performance/accessibility/SEO audit | CI scaffold exists |
-| Context7 | Version-specific developer documentation via MCP | Developer-time optional integration; not a public-site dependency |
-| Strix | Authorized security review of staging | Not run; do not scan production without approval |
-| ScrapeGraphAI | Structured extraction when a source has no usable API/feed | Optional runner/API; may incur usage costs |
-| Scrapling | Crawl/parse approved public sources | Optional Python runner; not suitable inside a Cloudflare Worker |
-| MCP Agent Reach | Agent access to supported search/RSS/GitHub sources | Optional developer environment integration; verify upstream package and permissions |
-| GDELT | News/event discovery | Planned server-side adapter; source attribution and validation required |
+| Context7 | Version-specific developer documentation via MCP | Developer-time documentation aid; not a public-site dependency and not a live visitor integration |
+| Strix | Authorized security review of staging | Not connected or run in this repo; use only against authorized staging, with existing tests as the immediate baseline |
+| ScrapeGraphAI | Structured extraction when a source has no usable API/feed | Not connected; prefer official APIs and RSS first, then add only with a configured provider and cost limits |
+| Scrapling | Crawl/parse approved public sources | Not connected to the public Worker; use a separate allowlisted Python runner only where site terms and robots rules permit |
+| MCP Agent Reach | Agent access to supported search/RSS/GitHub sources | Not connected to the visitor-facing app; use GitHub Actions and documented APIs until the upstream MCP server is configured and permission-reviewed |
+| GDELT | Public news/event discovery | Implemented read-only `/api/trends?q=...` adapter with HTTPS link filtering, a 7-day window, 10-result cap and 5-minute caching |
 | RSS/Atom | Efficient publisher feed ingestion | Planned; allowlist and caching required |
 | OpenAI / Gemini / Workers AI | AI assistance and transformations | Gateway code supports these providers; keys/bindings/configuration must be verified separately |
 | Dependabot / npm audit | Dependency risk alerts | Recommended CI hardening |
@@ -54,7 +54,7 @@ Build a useful tools-and-data platform, not a collection of thin keyword pages. 
 
 The named integrations are not all appropriate as runtime dependencies for a student/office/developer tools website. Do not claim a connector is active unless a working authenticated test proves it.
 
-| Requested integration | Decision for Utilityra v1 | Practical replacement / use |
+| Requested integration | Decision for Toolora v1 | Practical replacement / use |
 |---|---|---|
 | Context7 | Optional developer-time documentation lookup; not a public-site feature | Prefer official provider documentation and versioned links in the build workflow. No Context7 connection is configured in this repository. |
 | Strix | Not connected or run; never scan production without authorization | CI syntax/unit/browser tests first; add a scoped security scanner and dependency audit before release. |
