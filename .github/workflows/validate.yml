@@ -1,4 +1,4 @@
-name: Validate Flarivo rebuild
+name: Validate Utilityra rebuild
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
