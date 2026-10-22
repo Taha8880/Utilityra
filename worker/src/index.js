@@ -520,6 +520,20 @@ export default {
       }
     }
 
+    if (request.method === "GET" && env.ASSETS) {
+      const assetResponse = await env.ASSETS.fetch(request);
+      if (assetResponse.status !== 404) {
+        const headers = new Headers(assetResponse.headers);
+        headers.set("x-content-type-options", "nosniff");
+        headers.set("referrer-policy", "strict-origin-when-cross-origin");
+        headers.set("permissions-policy", "camera=(), microphone=(), geolocation=()");
+        if (url.pathname === "/" || url.pathname.endsWith(".html")) {
+          headers.set("cache-control", "public, max-age=300, stale-while-revalidate=3600");
+          headers.set("content-security-policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'");
+        }
+        return new Response(assetResponse.body, { status: assetResponse.status, statusText: assetResponse.statusText, headers });
+      }
+    }
     if (request.method !== "POST" || url.pathname !== "/api/ai") return json({ error: "NOT_FOUND" }, 404, origin);
     const maxChars = Math.min(12000, Math.max(500, Number(env.MAX_MESSAGE_CHARS) || DEFAULT_MAX_MESSAGE_CHARS));
     let body;
