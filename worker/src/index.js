@@ -334,6 +334,13 @@ async function searchGdelt(url) {
   const raw = (url.searchParams.get("q") || "").trim();
   const query = raw.replace(/[^\p{L}\p{N}\s"'()-]/gu, " ").replace(/\s+/g, " ").slice(0, 120).trim();
   if (query.length < 2) return { error: "QUERY_TOO_SHORT" };
+  const cacheKey = new Request(new URL("/__toolora-cache/gdelt?q=" + encodeURIComponent(query), url.origin).toString(), { method: "GET" });
+  if (typeof caches !== "undefined" && caches.default) {
+    try {
+      const cached = await caches.default.match(cacheKey);
+      if (cached) return await cached.json();
+    } catch {}
+  }
   const endpoint = new URL("https://api.gdeltproject.org/api/v2/doc/doc");
   endpoint.searchParams.set("query", query);
   endpoint.searchParams.set("mode", "ArtList");
@@ -360,7 +367,15 @@ async function searchGdelt(url) {
       sourceCountry: String(item.sourceCountry || "").slice(0, 80)
     };
   }).filter(item => item && item.title);
-  return { source: "GDELT DOC 2.0", query, fetchedAt: new Date().toISOString(), count: articles.length, articles };
+  const result = { source: "GDELT DOC 2.0", query, fetchedAt: new Date().toISOString(), count: articles.length, articles };
+  if (typeof caches !== "undefined" && caches.default) {
+    try {
+      await caches.default.put(cacheKey, new Response(JSON.stringify(result), {
+        headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=300" }
+      }));
+    } catch {}
+  }
+  return result;
 }
 
 function errorStatus(error) {
