@@ -185,7 +185,7 @@ html.motion-ready .to-header .to-toolswitch,html.motion-ready .to-header .to-bur
 .ur-secondary{border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:10px 14px;background:rgba(255,255,255,.045);color:#e8eaf4;font-weight:750}
 .ur-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .ur-note{font-size:11px!important;background:rgba(141,240,223,.06);border:1px solid rgba(141,240,223,.12);border-radius:12px;padding:12px;color:#c5e8e4!important}
-.ur-tool [role=status]{min-height:1.5em;font-size:12px}
+.ur-tool [role=status]{min-height:1.5em;font-size:12px}.ur-tool #uai-sources{padding-inline-start:22px}.ur-tool #uai-sources a{color:var(--teal);text-decoration:underline;text-underline-offset:3px;overflow-wrap:anywhere}
 .ur-coming{display:inline-block;margin-top:15px;color:#8f97aa;font-size:11px;font-weight:800}
 .blog-posts{max-width:900px;margin:35px auto;padding:0 20px}
 .post-outer,.post{border:1px solid rgba(255,255,255,.1);border-radius:22px;padding:clamp(20px,4vw,38px);margin-bottom:18px;background:linear-gradient(145deg,#141622,#0f1019);color:#f1f2fa}
@@ -400,6 +400,7 @@ html[data-theme=light] .post-body{color:#454b60}
     language=lang==='en'?'en':'ar';root.lang=language;root.dir=language==='ar'?'rtl':'ltr';
     document.querySelectorAll('[data-en],[data-ar]').forEach(function(el){const value=el.getAttribute('data-'+language);if(value!==null){if(el.hasAttribute('data-en-html')||el.hasAttribute('data-ar-html'))return;el.textContent=value;}});
     document.querySelectorAll('[data-en-html],[data-ar-html]').forEach(function(el){const value=el.getAttribute('data-'+language+'-html');if(value!==null)el.innerHTML=value;});
+    document.querySelectorAll('[data-en-placeholder],[data-ar-placeholder]').forEach(function(el){const value=el.getAttribute('data-'+language+'-placeholder');if(value!==null)el.placeholder=value;});
     const search=document.getElementById('to-search');if(search)search.placeholder=language==='ar'?'ابحث عن أداة: PDF، كلمات، درجات، JSON…':'Search tools: PDF, text, grades, JSON…';
     const lb=document.getElementById('ur-language');if(lb)lb.textContent=language==='ar'?'EN':'عربي';
     try{localStorage.setItem('toolora-language',language);}catch(e){}
