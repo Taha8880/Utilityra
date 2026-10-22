@@ -5,6 +5,8 @@ const path = require('node:path');
 const pagesDir = path.join(__dirname, '..', '..', 'blogger-pages');
 async function loadTool(page, filename) {
   const html = fs.readFileSync(path.join(pagesDir, filename), 'utf8');
+  await page.route('https://utilityra.test/**', route => route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><html><head><meta charset="utf-8"><title>Tool test</title></head><body></body></html>' }));
+  await page.goto('https://utilityra.test/');
   await page.setContent(html, { waitUntil: 'domcontentloaded' });
 }
 
