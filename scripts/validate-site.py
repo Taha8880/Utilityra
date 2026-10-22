@@ -97,8 +97,10 @@ for index, script in enumerate(re.findall(r"<script\b[^>]*>(.*?)</script\s*>", a
         fail(f"JavaScript syntax error in admin dashboard script {index}: {result.stderr.strip()}")
 
 theme_text = THEME.read_text(encoding="utf-8")
-for index, script in enumerate(re.findall(r"<script\b[^>]*>(.*?)</script\s*>", theme_text, flags=re.I | re.S), 1):
-    script = re.sub(r"^\s*<!\[CDATA\[|\]\]>\s*$", "", script.strip())
+for index, match in enumerate(re.finditer(r"<script\b([^>]*)>(.*?)</script\s*>", theme_text, flags=re.I | re.S), 1):
+    if re.search(r"""type=['"]application/ld\+json['"]""", match.group(1), flags=re.I):
+        continue
+    script = re.sub(r"^\s*<!\[CDATA\[|\]\]>\s*$", "", match.group(2).strip())
     if not script.strip():
         continue
     with tempfile.NamedTemporaryFile("w", suffix=".js", encoding="utf-8", delete=False) as tmp:
