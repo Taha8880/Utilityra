@@ -131,6 +131,66 @@ test("Workers AI fails safely when the optional binding is absent", async () => 
   assert.equal((await response.json()).error, "PROVIDER_NOT_CONFIGURED");
 });
 
+
+test("admin statistics are not public without a signed session", async () => {
+  const response = await worker.fetch(req("/api/admin/stats"), {});
+  assert.equal(response.status, 401);
+  assert.equal((await response.json()).error, "UNAUTHORIZED");
+});
+
+test("admin login issues an HttpOnly Secure session and session check accepts it", async () => {
+  const statements = [];
+  const DB = {
+    prepare(sql) {
+      const statement = { sql, args: [],
+        bind(...args) { this.args = args; return this; },
+        first: async () => null,
+        run: async () => { statements.push({ sql: this.sql, args: this.args }); return { success: true }; },
+        all: async () => ({ results: [] })
+      };
+      return statement;
+    }
+  };
+  const env = { DB, ADMIN_PASSWORD: "test-only-admin-password", ADMIN_SESSION_SECRET: "test-only-session-secret-which-is-long" };
+  const login = await worker.fetch(req("/api/admin/login", {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ password: env.ADMIN_PASSWORD })
+  }), env);
+  assert.equal(login.status, 200);
+  const cookie = login.headers.get("set-cookie");
+  assert.match(cookie, /HttpOnly/);
+  assert.match(cookie, /Secure/);
+  assert.match(cookie, /SameSite=Strict/);
+  const token = cookie.split(";")[0];
+  const session = await worker.fetch(req("/api/admin/session", { headers: { Cookie: token } }), env);
+  assert.equal(session.status, 200);
+  assert.equal((await session.json()).authenticated, true);
+  assert.ok(statements.some(s => s.sql.includes("DELETE FROM admin_login_attempts")));
+});
+
+test("analytics drops flagged review traffic and stores only minimized event fields", async () => {
+  const writes = [];
+  const DB = { prepare(sql) { return { sql, args: [], bind(...args) { this.args = args; return this; }, run: async function(){ writes.push({sql:this.sql,args:this.args}); return {success:true}; } }; } };
+  const review = await worker.fetch(req("/api/analytics/event", {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ visitorKey: "visitor-session-123456", eventType: "page_view", path: "/", reviewMode: true })
+  }), { DB });
+  assert.equal(review.status, 202);
+  assert.equal((await review.json()).ignored, true);
+  assert.equal(writes.length, 0);
+  const response = await worker.fetch(req("/api/analytics/event", {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ visitorKey: "visitor-session-123456", eventType: "search_miss", path: "/?q=x", searchTerm: "Need help at user@example.com 123-456-7890", referrer: "https://search.example/path" })
+  }), { DB });
+  assert.equal(response.status, 202);
+  assert.equal(writes.length, 1);
+  assert.equal(writes[0].args[0], "visitor-session-123456");
+  assert.equal(writes[0].args[1], "search_miss");
+  assert.match(writes[0].args[4], /\[email\]/);
+  assert.match(writes[0].args[4], /\[number\]/);
+  assert.equal(writes[0].args[2], "/");
+});
+
 test("unknown routes return JSON 404", async () => {
   const response = await worker.fetch(req("/not-a-route"), {});
   assert.equal(response.status, 404);
