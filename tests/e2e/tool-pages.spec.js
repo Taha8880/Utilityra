@@ -122,15 +122,15 @@ test('number base converter returns binary, octal and hex', async ({ page }) => 
   await loadTool(page, 'number-base-converter.html');
   await page.locator('#number-base-converter-input').fill('255');
   await page.locator('#number-base-converter-run').click();
-  await expect(page.locator('#number-base-converter-output')).toContainText('Binary: 11111111');
-  await expect(page.locator('#number-base-converter-output')).toContainText('Hex: 0xFF');
+  await expect(page.locator('#number-base-converter-output')).toHaveValue(/Binary: 11111111/);
+  await expect(page.locator('#number-base-converter-output')).toHaveValue(/Hex: 0xFF/);
 });
 
 test('JSON to XML converter escapes text and converts object fields', async ({ page }) => {
   await loadTool(page, 'json-to-xml.html');
   await page.locator('#json-to-xml-input').fill('{"name":"<test>","active":true}');
   await page.locator('#json-to-xml-run').click();
-  await expect(page.locator('#json-to-xml-output')).toContainText('&lt;test&gt;');
+  await expect(page.locator('#json-to-xml-output')).toHaveValue(/&lt;test&gt;/);
 });
 
 test('SHA-256 tool returns the standard digest for abc', async ({ page }) => {
@@ -144,14 +144,14 @@ test('color converter handles short HEX notation', async ({ page }) => {
   await loadTool(page, 'color-converter.html');
   await page.locator('#color-converter-input').fill('#fff');
   await page.locator('#color-converter-run').click();
-  await expect(page.locator('#color-converter-output')).toContainText('RGB rgb(255, 255, 255)');
+  await expect(page.locator('#color-converter-output')).toHaveValue(/RGB rgb\\(255, 255, 255\\)/);
 });
 
 test('unit converter converts kilometres to miles', async ({ page }) => {
   await loadTool(page, 'unit-converter.html');
   await page.locator('#unit-converter-input').fill('5 km to mi');
   await page.locator('#unit-converter-run').click();
-  await expect(page.locator('#unit-converter-output')).toContainText('3.10685596');
+  await expect(page.locator('#unit-converter-output')).toHaveValue(/3.10685596/);
 });
 
 test('image filter tool accepts a local image and exports a PNG', async ({ page }) => {
