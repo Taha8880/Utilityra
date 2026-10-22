@@ -220,6 +220,33 @@ test("GDELT trends endpoint validates queries and returns normalized source link
   }
 });
 
+
+test("current AI questions receive recent GDELT sources and return citations metadata", async () => {
+  const originalFetch = globalThis.fetch;
+  let prompt = "";
+  globalThis.fetch = async input => {
+    assert.match(String(input), /api\.gdeltproject\.org/);
+    return new Response(JSON.stringify({ articles: [
+      { title: "Recent public report", url: "https://news.example/current", domain: "news.example", seendate: "20261022T010000Z", language: "English", sourceCountry: "United States" }
+    ] }), { status: 200, headers: { "content-type": "application/json" } });
+  };
+  const AI = { run: async (_model, options) => { prompt = options.messages[1].content; return { response: "Here is a source-grounded summary: https://news.example/current" }; } };
+  try {
+    const response = await worker.fetch(req("/api/ai", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ provider: "workers-ai", message: "What is the latest news about climate policy?" })
+    }), { AI });
+    const body = await response.json();
+    assert.equal(response.status, 200);
+    assert.equal(body.sources.length, 1);
+    assert.equal(body.sources[0].url, "https://news.example/current");
+    assert.match(prompt, /GDELT/);
+    assert.match(prompt, /https:\/\/news\.example\/current/);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("unknown routes return JSON 404", async () => {
   const response = await worker.fetch(req("/not-a-route"), {});
   assert.equal(response.status, 404);
