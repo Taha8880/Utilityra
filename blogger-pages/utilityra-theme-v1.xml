@@ -431,8 +431,8 @@ html[data-theme=light] .post-body{color:#454b60}
     if(grid)grid.setAttribute('aria-label',language==='ar'?'نتائج الأدوات':'Tool results');
   }
   if(search)search.addEventListener('input',function(){query=search.value.trim();filterTools();});
-  if(form)form.addEventListener('submit',function(e){e.preventDefault();query=search?search.value.trim():'';filterTools();if(query.length>=2){const visible=cards.some(function(card){return !card.hidden;});track(visible?'tool_search':'search_miss',{searchTerm:query});}document.getElementById('tools')?.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});});
-  if(grid)grid.addEventListener('click',function(e){const link=e.target.closest('.ur-card-foot');if(!link)return;const card=link.closest('.ur-card');if(card)track('tool_open',{toolId:card.dataset.id||'',toolCategory:card.dataset.cat||''});});
+  if(form)form.addEventListener('submit',function(e){e.preventDefault();query=search?search.value.trim():'';filterTools();if(query.length>=2){const visible=cards.some(function(card){return !card.hidden;});track(visible?'search':'search_miss',{searchTerm:query});}document.getElementById('tools')?.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});});
+  if(grid)grid.addEventListener('click',function(e){const link=e.target.closest('.ur-card-foot');if(!link)return;const card=link.closest('.ur-card');if(card)track('tool_open',{toolKey:card.dataset.id||''});});
   if(grid){grid.setAttribute('aria-label','Tool catalog');cards.forEach(function(card){card.classList.add('to-reveal');});}
   if(!reduce){
     root.classList.add('motion-ready');
