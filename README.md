@@ -1,6 +1,6 @@
-# Utilityra — Platform v1 rebuild
+# Toolora — Platform v1 rebuild
 
-Utilityra is being rebuilt as a bilingual, practical tools platform for students, office workers, designers and developers. This branch is a **staging candidate**; it does not replace the live Blogger theme or publish pages automatically.
+Toolora is being rebuilt as a bilingual, practical tools platform for students, office workers, designers and developers. This branch is a **staging candidate**; it does not replace the live Blogger theme or publish pages automatically.
 
 ## Current staging work
 - `blogger-pages/utilityra-theme-v1.xml`: responsive Arabic/English Blogger theme with search, categories, light/dark mode, progressive tool-card loading, accessible GSAP motion and a reduced-motion fallback.

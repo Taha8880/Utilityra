@@ -81,7 +81,8 @@ for (const item of manifest.pages) {
   if (content.includes("REPLACE-WITH-YOUR-WORKER")) {
     console.warn(`WARNING: ${item.file} still contains an unconfigured Worker URL.`);
   }
-  const match = existing.find(page => page.title?.trim().toLowerCase() === item.title.trim().toLowerCase());
+  const acceptedTitles = [item.title, item.legacyTitle].filter(Boolean).map(title => title.trim().toLowerCase());
+  const match = existing.find(page => acceptedTitles.includes(page.title?.trim().toLowerCase()));
   const body = { title: item.title, content };
   if (!match) {
     // Default is draft to protect the live site; publishing is an explicit workflow input.

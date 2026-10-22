@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate Utilityra theme XML, manifest consistency, and embedded JavaScript syntax."""
+"""Validate Toolora theme XML, manifest consistency, and embedded JavaScript syntax."""
 import json
 import re
 import subprocess
@@ -115,7 +115,7 @@ def slug(title):
     value = title.casefold().replace("|", " ")
     value = re.sub(r"[^a-z0-9]+", "-", value).strip("-")
     return "/p/" + value + ".html"
-expected = {slug(page["title"]) for page in pages if page["file"] not in {"about.html", "privacy-policy.html", "contact.html", "disclaimer.html"}}
+expected = {slug(page.get("legacyTitle") or page["title"]) for page in pages if page["file"] not in {"about.html", "privacy-policy.html", "contact.html", "disclaimer.html"}}
 missing = sorted(set(card_hrefs) - expected)
 if missing:
     fail("Tool card URLs have no matching manifest title: " + ", ".join(missing))
