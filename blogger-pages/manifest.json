@@ -1,15 +1,64 @@
 {
   "pages": [
-    {"title":"Word Counter | Utilityra","file":"word-counter.html"},
-    {"title":"JSON Formatter and Validator | Utilityra","file":"json-formatter.html"},
-    {"title":"CSV to JSON Converter | Utilityra","file":"csv-json-converter.html"},
-    {"title":"Text Cleaner and Formatter | Utilityra","file":"text-cleaner.html"},
-    {"title":"URL Encoder and Decoder | Utilityra","file":"url-encoder-decoder.html"},
-    {"title":"Base64 Encoder and Decoder | Utilityra","file":"base64-encoder-decoder.html"},
-    {"title":"UUID v4 Generator | Utilityra","file":"uuid-generator.html"},
-    {"title":"Secure Password Generator | Utilityra","file":"password-generator.html"},
-    {"title":"Unix Timestamp Converter | Utilityra","file":"timestamp-converter.html"},
-    {"title":"Percentage and Discount Calculator | Utilityra","file":"percentage-calculator.html"},
-    {"title":"HTML Entities Encoder and Decoder | Utilityra","file":"html-entities.html"}
+    {
+      "title": "Word Counter | Utilityra",
+      "file": "word-counter.html"
+    },
+    {
+      "title": "JSON Formatter and Validator | Utilityra",
+      "file": "json-formatter.html"
+    },
+    {
+      "title": "CSV to JSON Converter | Utilityra",
+      "file": "csv-json-converter.html"
+    },
+    {
+      "title": "Text Cleaner and Formatter | Utilityra",
+      "file": "text-cleaner.html"
+    },
+    {
+      "title": "URL Encoder and Decoder | Utilityra",
+      "file": "url-encoder-decoder.html"
+    },
+    {
+      "title": "Base64 Encoder and Decoder | Utilityra",
+      "file": "base64-encoder-decoder.html"
+    },
+    {
+      "title": "UUID v4 Generator | Utilityra",
+      "file": "uuid-generator.html"
+    },
+    {
+      "title": "Secure Password Generator | Utilityra",
+      "file": "password-generator.html"
+    },
+    {
+      "title": "Unix Timestamp Converter | Utilityra",
+      "file": "timestamp-converter.html"
+    },
+    {
+      "title": "Percentage and Discount Calculator | Utilityra",
+      "file": "percentage-calculator.html"
+    },
+    {
+      "title": "HTML Entities Encoder and Decoder | Utilityra",
+      "file": "html-entities.html"
+    },
+    {
+      "title": "About",
+      "file": "about.html"
+    },
+    {
+      "title": "Privacy Policy",
+      "file": "privacy-policy.html"
+    },
+    {
+      "title": "Contact",
+      "file": "contact.html"
+    },
+    {
+      "title": "Disclaimer",
+      "file": "disclaimer.html"
+    }
   ]
 }
