@@ -98,4 +98,5 @@ if len(card_hrefs) < 10:
 
 print(f"PASS: Blogger theme XML is well-formed.")
 print(f"PASS: {len(pages)} manifest pages exist and contain syntactically valid JavaScript.")
-print(f"PASS: {len(card_hrefs)} homepage tool-card links map to manifest page titles.")\nprint(f"PASS: D1 schema and seed SQL execute; {seed_count} records remain private drafts.")
+print(f"PASS: {len(card_hrefs)} homepage tool-card links map to manifest page titles.")
+print(f"PASS: D1 schema and seed SQL execute; {seed_count} records remain private drafts.")
