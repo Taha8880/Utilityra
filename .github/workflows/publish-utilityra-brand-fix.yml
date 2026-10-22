@@ -4,8 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - "blogger-pages/*.html"
-      - "blogger-pages/manifest.json"
+      - "blogger-pages/**"
       - "scripts/blogger-sync.mjs"
 
 concurrency:
