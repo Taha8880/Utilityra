@@ -18,3 +18,8 @@ database_id = "REPLACE_AFTER_CREATING_D1"
 # Optional: uncomment only after checking current account limits and pricing.
 # [ai]
 # binding = "AI"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+run_worker_first = true
