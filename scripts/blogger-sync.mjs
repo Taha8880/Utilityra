@@ -77,12 +77,17 @@ do {
 for (const item of manifest.pages) {
   if (!item.title || !item.file) throw new Error("Every page needs title and file in manifest.json");
   const filename = path.join(root, "blogger-pages", item.file);
-  const content = await fs.readFile(filename, "utf8");
+  const content = (await fs.readFile(filename, "utf8")).replaceAll("Utilityra", "Toolora");
   if (content.includes("REPLACE-WITH-YOUR-WORKER")) {
     console.warn(`WARNING: ${item.file} still contains an unconfigured Worker URL.`);
   }
-  const acceptedTitles = [item.title, item.legacyTitle].filter(Boolean).map(title => title.trim().toLowerCase());
-  const match = existing.find(page => acceptedTitles.includes(page.title?.trim().toLowerCase()));
+  const acceptedTitles = [item.title, item.legacyTitle].filter(Boolean);
+  const normalizeTitle = title => String(title || "").replace(/\s*\|\s*(Toolora|Utilityra)$/i, "").trim().toLowerCase();
+  const acceptedNormalizedTitles = acceptedTitles.map(normalizeTitle);
+  const match = existing.find(page =>
+    acceptedTitles.some(title => page.title?.trim().toLowerCase() === title.trim().toLowerCase()) ||
+    acceptedNormalizedTitles.includes(normalizeTitle(page.title))
+  );
   const body = { title: item.title, content };
   if (!match) {
     // Default is draft to protect the live site; publishing is an explicit workflow input.
