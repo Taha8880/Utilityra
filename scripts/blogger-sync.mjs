@@ -98,7 +98,7 @@ const uniqueExisting = Array.from(new Map(existing.filter(page => page.id).map(p
 for (const item of manifest.pages) {
   if (!item.title || !item.file) throw new Error("Every page needs title and file in manifest.json");
   const filename = path.join(root, "blogger-pages", item.file);
-  const content = (await fs.readFile(filename, "utf8")).replaceAll("Utilityra", "Flarivo").replaceAll("Toolora", "Flarivo");
+  const content = (await fs.readFile(filename, "utf8"));
   if (content.includes("REPLACE-WITH-YOUR-WORKER")) {
     console.warn(`WARNING: ${item.file} still contains an unconfigured Worker URL.`);
   }
