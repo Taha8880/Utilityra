@@ -144,7 +144,7 @@ html[data-theme=dark]{color-scheme:dark;--bg:#0d1222;--surface:#151c30;--ink:#ed
   <script src='https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js'></script>
   <script><![CDATA[
 (function(){
-  const $=(s,r=document)=>r.querySelector(s), $=(s,r=document)=>Array.from(r.querySelectorAll(s));
+  const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
   const reviewParams=new URLSearchParams(location.search);
   const userAgent=navigator.userAgent||'';
   let ownerExcluded=false;
