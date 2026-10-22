@@ -44,6 +44,29 @@
 @media(max-width:380px){.brand{font-size:18px}.brand-mark{width:32px;height:32px}.hero h1{font-size:36px}.ur-tool-grid{gap:7px}.ur-card{padding:10px}.ur-card h3{font-size:11px}.ur-card p{font-size:9px}.nav-actions{gap:5px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}.anim .reveal,.anim.go .hero-copy .eyebrow,.anim.go .hero h1 .line,.anim.go .art,.anim.go .btn-primary,.anim.go .btn-ghost{opacity:1;transform:none;clip-path:none;animation:none!important}.core,.orbit,.art-glow,.glass-card{animation:none!important}}
 
+
+/* Utilityra layout safety patch: prevent Arabic/English text collisions and horizontal overflow. */
+html{max-width:100%;overflow-x:hidden}
+body{max-width:100%;overflow-x:hidden;overflow-wrap:anywhere}
+.wrap{min-width:0}
+.brand,.brand-word,.nav-links a,.menu a,.nav-actions,.btn{min-width:0}
+.brand-word{white-space:nowrap;display:inline-block;line-height:1.25;letter-spacing:-.035em}
+.hero h1,.hero h1 .line,.hero-lede,.section-head h2,.section-head p,.ur-card h3,.ur-card p,.footer p,.footer-links a,.page-shell h1,.page-shell h2,.page-shell .post-body,.page-shell .widget-content{overflow-wrap:anywhere;word-break:normal;hyphens:auto}
+.hero h1{line-height:1.2;letter-spacing:clamp(-2px,-.04em,-.5px)}
+.hero h1 .line{overflow:visible;padding-block:.04em}
+.nav{flex-wrap:wrap}
+.nav-links{min-width:0}
+.nav-actions{flex-shrink:0}
+.ur-tool-grid{align-items:stretch}
+.ur-card{height:100%;min-width:0}
+.ur-card h3{line-height:1.55}
+.ur-card p{line-height:1.9}
+.page-shell .Blog,.page-shell .post,.page-shell .post-body,.page-shell .widget-content{box-sizing:border-box;min-width:0;max-width:100%}
+.page-shell pre,.page-shell code,.page-shell textarea,.page-shell input,.page-shell select{max-width:100%;box-sizing:border-box}
+.page-shell pre,.page-shell code{white-space:pre-wrap;overflow-wrap:anywhere}
+.footer-inner,.footer-bottom{min-width:0;flex-wrap:wrap}
+@media(max-width:760px){.nav{gap:10px}.brand{font-size:20px}.nav-actions{margin-inline-start:auto}.hero h1{letter-spacing:-1px;line-height:1.22}.hero h1 .line{overflow:visible}.section-head h2{line-height:1.3}.footer-bottom{gap:8px}}
+
 ]]></b:skin>
 </head>
 <body>
