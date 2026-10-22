@@ -61,20 +61,24 @@
       "legacyTitle": "Image Compressor and Resizer | Utilityra"
     },
     {
-      "title": "About",
-      "file": "about.html"
+      "title": "About | Toolora",
+      "file": "about.html",
+      "legacyTitle": "About"
     },
     {
-      "title": "Privacy Policy",
-      "file": "privacy-policy.html"
+      "title": "Privacy Policy | Toolora",
+      "file": "privacy-policy.html",
+      "legacyTitle": "Privacy Policy"
     },
     {
-      "title": "Contact",
-      "file": "contact.html"
+      "title": "Contact | Toolora",
+      "file": "contact.html",
+      "legacyTitle": "Contact"
     },
     {
-      "title": "Disclaimer",
-      "file": "disclaimer.html"
+      "title": "Disclaimer | Toolora",
+      "file": "disclaimer.html",
+      "legacyTitle": "Disclaimer"
     },
     {
       "title": "Text Case Converter | Toolora",
