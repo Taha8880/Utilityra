@@ -22,6 +22,8 @@
   <b:include data='blog' name='all-head-content'/>
   <script async='async' src='https://www.googletagmanager.com/gtag/js?id=G-RVP9Q52085'></script>
   <script><![CDATA[
+    // Set this one value to the deployed Worker origin after setup; keep blank while staging.
+    window.UTILITYRA_API_BASE=window.UTILITYRA_API_BASE||'';
     window.dataLayer=window.dataLayer||[];
     function gtag(){window.dataLayer.push(arguments);}
     (function(){
