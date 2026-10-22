@@ -2,11 +2,11 @@
   "name": "toolora-platform",
   "version": "0.2.0",
   "private": true,
-  "description": "Utilityra website validation and browser tests",
+  "description": "Toolora website validation, privacy-aware analytics and browser tests",
   "scripts": {
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:syntax": "node --check worker/src/index.js",
+    "test:syntax": "node --check worker/src/index.js && node --check scripts/blogger-sync.mjs",
     "test:site": "python scripts/validate-site.py",
     "test": "npm run test:site && npm run test:syntax && npm run test:worker",
     "test:worker": "node --test tests/worker.test.mjs"
