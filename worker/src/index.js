@@ -520,6 +520,23 @@ export default {
       }
     }
 
+    if (request.method === "GET" && env.ASSETS && (
+      /^\/tools\/[a-z0-9-]+\/?$/.test(url.pathname) ||
+      ["/about", "/privacy", "/contact", "/terms"].includes(url.pathname)
+    )) {
+      const homeUrl = new URL(request.url);
+      homeUrl.pathname = "/index.html";
+      const appResponse = await env.ASSETS.fetch(new Request(homeUrl, request));
+      if (appResponse.ok) {
+        const headers = new Headers(appResponse.headers);
+        headers.set("cache-control", "public, max-age=120, stale-while-revalidate=600");
+        headers.set("x-content-type-options", "nosniff");
+        headers.set("referrer-policy", "strict-origin-when-cross-origin");
+        headers.set("content-security-policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'");
+        return new Response(appResponse.body, { status: 200, headers });
+      }
+    }
+
     if (request.method === "GET" && env.ASSETS) {
       const assetResponse = await env.ASSETS.fetch(request);
       if (assetResponse.status !== 404) {
