@@ -267,6 +267,10 @@
     {
       "title": "Image to Base64 Data URI | Utilityra",
       "file": "image-to-data-uri.html"
+    },
+    {
+      "title": "AI Assistant | Utilityra",
+      "file": "ai-assistant.html"
     }
   ]
 }
