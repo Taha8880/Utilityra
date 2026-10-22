@@ -4,7 +4,7 @@ Utilityra is being rebuilt as a practical bilingual tools and structured-data pl
 
 ## Current staging work
 - `blogger-pages/utilityra-theme-v1.xml`: new responsive Arabic/English Blogger theme candidate with search, category filters, light/dark mode, dedicated tool links, and accessibility states.
-- `blogger-pages/`: 11 standalone browser-local tool pages plus About, Privacy, Contact and Disclaimer drafts.
+- `blogger-pages/`: 12 standalone browser-local tool pages plus About, Privacy, Contact and Disclaimer drafts.
 - `blogger-pages/manifest.json`: pages for the GitHub Actions Blogger sync. Default workflow mode is draft; do not choose publish until each draft and permalink is reviewed.
 - `worker/src/index.js`: secure AI gateway for OpenAI, Gemini and optional Cloudflare Workers AI; read-only D1 collection/search/record endpoints; origin checks and bounded input.
 - `worker/schema.sql` and `worker/seed.sql`: D1 data-hub schema and initial MIME reference records. Seed records and collections intentionally remain private drafts until verified.
