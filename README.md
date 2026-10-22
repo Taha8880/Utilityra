@@ -4,7 +4,7 @@ Utilityra is being rebuilt as a bilingual, practical tools platform for students
 
 ## Current staging work
 - `blogger-pages/utilityra-theme-v1.xml`: responsive Arabic/English Blogger theme with search, categories, light/dark mode, progressive tool-card loading, accessible GSAP motion and a reduced-motion fallback.
-- `blogger-pages/`: 63 standalone browser-local utility pages plus an AI assistant draft and About, Privacy, Contact and Disclaimer pages. The homepage has 64 cards including the AI assistant.
+- `blogger-pages/`: 69 standalone browser-local utility pages plus an AI assistant draft and About, Privacy, Contact and Disclaimer pages. The homepage has 64 cards including the AI assistant.
 - `blogger-pages/manifest.json`: pages for GitHub Actions Blogger sync. The workflow defaults to drafts; never choose publish until the generated page URLs and content are reviewed.
 - `worker/src/index.js`: AI gateway for OpenAI, Gemini and optional Cloudflare Workers AI; read-only D1 endpoints; private admin sessions; privacy-minimized analytics; AI recommendations based on on-site usage and failed searches.
 - `worker/public/admin.html`: Worker-hosted private analytics dashboard, noindex, password protected through server-side secrets and a signed HttpOnly session.
