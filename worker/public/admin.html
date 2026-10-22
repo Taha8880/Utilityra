@@ -35,8 +35,8 @@ $('login-form').addEventListener('submit',async e=>{e.preventDefault();$('login-
 $('refresh').addEventListener('click',()=>loadStats().catch(e=>status('dashboard-status',e.message,true)));
 $('logout').addEventListener('click',async()=>{try{await api('/api/admin/logout',{method:'POST',body:'{}'})}finally{showLoggedIn(false);status('login-status','تم تسجيل الخروج.')}});
 $('ideas-btn').addEventListener('click',async()=>{const b=$('ideas-btn');b.disabled=true;$('ideas').innerHTML='<div class="empty">الذكاء الاصطناعي يحلل بيانات الاستخدام المتاحة…</div>';try{const data=await api('/api/admin/opportunities',{method:'POST',body:'{}'});let text=typeof data.report==='string'?data.report:JSON.stringify(data.report,null,2);$('ideas').innerHTML='<div class="item"><strong>مصدر التحليل: '+esc(data.provider)+' · '+esc(data.basedOn)+'</strong><pre style="white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.7 inherit">'+esc(text)+'</pre><span class="muted small">اقتراحات فقط؛ يجب التحقق والاختبار قبل إضافة أي أداة.</span></div>'}catch(err){$('ideas').innerHTML='<div class="empty">'+esc(err.message)+'</div>'}finally{b.disabled=false}});
-$('owner-exclude').addEventListener('click',()=>{window.open('https://utilityra.blogspot.com/?utilityra_owner=exclude','_blank','noopener,noreferrer')});
-$('owner-include').addEventListener('click',()=>{window.open('https://utilityra.blogspot.com/?utilityra_owner=include','_blank','noopener,noreferrer')});
+$('owner-exclude').addEventListener('click',()=>{window.open('https://utilityra.blogspot.com/?flarivo_owner=exclude','_blank','noopener,noreferrer')});
+$('owner-include').addEventListener('click',()=>{window.open('https://utilityra.blogspot.com/?flarivo_owner=include','_blank','noopener,noreferrer')});
 api('/api/admin/session',{method:'GET'}).then(s=>{if(s.authenticated){showLoggedIn(true);loadStats().catch(e=>status('dashboard-status',e.message,true))}}).catch(()=>{});
 })();
 </script></body></html>

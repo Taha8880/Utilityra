@@ -20,7 +20,7 @@
   const $=id=>document.getElementById(id),button=$('uai-send'),status=$('uai-status'),answer=$('uai-answer'),sourcesWrap=$('uai-sources-wrap'),sourcesList=$('uai-sources');
   const t=(ar,en)=>document.documentElement.lang==='en'?en:ar;
   button.addEventListener('click',async()=>{
-    const message=$('uai-message').value.trim(),context=$('uai-context').value.trim(),base=String(window.UTILITYRA_API_BASE||'').replace(/\/+$/,'');
+    const message=$('uai-message').value.trim(),context=$('uai-context').value.trim(),base=String(window.FLARIVO_API_BASE||'').replace(/\/+$/,'');
     if(!message){status.textContent=t('اكتب طلبك أولًا.','Enter your task first.');return;}
     if(!base){status.textContent=t('خدمة الذكاء الاصطناعي لم تُربط بعد بعنوان Worker.','The AI service has not been connected to its Worker URL yet.');return;}
     button.disabled=true;status.textContent=t('جارٍ تحليل الطلب…','Working through your request…');answer.value='';

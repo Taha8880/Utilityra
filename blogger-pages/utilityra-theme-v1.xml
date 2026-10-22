@@ -23,14 +23,14 @@
   <meta content='https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/82e7eb75-c65f-490a-99b5-f3d1cad54200.webp' name='twitter:image'/>
   <b:include data='blog' name='all-head-content'/>
   <script><![CDATA[
-    window.UTILITYRA_API_BASE=window.UTILITYRA_API_BASE||'';
+    window.FLARIVO_API_BASE=window.FLARIVO_API_BASE||'';
     (function(){
       const q=new URLSearchParams(location.search);
       try{
-        if(q.get('utilityra_owner')==='exclude')localStorage.setItem('ur-owner-exclude','1');
-        if(q.get('utilityra_owner')==='include')localStorage.removeItem('ur-owner-exclude');
+        if(q.get('flarivo_owner')==='exclude')localStorage.setItem('flarivo-owner-exclude','1');
+        if(q.get('flarivo_owner')==='include')localStorage.removeItem('flarivo-owner-exclude');
       }catch(e){}
-      if(q.has('utilityra_owner')){q.delete('utilityra_owner');const clean=location.pathname+(q.toString()?'?'+q.toString():'')+location.hash;history.replaceState(null,'',clean);}
+      if(q.has('flarivo_owner')){q.delete('flarivo_owner');const clean=location.pathname+(q.toString()?'?'+q.toString():'')+location.hash;history.replaceState(null,'',clean);}
     })();
   ]]></script>
   <script async='async' crossorigin='anonymous' src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1235197294708204'></script>
@@ -460,9 +460,9 @@ html[data-theme=light] .post-body{color:#454b60}
 
   const params=new URLSearchParams(location.search);
   let ownerExcluded=false;
-  try{ownerExcluded=localStorage.getItem('ur-owner-exclude')==='1';}catch(e){}
-  const reviewMode=params.has('utilityra_review')||params.has('preview')||Boolean(navigator.webdriver)||/bot|crawler|spider|headless|playwright|puppeteer|lighthouse|google-inspectiontool|chatgpt|openai|anthropic|claude|perplexity|gemini|bingpreview/i.test(navigator.userAgent);
-  const apiBase=String(window.UTILITYRA_API_BASE||'').replace(/\/+$/,'');
+  try{ownerExcluded=localStorage.getItem('flarivo-owner-exclude')==='1';}catch(e){}
+  const reviewMode=params.has('flarivo_review')||params.has('preview')||Boolean(navigator.webdriver)||/bot|crawler|spider|headless|playwright|puppeteer|lighthouse|google-inspectiontool|chatgpt|openai|anthropic|claude|perplexity|gemini|bingpreview/i.test(navigator.userAgent);
+  const apiBase=String(window.FLARIVO_API_BASE||'').replace(/\/+$/,'');
   let visitorKey='';
   try{visitorKey=sessionStorage.getItem('flarivo-visitor')||'';if(!visitorKey){visitorKey=crypto.randomUUID?crypto.randomUUID():(String(Date.now())+'-'+Math.random().toString(36).slice(2));sessionStorage.setItem('flarivo-visitor',visitorKey);}}catch(e){visitorKey='';}
   function track(eventType,extra){

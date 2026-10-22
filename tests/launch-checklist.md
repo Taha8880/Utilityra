@@ -8,9 +8,9 @@
 - [ ] Set a unique `ADMIN_PASSWORD` and a separate random `ADMIN_SESSION_SECRET` in Cloudflare.
 - [ ] Bind the Worker assets directory and verify `/admin` serves the private dashboard with noindex headers.
 - [ ] Verify a wrong admin password is rejected, repeated attempts are throttled, and stats return 401 without a signed session.
-- [ ] Set `window.UTILITYRA_API_BASE` to the exact deployed Worker origin only after deployment.
+- [ ] Set `window.FLARIVO_API_BASE` to the exact deployed Worker origin only after deployment.
 - [ ] Use the admin dashboard owner-exclusion control on every browser/device used for owner review.
-- [ ] Confirm known automated review/bot traffic and `?utilityra_review=1` are excluded on a best-effort basis.
+- [ ] Confirm known automated review/bot traffic and `?flarivo_review=1` are excluded on a best-effort basis.
 - [ ] Confirm analytics stores no raw IP, uploaded file, or tool input; review the privacy policy before enabling tracking.
 - [ ] Set allowed origin to the exact Blogger/custom domain.
 - [ ] Verify GET /health does not expose secret values.
