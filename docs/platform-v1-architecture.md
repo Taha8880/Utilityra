@@ -1,7 +1,7 @@
 # Utilityra Platform v1 — implementation blueprint
 
 ## Product direction
-Build a useful tools-and-data platform, not a collection of thin keyword pages. The current staging catalog has 63 standalone utility pages spanning study, office, developer, design, time, calculations and image editing; keep tools distinct and tested rather than padding the count. Every public tool should have a stable Blogger Page URL, a unique title and description, plain-language instructions, error states, and internal links to related tools.
+Build a useful tools-and-data platform, not a collection of thin keyword pages. The current staging catalog has 69 standalone utility pages spanning study, office, developer, design, time, calculations and image editing, PDF merging/splitting and file metadata inspection; keep tools distinct and tested rather than padding the count. Every public tool should have a stable Blogger Page URL, a unique title and description, plain-language instructions, error states, and internal links to related tools.
 
 ## Public site
 - Blogger remains the public content and SEO host at `https://utilityra.blogspot.com/`.
@@ -22,7 +22,7 @@ Build a useful tools-and-data platform, not a collection of thin keyword pages. 
 ## AI provider integrations
 - OpenAI, Gemini and Cloudflare Workers AI are optional providers behind the Worker. Each can be absent; tools must fail with a helpful message and never leak secrets. Workers AI requires an explicit Cloudflare AI binding and may be subject to account usage limits or charges; it is not activated on the live site by this PR.
 - Add provider budgets, request limits and abuse controls before enabling public AI.
-- The admin AI opportunity report analyzes on-site tool usage and failed internal searches; it is not external keyword volume until Search Console or a licensed trend source is connected.
+- The admin AI opportunity report requires at least 20 eligible events and analyzes on-site tool usage and failed internal searches; it is not external keyword volume until Search Console or a licensed trend source is connected.
 - AI can suggest tools but must not invent sources or publish untested code. Recommendations are not automatically merged or published; owner review and CI checks are required.
 
 ## Developer and quality integrations
