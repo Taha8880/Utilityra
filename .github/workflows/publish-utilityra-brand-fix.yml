@@ -1,15 +1,15 @@
-name: Publish Utilityra brand fix to Blogger
+name: Sync Utilityra pages to Blogger
 
 on:
   push:
     branches: [main]
     paths:
+      - "blogger-pages/*.html"
       - "blogger-pages/manifest.json"
       - "scripts/blogger-sync.mjs"
-      - ".github/workflows/publish-utilityra-brand-fix.yml"
 
 concurrency:
-  group: utilityra-brand-fix-publish
+  group: utilityra-page-sync
   cancel-in-progress: false
 
 permissions:
@@ -17,7 +17,6 @@ permissions:
 
 jobs:
   publish:
-    if: contains(github.event.head_commit.message, '[publish-utilityra-pages]')
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
