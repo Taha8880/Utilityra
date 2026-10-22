@@ -20,6 +20,7 @@ test("health endpoint reports safe capability flags without exposing secrets", a
   assert.equal(response.status, 200);
   assert.equal(body.ok, true);
   assert.equal(body.capabilities.dataStoreConfigured, false);
+  assert.equal(body.capabilities.workersAIConfigured, false);
   assert.equal(response.headers.get("access-control-allow-origin"), origin);
   assert.equal(JSON.stringify(body).includes("API_KEY"), false);
 });
@@ -98,6 +99,36 @@ test("AI endpoint reports missing provider configuration without leaking details
   const body = await response.json();
   assert.equal(body.error, "PROVIDER_NOT_CONFIGURED");
   assert.equal(body.message, "This AI provider is not configured yet.");
+});
+
+
+test("Workers AI can run through the gateway when explicitly bound", async () => {
+  let model = "";
+  const AI = { run: async (requestedModel, options) => {
+    model = requestedModel;
+    assert.equal(options.messages[1].role, "user");
+    return { response: "Safe test response" };
+  }};
+  const response = await worker.fetch(req("/api/ai", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ provider: "workers-ai", message: "Explain JSON" })
+  }), { AI });
+  const body = await response.json();
+  assert.equal(response.status, 200);
+  assert.equal(body.provider, "workers-ai");
+  assert.equal(body.reply, "Safe test response");
+  assert.equal(model, "@cf/meta/llama-3.1-8b-instruct");
+});
+
+test("Workers AI fails safely when the optional binding is absent", async () => {
+  const response = await worker.fetch(req("/api/ai", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ provider: "workers-ai", message: "Explain JSON" })
+  }), {});
+  assert.equal(response.status, 503);
+  assert.equal((await response.json()).error, "PROVIDER_NOT_CONFIGURED");
 });
 
 test("unknown routes return JSON 404", async () => {
