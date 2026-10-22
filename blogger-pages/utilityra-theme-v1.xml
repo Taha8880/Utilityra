@@ -18,7 +18,9 @@
   <meta expr:content='data:blog.canonicalUrl' property='og:url'/>
   <meta expr:content='data:blog.pageTitle' property='og:title'/>
   <b:if cond='data:blog.metaDescription'><meta expr:content='data:blog.metaDescription' property='og:description'/><b:else/><meta content='Practical tools for study, office work, software development and file workflows.' property='og:description'/></b:if>
-  <meta content='summary' name='twitter:card'/>
+  <meta content='summary_large_image' name='twitter:card'/>
+  <meta content='https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/82e7eb75-c65f-490a-99b5-f3d1cad54200.webp' property='og:image'/>
+  <meta content='https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/82e7eb75-c65f-490a-99b5-f3d1cad54200.webp' name='twitter:image'/>
   <b:include data='blog' name='all-head-content'/>
   <script><![CDATA[
     window.UTILITYRA_API_BASE=window.UTILITYRA_API_BASE||'';
