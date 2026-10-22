@@ -6,7 +6,9 @@
   "scripts": {
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:syntax": "node --check worker/src/index.js"
+    "test:syntax": "node --check worker/src/index.js",
+    "test:site": "python scripts/validate-site.py",
+    "test": "npm run test:site && npm run test:syntax"
   },
   "devDependencies": {
     "@playwright/test": "^1.55.0"
