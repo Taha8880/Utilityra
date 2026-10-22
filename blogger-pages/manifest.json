@@ -1,372 +1,372 @@
 {
   "pages": [
     {
-      "title": "Word Counter | Flarivo",
+      "title": "Word Counter | Utilityra",
       "file": "word-counter.html",
       "legacyTitle": "Word Counter | Utilityra"
     },
     {
-      "title": "JSON Formatter and Validator | Flarivo",
+      "title": "JSON Formatter and Validator | Utilityra",
       "file": "json-formatter.html",
       "legacyTitle": "JSON Formatter and Validator | Utilityra"
     },
     {
-      "title": "CSV to JSON Converter | Flarivo",
+      "title": "CSV to JSON Converter | Utilityra",
       "file": "csv-json-converter.html",
       "legacyTitle": "CSV to JSON Converter | Utilityra"
     },
     {
-      "title": "Text Cleaner and Formatter | Flarivo",
+      "title": "Text Cleaner and Formatter | Utilityra",
       "file": "text-cleaner.html",
       "legacyTitle": "Text Cleaner and Formatter | Utilityra"
     },
     {
-      "title": "URL Encoder and Decoder | Flarivo",
+      "title": "URL Encoder and Decoder | Utilityra",
       "file": "url-encoder-decoder.html",
       "legacyTitle": "URL Encoder and Decoder | Utilityra"
     },
     {
-      "title": "Base64 Encoder and Decoder | Flarivo",
+      "title": "Base64 Encoder and Decoder | Utilityra",
       "file": "base64-encoder-decoder.html",
       "legacyTitle": "Base64 Encoder and Decoder | Utilityra"
     },
     {
-      "title": "UUID v4 Generator | Flarivo",
+      "title": "UUID v4 Generator | Utilityra",
       "file": "uuid-generator.html",
       "legacyTitle": "UUID v4 Generator | Utilityra"
     },
     {
-      "title": "Secure Password Generator | Flarivo",
+      "title": "Secure Password Generator | Utilityra",
       "file": "password-generator.html",
       "legacyTitle": "Secure Password Generator | Utilityra"
     },
     {
-      "title": "Unix Timestamp Converter | Flarivo",
+      "title": "Unix Timestamp Converter | Utilityra",
       "file": "timestamp-converter.html",
       "legacyTitle": "Unix Timestamp Converter | Utilityra"
     },
     {
-      "title": "Percentage and Discount Calculator | Flarivo",
+      "title": "Percentage and Discount Calculator | Utilityra",
       "file": "percentage-calculator.html",
       "legacyTitle": "Percentage and Discount Calculator | Utilityra"
     },
     {
-      "title": "HTML Entities Encoder and Decoder | Flarivo",
+      "title": "HTML Entities Encoder and Decoder | Utilityra",
       "file": "html-entities.html",
       "legacyTitle": "HTML Entities Encoder and Decoder | Utilityra"
     },
     {
-      "title": "Image Compressor and Resizer | Flarivo",
+      "title": "Image Compressor and Resizer | Utilityra",
       "file": "image-compressor.html",
       "legacyTitle": "Image Compressor and Resizer | Utilityra"
     },
     {
-      "title": "About | Flarivo",
+      "title": "About | Utilityra",
       "file": "about.html",
       "legacyTitle": "About"
     },
     {
-      "title": "Privacy Policy | Flarivo",
+      "title": "Privacy Policy | Utilityra",
       "file": "privacy-policy.html",
       "legacyTitle": "Privacy Policy"
     },
     {
-      "title": "Contact | Flarivo",
+      "title": "Contact | Utilityra",
       "file": "contact.html",
       "legacyTitle": "Contact"
     },
     {
-      "title": "Disclaimer | Flarivo",
+      "title": "Disclaimer | Utilityra",
       "file": "disclaimer.html",
       "legacyTitle": "Disclaimer"
     },
     {
-      "title": "Text Case Converter | Flarivo",
+      "title": "Text Case Converter | Utilityra",
       "file": "case-converter.html",
       "legacyTitle": "Text Case Converter | Utilityra"
     },
     {
-      "title": "Sort Text Lines | Flarivo",
+      "title": "Sort Text Lines | Utilityra",
       "file": "line-sorter.html",
       "legacyTitle": "Sort Text Lines | Utilityra"
     },
     {
-      "title": "Duplicate Line Remover | Flarivo",
+      "title": "Duplicate Line Remover | Utilityra",
       "file": "duplicate-line-remover.html",
       "legacyTitle": "Duplicate Line Remover | Utilityra"
     },
     {
-      "title": "Find and Replace Text | Flarivo",
+      "title": "Find and Replace Text | Utilityra",
       "file": "find-replace.html",
       "legacyTitle": "Find and Replace Text | Utilityra"
     },
     {
-      "title": "Text Difference Checker | Flarivo",
+      "title": "Text Difference Checker | Utilityra",
       "file": "text-compare.html",
       "legacyTitle": "Text Difference Checker | Utilityra"
     },
     {
-      "title": "Lorem Ipsum Generator | Flarivo",
+      "title": "Lorem Ipsum Generator | Utilityra",
       "file": "lorem-ipsum-generator.html",
       "legacyTitle": "Lorem Ipsum Generator | Utilityra"
     },
     {
-      "title": "Word Frequency Counter | Flarivo",
+      "title": "Word Frequency Counter | Utilityra",
       "file": "word-frequency.html",
       "legacyTitle": "Word Frequency Counter | Utilityra"
     },
     {
-      "title": "Reading Time Estimator | Flarivo",
+      "title": "Reading Time Estimator | Utilityra",
       "file": "reading-time.html",
       "legacyTitle": "Reading Time Estimator | Utilityra"
     },
     {
-      "title": "Study Flashcard Maker | Flarivo",
+      "title": "Study Flashcard Maker | Utilityra",
       "file": "flashcard-maker.html",
       "legacyTitle": "Study Flashcard Maker | Utilityra"
     },
     {
-      "title": "Grade Average Calculator | Flarivo",
+      "title": "Grade Average Calculator | Utilityra",
       "file": "grade-calculator.html",
       "legacyTitle": "Grade Average Calculator | Utilityra"
     },
     {
-      "title": "GPA Estimator | Flarivo",
+      "title": "GPA Estimator | Utilityra",
       "file": "gpa-calculator.html",
       "legacyTitle": "GPA Estimator | Utilityra"
     },
     {
-      "title": "Weighted Grade Calculator | Flarivo",
+      "title": "Weighted Grade Calculator | Utilityra",
       "file": "weighted-grade-calculator.html",
       "legacyTitle": "Weighted Grade Calculator | Utilityra"
     },
     {
-      "title": "Study Plan Builder | Flarivo",
+      "title": "Study Plan Builder | Utilityra",
       "file": "study-plan-generator.html",
       "legacyTitle": "Study Plan Builder | Utilityra"
     },
     {
-      "title": "Age Calculator | Flarivo",
+      "title": "Age Calculator | Utilityra",
       "file": "age-calculator.html",
       "legacyTitle": "Age Calculator | Utilityra"
     },
     {
-      "title": "Date Difference Calculator | Flarivo",
+      "title": "Date Difference Calculator | Utilityra",
       "file": "date-difference.html",
       "legacyTitle": "Date Difference Calculator | Utilityra"
     },
     {
-      "title": "Everyday Unit Converter | Flarivo",
+      "title": "Everyday Unit Converter | Utilityra",
       "file": "unit-converter.html",
       "legacyTitle": "Everyday Unit Converter | Utilityra"
     },
     {
-      "title": "Scientific Calculator | Flarivo",
+      "title": "Scientific Calculator | Utilityra",
       "file": "scientific-calculator.html",
       "legacyTitle": "Scientific Calculator | Utilityra"
     },
     {
-      "title": "VAT and Tax Calculator | Flarivo",
+      "title": "VAT and Tax Calculator | Utilityra",
       "file": "vat-calculator.html",
       "legacyTitle": "VAT and Tax Calculator | Utilityra"
     },
     {
-      "title": "Hourly Pay Calculator | Flarivo",
+      "title": "Hourly Pay Calculator | Utilityra",
       "file": "hourly-pay-calculator.html",
       "legacyTitle": "Hourly Pay Calculator | Utilityra"
     },
     {
-      "title": "Statistics Calculator | Flarivo",
+      "title": "Statistics Calculator | Utilityra",
       "file": "statistics-calculator.html",
       "legacyTitle": "Statistics Calculator | Utilityra"
     },
     {
-      "title": "Number Base Converter | Flarivo",
+      "title": "Number Base Converter | Utilityra",
       "file": "number-base-converter.html",
       "legacyTitle": "Number Base Converter | Utilityra"
     },
     {
-      "title": "Binary and Hex Converter | Flarivo",
+      "title": "Binary and Hex Converter | Utilityra",
       "file": "binary-hex-converter.html",
       "legacyTitle": "Binary and Hex Converter | Utilityra"
     },
     {
-      "title": "JSON to XML Converter | Flarivo",
+      "title": "JSON to XML Converter | Utilityra",
       "file": "json-to-xml.html",
       "legacyTitle": "JSON to XML Converter | Utilityra"
     },
     {
-      "title": "XML Formatter and Validator | Flarivo",
+      "title": "XML Formatter and Validator | Utilityra",
       "file": "xml-formatter.html",
       "legacyTitle": "XML Formatter and Validator | Utilityra"
     },
     {
-      "title": "SQL Query Formatter | Flarivo",
+      "title": "SQL Query Formatter | Utilityra",
       "file": "sql-formatter.html",
       "legacyTitle": "SQL Query Formatter | Utilityra"
     },
     {
-      "title": "Regular Expression Tester | Flarivo",
+      "title": "Regular Expression Tester | Utilityra",
       "file": "regex-tester.html",
       "legacyTitle": "Regular Expression Tester | Utilityra"
     },
     {
-      "title": "JWT Decoder | Flarivo",
+      "title": "JWT Decoder | Utilityra",
       "file": "jwt-decoder.html",
       "legacyTitle": "JWT Decoder | Utilityra"
     },
     {
-      "title": "SHA-256 Hash Generator | Flarivo",
+      "title": "SHA-256 Hash Generator | Utilityra",
       "file": "sha256-hash.html",
       "legacyTitle": "SHA-256 Hash Generator | Utilityra"
     },
     {
-      "title": "JSON Difference Checker | Flarivo",
+      "title": "JSON Difference Checker | Utilityra",
       "file": "json-diff.html",
       "legacyTitle": "JSON Difference Checker | Utilityra"
     },
     {
-      "title": "HTML Formatter | Flarivo",
+      "title": "HTML Formatter | Utilityra",
       "file": "html-formatter.html",
       "legacyTitle": "HTML Formatter | Utilityra"
     },
     {
-      "title": "CSS Formatter | Flarivo",
+      "title": "CSS Formatter | Utilityra",
       "file": "css-formatter.html",
       "legacyTitle": "CSS Formatter | Utilityra"
     },
     {
-      "title": "Color Format Converter | Flarivo",
+      "title": "Color Format Converter | Utilityra",
       "file": "color-converter.html",
       "legacyTitle": "Color Format Converter | Utilityra"
     },
     {
-      "title": "CSS Gradient Generator | Flarivo",
+      "title": "CSS Gradient Generator | Utilityra",
       "file": "gradient-generator.html",
       "legacyTitle": "CSS Gradient Generator | Utilityra"
     },
     {
-      "title": "CSS Box Shadow Generator | Flarivo",
+      "title": "CSS Box Shadow Generator | Utilityra",
       "file": "box-shadow-generator.html",
       "legacyTitle": "CSS Box Shadow Generator | Utilityra"
     },
     {
-      "title": "SEO Meta Tag Generator | Flarivo",
+      "title": "SEO Meta Tag Generator | Utilityra",
       "file": "meta-tag-generator.html",
       "legacyTitle": "SEO Meta Tag Generator | Utilityra"
     },
     {
-      "title": "Robots.txt Builder | Flarivo",
+      "title": "Robots.txt Builder | Utilityra",
       "file": "robots-txt-generator.html",
       "legacyTitle": "Robots.txt Builder | Utilityra"
     },
     {
-      "title": "Sitemap URL List Builder | Flarivo",
+      "title": "Sitemap URL List Builder | Utilityra",
       "file": "sitemap-generator.html",
       "legacyTitle": "Sitemap URL List Builder | Utilityra"
     },
     {
-      "title": "URL Inspector | Flarivo",
+      "title": "URL Inspector | Utilityra",
       "file": "url-parser.html",
       "legacyTitle": "URL Inspector | Utilityra"
     },
     {
-      "title": "Cron Expression Validator | Flarivo",
+      "title": "Cron Expression Validator | Utilityra",
       "file": "cron-validator.html",
       "legacyTitle": "Cron Expression Validator | Utilityra"
     },
     {
-      "title": "CSV to Markdown Table | Flarivo",
+      "title": "CSV to Markdown Table | Utilityra",
       "file": "csv-to-markdown.html",
       "legacyTitle": "CSV to Markdown Table | Utilityra"
     },
     {
-      "title": "Markdown Table Generator | Flarivo",
+      "title": "Markdown Table Generator | Utilityra",
       "file": "markdown-table-generator.html",
       "legacyTitle": "Markdown Table Generator | Utilityra"
     },
     {
-      "title": "File Size Converter | Flarivo",
+      "title": "File Size Converter | Utilityra",
       "file": "file-size-converter.html",
       "legacyTitle": "File Size Converter | Utilityra"
     },
     {
-      "title": "Random Number Generator | Flarivo",
+      "title": "Random Number Generator | Utilityra",
       "file": "random-number-generator.html",
       "legacyTitle": "Random Number Generator | Utilityra"
     },
     {
-      "title": "Password Strength Checker | Flarivo",
+      "title": "Password Strength Checker | Utilityra",
       "file": "password-strength-checker.html",
       "legacyTitle": "Password Strength Checker | Utilityra"
     },
     {
-      "title": "CSV Validator | Flarivo",
+      "title": "CSV Validator | Utilityra",
       "file": "csv-validator.html",
       "legacyTitle": "CSV Validator | Utilityra"
     },
     {
-      "title": "Excel Formula Helper | Flarivo",
+      "title": "Excel Formula Helper | Utilityra",
       "file": "excel-formula-helper.html",
       "legacyTitle": "Excel Formula Helper | Utilityra"
     },
     {
-      "title": "Time Zone Converter | Flarivo",
+      "title": "Time Zone Converter | Utilityra",
       "file": "timezone-converter.html",
       "legacyTitle": "Time Zone Converter | Utilityra"
     },
     {
-      "title": "Citation Formatter | Flarivo",
+      "title": "Citation Formatter | Utilityra",
       "file": "citation-formatter.html",
       "legacyTitle": "Citation Formatter | Utilityra"
     },
     {
-      "title": "Image Filter Studio | Flarivo",
+      "title": "Image Filter Studio | Utilityra",
       "file": "image-filter-studio.html",
       "legacyTitle": "Image Filter Studio | Utilityra"
     },
     {
-      "title": "Image Rotate and Flip | Flarivo",
+      "title": "Image Rotate and Flip | Utilityra",
       "file": "image-rotate-flip.html",
       "legacyTitle": "Image Rotate and Flip | Utilityra"
     },
     {
-      "title": "Image to Base64 Data URI | Flarivo",
+      "title": "Image to Base64 Data URI | Utilityra",
       "file": "image-to-data-uri.html",
       "legacyTitle": "Image to Base64 Data URI | Utilityra"
     },
     {
-      "title": "AI Assistant | Flarivo",
+      "title": "AI Assistant | Utilityra",
       "file": "ai-assistant.html",
       "legacyTitle": "AI Assistant | Utilityra"
     },
     {
-      "title": "PDF Merge | Flarivo",
+      "title": "PDF Merge | Utilityra",
       "file": "pdf-merge.html",
       "legacyTitle": "PDF Merge | Utilityra"
     },
     {
-      "title": "PDF Page Extractor | Flarivo",
+      "title": "PDF Page Extractor | Utilityra",
       "file": "pdf-split.html",
       "legacyTitle": "PDF Page Extractor | Utilityra"
     },
     {
-      "title": "PDF Page Counter and Info | Flarivo",
+      "title": "PDF Page Counter and Info | Utilityra",
       "file": "pdf-page-info.html",
       "legacyTitle": "PDF Page Counter and Info | Utilityra"
     },
     {
-      "title": "Image Cropper | Flarivo",
+      "title": "Image Cropper | Utilityra",
       "file": "image-cropper.html",
       "legacyTitle": "Image Cropper | Utilityra"
     },
     {
-      "title": "Image Watermark Tool | Flarivo",
+      "title": "Image Watermark Tool | Utilityra",
       "file": "image-watermark.html",
       "legacyTitle": "Image Watermark Tool | Utilityra"
     },
     {
-      "title": "File Metadata Inspector | Flarivo",
+      "title": "File Metadata Inspector | Utilityra",
       "file": "file-metadata-inspector.html",
       "legacyTitle": "File Metadata Inspector | Utilityra"
     }
