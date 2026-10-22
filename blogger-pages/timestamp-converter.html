@@ -1,0 +1,14 @@
+<!-- Utilityra tool page: Unix timestamp converter. Review as a Blogger draft before publishing. -->
+<section class="ur-tool" lang="en" aria-labelledby="uts-title">
+  <p class="ur-eyebrow">DATE AND TIME TOOLS</p><h2 id="uts-title">Unix Timestamp Converter</h2>
+  <p>Convert Unix timestamps in seconds or milliseconds to UTC and local time, or convert a date to Unix time.</p>
+  <label for="uts-input">Timestamp or date</label><input id="uts-input" type="text" placeholder="e.g. 1735689600 or 2025-01-01T00:00:00Z"/>
+  <div class="ur-actions"><button type="button" id="uts-to-date" class="ur-primary">Convert to date</button><button type="button" id="uts-now" class="ur-secondary">Use current time</button><button type="button" id="uts-clear" class="ur-secondary">Clear</button></div>
+  <p id="uts-status" role="status" aria-live="polite"></p><label for="uts-output">Result</label><textarea id="uts-output" rows="7" readonly="readonly"></textarea>
+</section>
+<script>
+(function(){const $=id=>document.getElementById(id),input=$('uts-input'),out=$('uts-output'),status=$('uts-status');if(!input||!out)return;
+function convert(){const v=input.value.trim();if(!v){status.textContent='Enter a timestamp or date.';return}let ms;if(/^-?\d+(\.\d+)?$/.test(v)){const n=Number(v);ms=Math.abs(n)>=1e12?n:n*1000}else ms=Date.parse(v);const d=new Date(ms);if(!Number.isFinite(ms)||Number.isNaN(d.getTime())){out.value='';status.textContent='Invalid timestamp or date.';return}out.value='UTC: '+d.toISOString()+'\nLocal: '+d.toLocaleString()+'\nUnix seconds: '+Math.floor(ms/1000)+'\nUnix milliseconds: '+Math.trunc(ms);status.textContent='Conversion completed.'}
+$('uts-to-date').addEventListener('click',convert);$('uts-now').addEventListener('click',()=>{input.value=String(Date.now());convert()});$('uts-clear').addEventListener('click',()=>{input.value='';out.value='';status.textContent=''});
+})();
+</script>

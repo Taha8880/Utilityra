@@ -1,0 +1,15 @@
+<!-- Utilityra tool page: percentage calculator. Review as a Blogger draft before publishing. -->
+<section class="ur-tool" lang="en" aria-labelledby="upc-title">
+  <p class="ur-eyebrow">CALCULATORS</p><h2 id="upc-title">Percentage and Discount Calculator</h2>
+  <p>Calculate a percentage of a number, the percentage change between two values, or a discount and final price.</p>
+  <label for="upc-mode">Calculation</label><select id="upc-mode"><option value="of">What is X% of a number?</option><option value="change">Percentage change from A to B</option><option value="discount">Discount and final price</option></select>
+  <div class="ur-form-grid"><label for="upc-a">Value A<input id="upc-a" type="number" step="any" value="100"/></label><label for="upc-b">Value B<input id="upc-b" type="number" step="any" value="15"/></label></div>
+  <div class="ur-actions"><button type="button" id="upc-run" class="ur-primary">Calculate</button><button type="button" id="upc-clear" class="ur-secondary">Clear</button></div>
+  <p id="upc-status" role="status" aria-live="polite"></p><label for="upc-output">Result</label><textarea id="upc-output" rows="5" readonly="readonly"></textarea>
+</section>
+<script>
+(function(){const $=id=>document.getElementById(id),a=$('upc-a'),b=$('upc-b'),mode=$('upc-mode'),out=$('upc-output'),status=$('upc-status');if(!out)return;
+$('upc-run').addEventListener('click',()=>{const x=Number(a.value),y=Number(b.value);if(a.value===''||b.value===''||!Number.isFinite(x)||!Number.isFinite(y)){status.textContent='Enter valid numbers in both fields.';return}if(mode.value==='of')out.value=y+'% of '+x+' = '+(x*y/100).toLocaleString(undefined,{maximumFractionDigits:8});else if(mode.value==='change'){if(x===0){status.textContent='Value A cannot be zero for percentage change.';return}out.value='Change: '+(y-x).toLocaleString()+'\nPercentage change: '+(((y-x)/Math.abs(x))*100).toFixed(2)+'%'}else out.value='Discount amount: '+(x*y/100).toFixed(2)+'\nFinal price: '+(x-x*y/100).toFixed(2);status.textContent='Calculation completed.'});
+$('upc-clear').addEventListener('click',()=>{a.value='';b.value='';out.value='';status.textContent=''});
+})();
+</script>

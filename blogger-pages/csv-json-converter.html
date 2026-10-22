@@ -1,0 +1,19 @@
+<!-- Utilityra tool page: CSV ↔ JSON. Review as a Blogger draft before publishing. -->
+<section class="ur-tool" lang="en" aria-labelledby="ucj-title">
+  <p class="ur-eyebrow">DATA TOOLS</p><h2 id="ucj-title">CSV to JSON Converter</h2>
+  <p>Convert tabular CSV data into JSON or convert a JSON array of objects back to CSV. Processing happens in your browser.</p>
+  <label for="ucj-input">Input data</label><textarea id="ucj-input" rows="12" spellcheck="false" placeholder="name,age\nMona,25\nOmar,31"></textarea>
+  <div class="ur-actions"><label for="ucj-mode">Convert to</label><select id="ucj-mode"><option value="json">JSON</option><option value="csv">CSV</option></select><button type="button" id="ucj-run" class="ur-primary">Convert</button><button type="button" id="ucj-clear" class="ur-secondary">Clear</button></div>
+  <p id="ucj-status" role="status" aria-live="polite"></p><label for="ucj-output">Result</label><textarea id="ucj-output" rows="12" readonly spellcheck="false"></textarea><button type="button" id="ucj-copy" class="ur-secondary">Copy result</button>
+</section>
+<script>
+(function(){
+const $=id=>document.getElementById(id), input=$('ucj-input'), output=$('ucj-output'), status=$('ucj-status');
+if(!input||!output||!status)return;
+function parseCSV(s){const rows=[];let row=[],cell='',quoted=false;for(let i=0;i<s.length;i++){const c=s[i];if(quoted){if(c==='"'&&s[i+1]==='"'){cell+='"';i++}else if(c==='"')quoted=false;else cell+=c}else if(c==='"'&&cell==='')quoted=true;else if(c===','){row.push(cell);cell=''}else if(c==='\n'||c==='\r'){if(c==='\r'&&s[i+1]==='\n')i++;row.push(cell);if(row.some(v=>v!==''))rows.push(row);row=[];cell=''}else cell+=c}if(quoted)throw Error('CSV contains an unclosed quoted field.');row.push(cell);if(row.some(v=>v!==''))rows.push(row);if(!rows.length)return [];const headers=rows.shift().map((h,i)=>h.trim()||'column_'+(i+1));return rows.map(r=>Object.fromEntries(headers.map((h,i)=>[h,r[i]??''])));}
+function quote(v){const s=String(v??'');return /[",\r\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}
+$('ucj-run').addEventListener('click',()=>{try{const mode=$('ucj-mode').value;if(mode==='json'){output.value=JSON.stringify(parseCSV(input.value),null,2)}else{const data=JSON.parse(input.value);if(!Array.isArray(data)||data.some(x=>!x||typeof x!=='object'||Array.isArray(x)))throw Error('Expected a JSON array of objects.');const headers=[...new Set(data.flatMap(Object.keys))];output.value=[headers.map(quote).join(','),...data.map(o=>headers.map(h=>quote(o[h])).join(','))].join('\r\n')}status.textContent='Conversion completed.'}catch(e){output.value='';status.textContent='Could not convert: '+e.message}});
+$('ucj-clear').addEventListener('click',()=>{input.value='';output.value='';status.textContent=''});
+$('ucj-copy').addEventListener('click',async()=>{if(!output.value){status.textContent='No result to copy.';return}try{await navigator.clipboard.writeText(output.value);status.textContent='Result copied.'}catch{output.focus();output.select();status.textContent='Select the result and copy it manually.'}});
+})();
+</script>

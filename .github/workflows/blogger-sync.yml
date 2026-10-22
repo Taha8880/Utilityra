@@ -1,6 +1,12 @@
 name: Blogger page sync
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'blogger-pages/**'
+      - 'scripts/blogger-sync.mjs'
+      - '.github/workflows/blogger-sync.yml'
   workflow_dispatch:
     inputs:
       publish:

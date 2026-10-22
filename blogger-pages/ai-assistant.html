@@ -1,26 +1,45 @@
-<!-- Publish only after deploying the Worker. Replace WORKER_BASE_URL with your deployed Cloudflare Worker URL. -->
-<section class="utilityra-tool" lang="en" aria-labelledby="uai-title">
-  <h2 id="uai-title">Utilityra AI Assistant</h2>
-  <p>Ask for help understanding an error or planning a code fix. Do not send passwords, API keys, or private personal data.</p>
-  <label for="uai-provider">AI provider</label>
-  <select id="uai-provider"><option value="openai">OpenAI</option><option value="gemini">Google Gemini</option></select>
-  <label for="uai-message" style="display:block;margin-top:10px">Your question</label>
-  <textarea id="uai-message" rows="6" maxlength="8000" placeholder="Describe the problem…" style="display:block;width:100%;box-sizing:border-box;padding:12px;margin:8px 0;border:1px solid #bbb;border-radius:10px"></textarea>
-  <button type="button" id="uai-send">Ask AI</button>
+<section class="ur-tool" data-tool-id="ai-assistant" lang="ar" aria-labelledby="uai-title">
+  <p class="ur-eyebrow" data-en="AI WORKSPACE · ASSISTANT" data-ar="مساحة الذكاء الاصطناعي · مساعد">AI WORKSPACE · ASSISTANT</p>
+  <h2 id="uai-title" data-en="Toolora AI Assistant" data-ar="مساعد Toolora للذكاء الاصطناعي">مساعد Toolora للذكاء الاصطناعي</h2>
+  <p data-en="Get practical help with study, office work, programming and problem-solving. For current news questions, the assistant can attach recent public coverage links from GDELT when the service is configured. Review sources yourself; the assistant does not edit or publish your files. Never submit secrets." data-ar="احصل على مساعدة عملية في الدراسة والعمل والبرمجة وحل المشكلات. عند السؤال عن الأخبار الحديثة، يمكن للمساعد إرفاق روابط تغطية عامة من GDELT إذا كانت الخدمة مفعّلة. راجع المصادر بنفسك؛ لا يعدّل المساعد ملفاتك أو ينشرها. لا ترسل أسرارًا.">احصل على مساعدة عملية في الدراسة والعمل والبرمجة وحل المشكلات. عند السؤال عن الأخبار الحديثة، يمكن للمساعد إرفاق روابط تغطية عامة من GDELT إذا كانت الخدمة مفعّلة. راجع المصادر بنفسك؛ لا يعدّل المساعد ملفاتك أو ينشرها. لا ترسل أسرارًا.</p>
+  <label for="uai-provider" data-en="AI provider" data-ar="مزود الذكاء الاصطناعي">مزود الذكاء الاصطناعي</label>
+  <select id="uai-provider"><option value="workers-ai" selected="selected" data-en="Cloudflare Workers AI" data-ar="Cloudflare Workers AI">Cloudflare Workers AI</option><option value="openai" data-en="OpenAI (optional)" data-ar="OpenAI (اختياري)">OpenAI (اختياري)</option><option value="gemini" data-en="Google Gemini (optional)" data-ar="Google Gemini (اختياري)">Google Gemini (اختياري)</option></select>
+  <label for="uai-message" data-en="What do you want to solve?" data-ar="ما المشكلة التي تريد حلها؟">ما المشكلة التي تريد حلها؟</label>
+  <textarea id="uai-message" rows="6" maxlength="8000" data-en-placeholder="Describe the task, expected result and what you have tried…" data-ar-placeholder="اشرح المطلوب والنتيجة المتوقعة وما الذي جرّبته… " placeholder="اشرح المطلوب والنتيجة المتوقعة وما الذي جرّبته…"></textarea>
+  <label for="uai-context" data-en="Extra source, context or error message (optional)" data-ar="مصدر إضافي أو سياق أو رسالة خطأ (اختياري)">مصدر إضافي أو سياق أو رسالة خطأ (اختياري)</label>
+  <textarea id="uai-context" rows="4" maxlength="8000" data-en-placeholder="Paste a non-sensitive excerpt, error or sample…" data-ar-placeholder="ألصق مقتطفًا أو خطأ أو مثالًا غير حساس…" placeholder="ألصق مقتطفًا أو خطأ أو مثالًا غير حساس…"></textarea>
+  <div class="ur-actions"><button type="button" id="uai-send" class="ur-primary" data-en="Solve task" data-ar="حلل الطلب">حلل الطلب</button><button type="button" id="uai-clear" class="ur-secondary" data-en="Clear" data-ar="مسح">مسح</button></div>
   <p id="uai-status" role="status" aria-live="polite"></p>
-  <pre id="uai-answer" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre>
+  <label for="uai-answer" data-en="Answer" data-ar="الإجابة">الإجابة</label>
+  <textarea id="uai-answer" rows="12" readonly data-en-placeholder="The answer will appear here." data-ar-placeholder="ستظهر الإجابة هنا" placeholder="ستظهر الإجابة هنا"></textarea>
+  <div id="uai-sources-wrap" hidden="hidden"><h3 data-en="Sources to review" data-ar="مصادر للمراجعة">مصادر للمراجعة</h3><ul id="uai-sources"></ul></div>
+  <p class="ur-note" data-en="AI can make mistakes. For important academic, legal, medical or financial decisions, verify the answer against authoritative sources." data-ar="قد يخطئ الذكاء الاصطناعي. في القرارات الأكاديمية أو القانونية أو الطبية أو المالية المهمة، تحقق من الإجابة بمصادر موثوقة.">قد يخطئ الذكاء الاصطناعي. في القرارات الأكاديمية أو القانونية أو الطبية أو المالية المهمة، تحقق من الإجابة بمصادر موثوقة.</p>
 </section>
 <script>
 (function(){
- const WORKER_BASE_URL='https://REPLACE-WITH-YOUR-WORKER.workers.dev';
- const $=id=>document.getElementById(id);const button=$('uai-send'),status=$('uai-status'),answer=$('uai-answer');
- button.addEventListener('click',async()=>{
-   const message=$('uai-message').value.trim();if(!message){status.textContent='Enter a question first.';return}
-   if(WORKER_BASE_URL.includes('REPLACE-WITH-YOUR-WORKER')){status.textContent='The AI service has not been configured yet.';return}
-   button.disabled=true;status.textContent='Waiting for AI…';answer.textContent='';
-   try{const response=await fetch(WORKER_BASE_URL+'/api/ai',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({provider:$('uai-provider').value,message})});const data=await response.json();if(!response.ok)throw new Error(data.message||data.error||'Request failed');answer.textContent=data.reply||'No response returned.';status.textContent='Response ready.'}
-   catch(e){status.textContent='Could not reach the AI service. Check its setup and try again.'}
-   finally{button.disabled=false}
- });
+  const $=id=>document.getElementById(id),button=$('uai-send'),status=$('uai-status'),answer=$('uai-answer'),sourcesWrap=$('uai-sources-wrap'),sourcesList=$('uai-sources');
+  const t=(ar,en)=>document.documentElement.lang==='en'?en:ar;
+  button.addEventListener('click',async()=>{
+    const message=$('uai-message').value.trim(),context=$('uai-context').value.trim(),base=String(window.UTILITYRA_API_BASE||'').replace(/\/+$/,'');
+    if(!message){status.textContent=t('اكتب طلبك أولًا.','Enter your task first.');return;}
+    if(!base){status.textContent=t('خدمة الذكاء الاصطناعي لم تُربط بعد بعنوان Worker.','The AI service has not been connected to its Worker URL yet.');return;}
+    button.disabled=true;status.textContent=t('جارٍ تحليل الطلب…','Working through your request…');answer.value='';
+    if(sourcesList)sourcesList.textContent='';if(sourcesWrap)sourcesWrap.hidden=true;
+    try{
+      const response=await fetch(base+'/api/ai',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({provider:$('uai-provider').value,message,context})});
+      const data=await response.json();if(!response.ok)throw new Error(data.message||data.error||t('تعذر تنفيذ الطلب','The request could not be completed'));
+      answer.value=data.reply||t('لم تصل إجابة.','No answer was returned.');
+      const sources=Array.isArray(data.sources)?data.sources:[];
+      if(sourcesList&&sourcesWrap&&sources.length){
+        sources.forEach(source=>{
+          try{const url=new URL(source.url);if(url.protocol!=='https:')return;const li=document.createElement('li'),a=document.createElement('a');a.href=url.href;a.target='_blank';a.rel='noopener noreferrer';a.textContent=(source.title||source.domain||url.hostname)+' — '+(source.domain||url.hostname);li.appendChild(a);sourcesList.appendChild(li);}catch(e){}
+        });
+        sourcesWrap.hidden=!sourcesList.children.length;
+      }
+      status.textContent=sources.length?t('وصلت الإجابة مع روابط مصادر حديثة. تحقق من التفاصيل المهمة.','Answer received with recent source links. Verify important details.'):t('وصلت الإجابة. راجعها وتحقق من المعلومات المهمة.','Answer received. Review it and verify important details.');
+    }catch(e){status.textContent=e&&e.message?e.message:t('تعذر الوصول إلى خدمة الذكاء الاصطناعي؛ تحقق من إعدادها.','Could not reach the AI service. Check its configuration.');}
+    finally{button.disabled=false;}
+  });
+  $('uai-clear').addEventListener('click',()=>{$('uai-message').value='';$('uai-context').value='';answer.value='';if(sourcesList)sourcesList.textContent='';if(sourcesWrap)sourcesWrap.hidden=true;status.textContent='';});
 })();
 </script>

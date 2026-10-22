@@ -1,0 +1,16 @@
+<!-- Utilityra tool page: HTML entities encoder/decoder. Review as a Blogger draft before publishing. -->
+<section class="ur-tool" lang="en" aria-labelledby="uhe-title">
+  <p class="ur-eyebrow">DEVELOPER TOOLS</p><h2 id="uhe-title">HTML Entities Encoder and Decoder</h2>
+  <p>Escape special HTML characters for safe text display or decode common HTML entities. The result is displayed as text, not executed as HTML.</p>
+  <label for="uhe-input">Input</label><textarea id="uhe-input" rows="8" placeholder='<div title="Example">Text &amp; more</div>'></textarea>
+  <div class="ur-actions"><button type="button" id="uhe-encode" class="ur-primary">Encode</button><button type="button" id="uhe-decode" class="ur-secondary">Decode</button><button type="button" id="uhe-clear" class="ur-secondary">Clear</button></div>
+  <p id="uhe-status" role="status" aria-live="polite"></p><label for="uhe-output">Result</label><textarea id="uhe-output" rows="8" readonly="readonly"></textarea><button type="button" id="uhe-copy" class="ur-secondary">Copy result</button>
+</section>
+<script>
+(function(){const $=id=>document.getElementById(id),input=$('uhe-input'),out=$('uhe-output'),status=$('uhe-status');if(!input||!out)return;
+$('uhe-encode').addEventListener('click',()=>{out.value=input.value.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');status.textContent='HTML entities encoded.'});
+$('uhe-decode').addEventListener('click',()=>{const t=document.createElement('textarea');t.innerHTML=input.value;out.value=t.value;status.textContent='Common HTML entities decoded as text.'});
+$('uhe-clear').addEventListener('click',()=>{input.value='';out.value='';status.textContent=''});
+$('uhe-copy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(out.value);status.textContent='Copied.'}catch{out.focus();out.select();status.textContent='Select the result and copy it manually.'}});
+})();
+</script>

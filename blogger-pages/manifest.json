@@ -1,12 +1,374 @@
 {
   "pages": [
     {
-      "title": "Word Counter | Utilityra",
-      "file": "word-counter.html"
+      "title": "Word Counter | Toolora",
+      "file": "word-counter.html",
+      "legacyTitle": "Word Counter | Utilityra"
     },
     {
-      "title": "JSON Formatter and Validator | Utilityra",
-      "file": "json-formatter.html"
+      "title": "JSON Formatter and Validator | Toolora",
+      "file": "json-formatter.html",
+      "legacyTitle": "JSON Formatter and Validator | Utilityra"
+    },
+    {
+      "title": "CSV to JSON Converter | Toolora",
+      "file": "csv-json-converter.html",
+      "legacyTitle": "CSV to JSON Converter | Utilityra"
+    },
+    {
+      "title": "Text Cleaner and Formatter | Toolora",
+      "file": "text-cleaner.html",
+      "legacyTitle": "Text Cleaner and Formatter | Utilityra"
+    },
+    {
+      "title": "URL Encoder and Decoder | Toolora",
+      "file": "url-encoder-decoder.html",
+      "legacyTitle": "URL Encoder and Decoder | Utilityra"
+    },
+    {
+      "title": "Base64 Encoder and Decoder | Toolora",
+      "file": "base64-encoder-decoder.html",
+      "legacyTitle": "Base64 Encoder and Decoder | Utilityra"
+    },
+    {
+      "title": "UUID v4 Generator | Toolora",
+      "file": "uuid-generator.html",
+      "legacyTitle": "UUID v4 Generator | Utilityra"
+    },
+    {
+      "title": "Secure Password Generator | Toolora",
+      "file": "password-generator.html",
+      "legacyTitle": "Secure Password Generator | Utilityra"
+    },
+    {
+      "title": "Unix Timestamp Converter | Toolora",
+      "file": "timestamp-converter.html",
+      "legacyTitle": "Unix Timestamp Converter | Utilityra"
+    },
+    {
+      "title": "Percentage and Discount Calculator | Toolora",
+      "file": "percentage-calculator.html",
+      "legacyTitle": "Percentage and Discount Calculator | Utilityra"
+    },
+    {
+      "title": "HTML Entities Encoder and Decoder | Toolora",
+      "file": "html-entities.html",
+      "legacyTitle": "HTML Entities Encoder and Decoder | Utilityra"
+    },
+    {
+      "title": "Image Compressor and Resizer | Toolora",
+      "file": "image-compressor.html",
+      "legacyTitle": "Image Compressor and Resizer | Utilityra"
+    },
+    {
+      "title": "About | Toolora",
+      "file": "about.html",
+      "legacyTitle": "About"
+    },
+    {
+      "title": "Privacy Policy | Toolora",
+      "file": "privacy-policy.html",
+      "legacyTitle": "Privacy Policy"
+    },
+    {
+      "title": "Contact | Toolora",
+      "file": "contact.html",
+      "legacyTitle": "Contact"
+    },
+    {
+      "title": "Disclaimer | Toolora",
+      "file": "disclaimer.html",
+      "legacyTitle": "Disclaimer"
+    },
+    {
+      "title": "Text Case Converter | Toolora",
+      "file": "case-converter.html",
+      "legacyTitle": "Text Case Converter | Utilityra"
+    },
+    {
+      "title": "Sort Text Lines | Toolora",
+      "file": "line-sorter.html",
+      "legacyTitle": "Sort Text Lines | Utilityra"
+    },
+    {
+      "title": "Duplicate Line Remover | Toolora",
+      "file": "duplicate-line-remover.html",
+      "legacyTitle": "Duplicate Line Remover | Utilityra"
+    },
+    {
+      "title": "Find and Replace Text | Toolora",
+      "file": "find-replace.html",
+      "legacyTitle": "Find and Replace Text | Utilityra"
+    },
+    {
+      "title": "Text Difference Checker | Toolora",
+      "file": "text-compare.html",
+      "legacyTitle": "Text Difference Checker | Utilityra"
+    },
+    {
+      "title": "Lorem Ipsum Generator | Toolora",
+      "file": "lorem-ipsum-generator.html",
+      "legacyTitle": "Lorem Ipsum Generator | Utilityra"
+    },
+    {
+      "title": "Word Frequency Counter | Toolora",
+      "file": "word-frequency.html",
+      "legacyTitle": "Word Frequency Counter | Utilityra"
+    },
+    {
+      "title": "Reading Time Estimator | Toolora",
+      "file": "reading-time.html",
+      "legacyTitle": "Reading Time Estimator | Utilityra"
+    },
+    {
+      "title": "Study Flashcard Maker | Toolora",
+      "file": "flashcard-maker.html",
+      "legacyTitle": "Study Flashcard Maker | Utilityra"
+    },
+    {
+      "title": "Grade Average Calculator | Toolora",
+      "file": "grade-calculator.html",
+      "legacyTitle": "Grade Average Calculator | Utilityra"
+    },
+    {
+      "title": "GPA Estimator | Toolora",
+      "file": "gpa-calculator.html",
+      "legacyTitle": "GPA Estimator | Utilityra"
+    },
+    {
+      "title": "Weighted Grade Calculator | Toolora",
+      "file": "weighted-grade-calculator.html",
+      "legacyTitle": "Weighted Grade Calculator | Utilityra"
+    },
+    {
+      "title": "Study Plan Builder | Toolora",
+      "file": "study-plan-generator.html",
+      "legacyTitle": "Study Plan Builder | Utilityra"
+    },
+    {
+      "title": "Age Calculator | Toolora",
+      "file": "age-calculator.html",
+      "legacyTitle": "Age Calculator | Utilityra"
+    },
+    {
+      "title": "Date Difference Calculator | Toolora",
+      "file": "date-difference.html",
+      "legacyTitle": "Date Difference Calculator | Utilityra"
+    },
+    {
+      "title": "Everyday Unit Converter | Toolora",
+      "file": "unit-converter.html",
+      "legacyTitle": "Everyday Unit Converter | Utilityra"
+    },
+    {
+      "title": "Scientific Calculator | Toolora",
+      "file": "scientific-calculator.html",
+      "legacyTitle": "Scientific Calculator | Utilityra"
+    },
+    {
+      "title": "VAT and Tax Calculator | Toolora",
+      "file": "vat-calculator.html",
+      "legacyTitle": "VAT and Tax Calculator | Utilityra"
+    },
+    {
+      "title": "Hourly Pay Calculator | Toolora",
+      "file": "hourly-pay-calculator.html",
+      "legacyTitle": "Hourly Pay Calculator | Utilityra"
+    },
+    {
+      "title": "Statistics Calculator | Toolora",
+      "file": "statistics-calculator.html",
+      "legacyTitle": "Statistics Calculator | Utilityra"
+    },
+    {
+      "title": "Number Base Converter | Toolora",
+      "file": "number-base-converter.html",
+      "legacyTitle": "Number Base Converter | Utilityra"
+    },
+    {
+      "title": "Binary and Hex Converter | Toolora",
+      "file": "binary-hex-converter.html",
+      "legacyTitle": "Binary and Hex Converter | Utilityra"
+    },
+    {
+      "title": "JSON to XML Converter | Toolora",
+      "file": "json-to-xml.html",
+      "legacyTitle": "JSON to XML Converter | Utilityra"
+    },
+    {
+      "title": "XML Formatter and Validator | Toolora",
+      "file": "xml-formatter.html",
+      "legacyTitle": "XML Formatter and Validator | Utilityra"
+    },
+    {
+      "title": "SQL Query Formatter | Toolora",
+      "file": "sql-formatter.html",
+      "legacyTitle": "SQL Query Formatter | Utilityra"
+    },
+    {
+      "title": "Regular Expression Tester | Toolora",
+      "file": "regex-tester.html",
+      "legacyTitle": "Regular Expression Tester | Utilityra"
+    },
+    {
+      "title": "JWT Decoder | Toolora",
+      "file": "jwt-decoder.html",
+      "legacyTitle": "JWT Decoder | Utilityra"
+    },
+    {
+      "title": "SHA-256 Hash Generator | Toolora",
+      "file": "sha256-hash.html",
+      "legacyTitle": "SHA-256 Hash Generator | Utilityra"
+    },
+    {
+      "title": "JSON Difference Checker | Toolora",
+      "file": "json-diff.html",
+      "legacyTitle": "JSON Difference Checker | Utilityra"
+    },
+    {
+      "title": "HTML Formatter | Toolora",
+      "file": "html-formatter.html",
+      "legacyTitle": "HTML Formatter | Utilityra"
+    },
+    {
+      "title": "CSS Formatter | Toolora",
+      "file": "css-formatter.html",
+      "legacyTitle": "CSS Formatter | Utilityra"
+    },
+    {
+      "title": "Color Format Converter | Toolora",
+      "file": "color-converter.html",
+      "legacyTitle": "Color Format Converter | Utilityra"
+    },
+    {
+      "title": "CSS Gradient Generator | Toolora",
+      "file": "gradient-generator.html",
+      "legacyTitle": "CSS Gradient Generator | Utilityra"
+    },
+    {
+      "title": "CSS Box Shadow Generator | Toolora",
+      "file": "box-shadow-generator.html",
+      "legacyTitle": "CSS Box Shadow Generator | Utilityra"
+    },
+    {
+      "title": "SEO Meta Tag Generator | Toolora",
+      "file": "meta-tag-generator.html",
+      "legacyTitle": "SEO Meta Tag Generator | Utilityra"
+    },
+    {
+      "title": "Robots.txt Builder | Toolora",
+      "file": "robots-txt-generator.html",
+      "legacyTitle": "Robots.txt Builder | Utilityra"
+    },
+    {
+      "title": "Sitemap URL List Builder | Toolora",
+      "file": "sitemap-generator.html",
+      "legacyTitle": "Sitemap URL List Builder | Utilityra"
+    },
+    {
+      "title": "URL Inspector | Toolora",
+      "file": "url-parser.html",
+      "legacyTitle": "URL Inspector | Utilityra"
+    },
+    {
+      "title": "Cron Expression Validator | Toolora",
+      "file": "cron-validator.html",
+      "legacyTitle": "Cron Expression Validator | Utilityra"
+    },
+    {
+      "title": "CSV to Markdown Table | Toolora",
+      "file": "csv-to-markdown.html",
+      "legacyTitle": "CSV to Markdown Table | Utilityra"
+    },
+    {
+      "title": "Markdown Table Generator | Toolora",
+      "file": "markdown-table-generator.html",
+      "legacyTitle": "Markdown Table Generator | Utilityra"
+    },
+    {
+      "title": "File Size Converter | Toolora",
+      "file": "file-size-converter.html",
+      "legacyTitle": "File Size Converter | Utilityra"
+    },
+    {
+      "title": "Random Number Generator | Toolora",
+      "file": "random-number-generator.html",
+      "legacyTitle": "Random Number Generator | Utilityra"
+    },
+    {
+      "title": "Password Strength Checker | Toolora",
+      "file": "password-strength-checker.html",
+      "legacyTitle": "Password Strength Checker | Utilityra"
+    },
+    {
+      "title": "CSV Validator | Toolora",
+      "file": "csv-validator.html",
+      "legacyTitle": "CSV Validator | Utilityra"
+    },
+    {
+      "title": "Excel Formula Helper | Toolora",
+      "file": "excel-formula-helper.html",
+      "legacyTitle": "Excel Formula Helper | Utilityra"
+    },
+    {
+      "title": "Time Zone Converter | Toolora",
+      "file": "timezone-converter.html",
+      "legacyTitle": "Time Zone Converter | Utilityra"
+    },
+    {
+      "title": "Citation Formatter | Toolora",
+      "file": "citation-formatter.html",
+      "legacyTitle": "Citation Formatter | Utilityra"
+    },
+    {
+      "title": "Image Filter Studio | Toolora",
+      "file": "image-filter-studio.html",
+      "legacyTitle": "Image Filter Studio | Utilityra"
+    },
+    {
+      "title": "Image Rotate and Flip | Toolora",
+      "file": "image-rotate-flip.html",
+      "legacyTitle": "Image Rotate and Flip | Utilityra"
+    },
+    {
+      "title": "Image to Base64 Data URI | Toolora",
+      "file": "image-to-data-uri.html",
+      "legacyTitle": "Image to Base64 Data URI | Utilityra"
+    },
+    {
+      "title": "AI Assistant | Toolora",
+      "file": "ai-assistant.html",
+      "legacyTitle": "AI Assistant | Utilityra"
+    },
+    {
+      "title": "PDF Merge | Toolora",
+      "file": "pdf-merge.html",
+      "legacyTitle": "PDF Merge | Utilityra"
+    },
+    {
+      "title": "PDF Page Extractor | Toolora",
+      "file": "pdf-split.html",
+      "legacyTitle": "PDF Page Extractor | Utilityra"
+    },
+    {
+      "title": "PDF Page Counter and Info | Toolora",
+      "file": "pdf-page-info.html",
+      "legacyTitle": "PDF Page Counter and Info | Utilityra"
+    },
+    {
+      "title": "Image Cropper | Toolora",
+      "file": "image-cropper.html",
+      "legacyTitle": "Image Cropper | Utilityra"
+    },
+    {
+      "title": "Image Watermark Tool | Toolora",
+      "file": "image-watermark.html",
+      "legacyTitle": "Image Watermark Tool | Utilityra"
+    },
+    {
+      "title": "File Metadata Inspector | Toolora",
+      "file": "file-metadata-inspector.html",
+      "legacyTitle": "File Metadata Inspector | Utilityra"
     }
   ]
 }

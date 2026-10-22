@@ -1,0 +1,16 @@
+<!-- Utilityra tool page: URL encoder/decoder. Review as a Blogger draft before publishing. -->
+<section class="ur-tool" lang="en" aria-labelledby="uue-title">
+  <p class="ur-eyebrow">DEVELOPER TOOLS</p><h2 id="uue-title">URL Encoder and Decoder</h2>
+  <p>Encode text for use in URL components or decode percent-encoded text. This tool does not navigate to entered URLs.</p>
+  <label for="uue-input">Text or URL component</label><textarea id="uue-input" rows="8" placeholder="Enter text to encode or decode…"></textarea>
+  <div class="ur-actions"><button type="button" id="uue-encode" class="ur-primary">Encode</button><button type="button" id="uue-decode" class="ur-secondary">Decode</button><button type="button" id="uue-clear" class="ur-secondary">Clear</button></div>
+  <p id="uue-status" role="status" aria-live="polite"></p><label for="uue-output">Result</label><textarea id="uue-output" rows="8" readonly="readonly"></textarea><button type="button" id="uue-copy" class="ur-secondary">Copy result</button>
+</section>
+<script>
+(function(){const $=id=>document.getElementById(id),input=$('uue-input'),output=$('uue-output'),status=$('uue-status');if(!input||!output)return;
+$('uue-encode').addEventListener('click',()=>{output.value=encodeURIComponent(input.value);status.textContent='Encoding completed.'});
+$('uue-decode').addEventListener('click',()=>{try{output.value=decodeURIComponent(input.value);status.textContent='Decoding completed.'}catch{output.value='';status.textContent='Invalid percent-encoded text. Check the input and try again.'}});
+$('uue-clear').addEventListener('click',()=>{input.value='';output.value='';status.textContent=''});
+$('uue-copy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(output.value);status.textContent='Copied.'}catch{output.focus();output.select();status.textContent='Select the result and copy it manually.'}});
+})();
+</script>

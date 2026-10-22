@@ -1,9 +1,12 @@
-name: Validate Utilityra starter
+name: Validate Toolora rebuild
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 on:
-  push:
-    branches: [main]
   pull_request:
-    branches: [main]
+    branches: [main, rebuild/utilityra-platform-v1]
+  push:
+    branches: [main, rebuild/utilityra-platform-v1]
   workflow_dispatch:
 jobs:
   validate:
@@ -13,7 +16,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Check JavaScript syntax
-        run: node --check worker/src/index.js
-      - name: Check page fragments are present
-        run: test -s blogger-pages/word-counter.html && test -s blogger-pages/json-formatter.html && test -s blogger-pages/ai-assistant.html
+      - name: Check Worker and Blogger sync JavaScript syntax
+        run: node --check worker/src/index.js && node --check scripts/blogger-sync.mjs
+      - name: Validate theme XML, tool scripts, and manifest
+        run: python scripts/validate-site.py
+      - name: Test Worker API behavior
+        run: node --test tests/worker.test.mjs
+      - name: Check required pages exist
+        run: test -s blogger-pages/word-counter.html && test -s blogger-pages/json-formatter.html && test -s blogger-pages/utilityra-theme-v1.xml
