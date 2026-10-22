@@ -94,8 +94,14 @@ async function listPages(status) {
   } while (pageToken);
   return pages;
 }
-const existing = await listPages("LIVE");
-const uniqueExisting = Array.from(new Map(existing.filter(page => page.id).map(page => [page.id, page])).values());
+// Include drafts as well as live pages. Otherwise a page that already exists as a
+// Blogger draft is invisible to the sync and a duplicate page gets created on every publish.
+const [livePages, draftPages] = await Promise.all([listPages("LIVE"), listPages("DRAFT")]);
+const uniqueExisting = Array.from(
+  new Map([...livePages, ...draftPages].filter(page => page.id).map(page => [page.id, page])).values()
+);
+// Prefer the published page if an older duplicate exists with the same accepted title.
+uniqueExisting.sort((a, b) => Number(b.status === "LIVE") - Number(a.status === "LIVE"));
 
 for (const item of manifest.pages) {
   if (!item.title || !item.file) throw new Error("Every page needs title and file in manifest.json");
@@ -112,7 +118,8 @@ for (const item of manifest.pages) {
     acceptedNormalizedTitles.includes(normalizeTitle(page.title))
   );
   const normalizeContent = value => String(value || "").replace(/\r\n/g, "\n").trim();
-  if (match && mode === "publish" && match.title?.trim() === item.title.trim()
+  if (match && match.status === "LIVE" && mode === "publish"
+      && match.title?.trim() === item.title.trim()
       && normalizeContent(match.content) === normalizeContent(content)) {
     console.log("Skipped unchanged page: " + item.title + " " + (match.url || ""));
     continue;
