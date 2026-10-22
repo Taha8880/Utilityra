@@ -63,6 +63,210 @@
     {
       "title": "Disclaimer",
       "file": "disclaimer.html"
+    },
+    {
+      "title": "Text Case Converter | Utilityra",
+      "file": "case-converter.html"
+    },
+    {
+      "title": "Sort Text Lines | Utilityra",
+      "file": "line-sorter.html"
+    },
+    {
+      "title": "Duplicate Line Remover | Utilityra",
+      "file": "duplicate-line-remover.html"
+    },
+    {
+      "title": "Find and Replace Text | Utilityra",
+      "file": "find-replace.html"
+    },
+    {
+      "title": "Text Difference Checker | Utilityra",
+      "file": "text-compare.html"
+    },
+    {
+      "title": "Lorem Ipsum Generator | Utilityra",
+      "file": "lorem-ipsum-generator.html"
+    },
+    {
+      "title": "Word Frequency Counter | Utilityra",
+      "file": "word-frequency.html"
+    },
+    {
+      "title": "Reading Time Estimator | Utilityra",
+      "file": "reading-time.html"
+    },
+    {
+      "title": "Study Flashcard Maker | Utilityra",
+      "file": "flashcard-maker.html"
+    },
+    {
+      "title": "Grade Average Calculator | Utilityra",
+      "file": "grade-calculator.html"
+    },
+    {
+      "title": "GPA Estimator | Utilityra",
+      "file": "gpa-calculator.html"
+    },
+    {
+      "title": "Weighted Grade Calculator | Utilityra",
+      "file": "weighted-grade-calculator.html"
+    },
+    {
+      "title": "Study Plan Builder | Utilityra",
+      "file": "study-plan-generator.html"
+    },
+    {
+      "title": "Age Calculator | Utilityra",
+      "file": "age-calculator.html"
+    },
+    {
+      "title": "Date Difference Calculator | Utilityra",
+      "file": "date-difference.html"
+    },
+    {
+      "title": "Everyday Unit Converter | Utilityra",
+      "file": "unit-converter.html"
+    },
+    {
+      "title": "Scientific Calculator | Utilityra",
+      "file": "scientific-calculator.html"
+    },
+    {
+      "title": "VAT and Tax Calculator | Utilityra",
+      "file": "vat-calculator.html"
+    },
+    {
+      "title": "Hourly Pay Calculator | Utilityra",
+      "file": "hourly-pay-calculator.html"
+    },
+    {
+      "title": "Statistics Calculator | Utilityra",
+      "file": "statistics-calculator.html"
+    },
+    {
+      "title": "Number Base Converter | Utilityra",
+      "file": "number-base-converter.html"
+    },
+    {
+      "title": "Binary and Hex Converter | Utilityra",
+      "file": "binary-hex-converter.html"
+    },
+    {
+      "title": "JSON to XML Converter | Utilityra",
+      "file": "json-to-xml.html"
+    },
+    {
+      "title": "XML Formatter and Validator | Utilityra",
+      "file": "xml-formatter.html"
+    },
+    {
+      "title": "SQL Query Formatter | Utilityra",
+      "file": "sql-formatter.html"
+    },
+    {
+      "title": "Regular Expression Tester | Utilityra",
+      "file": "regex-tester.html"
+    },
+    {
+      "title": "JWT Decoder | Utilityra",
+      "file": "jwt-decoder.html"
+    },
+    {
+      "title": "SHA-256 Hash Generator | Utilityra",
+      "file": "sha256-hash.html"
+    },
+    {
+      "title": "JSON Difference Checker | Utilityra",
+      "file": "json-diff.html"
+    },
+    {
+      "title": "HTML Formatter | Utilityra",
+      "file": "html-formatter.html"
+    },
+    {
+      "title": "CSS Formatter | Utilityra",
+      "file": "css-formatter.html"
+    },
+    {
+      "title": "Color Format Converter | Utilityra",
+      "file": "color-converter.html"
+    },
+    {
+      "title": "CSS Gradient Generator | Utilityra",
+      "file": "gradient-generator.html"
+    },
+    {
+      "title": "CSS Box Shadow Generator | Utilityra",
+      "file": "box-shadow-generator.html"
+    },
+    {
+      "title": "SEO Meta Tag Generator | Utilityra",
+      "file": "meta-tag-generator.html"
+    },
+    {
+      "title": "Robots.txt Builder | Utilityra",
+      "file": "robots-txt-generator.html"
+    },
+    {
+      "title": "Sitemap URL List Builder | Utilityra",
+      "file": "sitemap-generator.html"
+    },
+    {
+      "title": "URL Inspector | Utilityra",
+      "file": "url-parser.html"
+    },
+    {
+      "title": "Cron Expression Validator | Utilityra",
+      "file": "cron-validator.html"
+    },
+    {
+      "title": "CSV to Markdown Table | Utilityra",
+      "file": "csv-to-markdown.html"
+    },
+    {
+      "title": "Markdown Table Generator | Utilityra",
+      "file": "markdown-table-generator.html"
+    },
+    {
+      "title": "File Size Converter | Utilityra",
+      "file": "file-size-converter.html"
+    },
+    {
+      "title": "Random Number Generator | Utilityra",
+      "file": "random-number-generator.html"
+    },
+    {
+      "title": "Password Strength Checker | Utilityra",
+      "file": "password-strength-checker.html"
+    },
+    {
+      "title": "CSV Validator | Utilityra",
+      "file": "csv-validator.html"
+    },
+    {
+      "title": "Excel Formula Helper | Utilityra",
+      "file": "excel-formula-helper.html"
+    },
+    {
+      "title": "Time Zone Converter | Utilityra",
+      "file": "timezone-converter.html"
+    },
+    {
+      "title": "Citation Formatter | Utilityra",
+      "file": "citation-formatter.html"
+    },
+    {
+      "title": "Image Filter Studio | Utilityra",
+      "file": "image-filter-studio.html"
+    },
+    {
+      "title": "Image Rotate and Flip | Utilityra",
+      "file": "image-rotate-flip.html"
+    },
+    {
+      "title": "Image to Base64 Data URI | Utilityra",
+      "file": "image-to-data-uri.html"
     }
   ]
 }
