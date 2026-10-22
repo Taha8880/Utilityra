@@ -1,0 +1,46 @@
+name: Utilityra Blogger Browser Test
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/blogger-browser-test.yml"
+      - "scripts/blogger-browser-check.mjs"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: utilityra-blogger-browser-test
+  cancel-in-progress: false
+
+jobs:
+  browser-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Playwright and Chromium
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+
+      - name: Open the live Utilityra Blogger site
+        run: node scripts/blogger-browser-check.mjs
+
+      - name: Upload browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: utilityra-blogger-browser-evidence
+          path: browser-evidence/
+          if-no-files-found: ignore
+          retention-days: 7
