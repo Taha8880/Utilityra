@@ -1,5 +1,5 @@
 # Example only. Do not deploy until the D1 database is created and its real ID is filled in.
-name = "flarivo-platform-api"
+name = "utilityra-platform-api"
 main = "src/index.js"
 compatibility_date = "2026-10-22"
 
@@ -12,7 +12,7 @@ WORKERS_AI_MODEL = "@cf/meta/llama-3.1-8b-instruct"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "flarivo-data"
+database_name = "utilityra-data"
 database_id = "REPLACE_AFTER_CREATING_D1"
 
 # Cloudflare Workers AI powers the default assistant provider. Review account limits and pricing.
