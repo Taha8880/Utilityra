@@ -433,6 +433,7 @@ html[data-theme=light] .post-body{color:#454b60}
   if(search)search.addEventListener('input',function(){query=search.value.trim();filterTools();});
   if(form)form.addEventListener('submit',function(e){e.preventDefault();query=search?search.value.trim():'';filterTools();if(query.length>=2){const visible=cards.some(function(card){return !card.hidden;});track(visible?'search':'search_miss',{searchTerm:query});}document.getElementById('tools')?.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});});
   if(grid)grid.addEventListener('click',function(e){const link=e.target.closest('.ur-card-foot');if(!link)return;const card=link.closest('.ur-card');if(card)track('tool_open',{toolKey:card.dataset.id||''});});
+  document.addEventListener('click',function(e){const button=e.target.closest('.ur-tool button,.utilityra-tool button');if(!button)return;const panel=button.closest('[data-tool-id],.ur-tool,.utilityra-tool');let key=panel&&panel.dataset.toolId?panel.dataset.toolId:location.pathname.split('/').pop().replace(/\.html$/i,'').replace(/-(utilityra|toolora)$/i,'');key=String(key||'tool').toLowerCase().replace(/[^a-z0-9-]/g,'-').replace(/^-+|-+$/g,'').slice(0,80)||'tool';track('tool_action',{toolKey:key});});
   if(grid){grid.setAttribute('aria-label','Tool catalog');cards.forEach(function(card){card.classList.add('to-reveal');});}
   if(!reduce){
     root.classList.add('motion-ready');
