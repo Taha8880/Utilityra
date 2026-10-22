@@ -52,13 +52,14 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           set -euo pipefail
-          npx --yes wrangler@4 d1 list --json > "$RUNNER_TEMP/d1-list.json"
-          DB_ID="$(node -e 'const d=require(process.argv[1]);const a=Array.isArray(d)?d:(d.result||d.databases||[]);const x=a.find(v=>v.name==="utilityra-data");console.log(x?(x.uuid||x.database_id||x.id||""):"")' "$RUNNER_TEMP/d1-list.json")"
+          API="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/d1/database"
+          curl -fsS -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$API" > "$RUNNER_TEMP/d1-list.json"
+          DB_ID="$(node -e 'const d=require(process.argv[1]);if(!d.success)process.exit(2);const x=(d.result||[]).find(v=>v.name==="utilityra-data");console.log(x?x.uuid:"")' "$RUNNER_TEMP/d1-list.json")"
           if [ -z "$DB_ID" ]; then
-            npx --yes wrangler@4 d1 create utilityra-data --json > "$RUNNER_TEMP/d1-create.json"
-            DB_ID="$(node -e 'const d=require(process.argv[1]);const x=d.result||d;console.log(x.uuid||x.database_id||x.id||"")' "$RUNNER_TEMP/d1-create.json")"
+            curl -fsS -X POST "$API" -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" --data '{"name":"utilityra-data"}' > "$RUNNER_TEMP/d1-create.json"
+            DB_ID="$(node -e 'const d=require(process.argv[1]);if(!d.success)process.exit(2);console.log(d.result?.uuid||"")' "$RUNNER_TEMP/d1-create.json")"
           fi
-          test -n "$DB_ID" || { echo "::error::Could not resolve the D1 database ID from Wrangler output."; exit 1; }
+          test -n "$DB_ID" || { echo "::error::Could not resolve the D1 database ID from Cloudflare API."; exit 1; }
           sed "s/REPLACE_AFTER_CREATING_D1/$DB_ID/" wrangler.toml.example > wrangler.toml
           echo "D1 database is ready; ID is intentionally not printed."
 
