@@ -163,6 +163,37 @@ test('image filter tool accepts a local image and exports a PNG', async ({ page 
   await expect(page.locator('#ifs-dl')).toHaveAttribute('href', /^blob:/);
 });
 
+
+test('image cropper validates bounds and exports a local crop', async ({ page }) => {
+  await loadTool(page, 'image-cropper.html');
+  const pixel = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR4nGP4DwQACfsD/fteaysAAAAASUVORK5CYII=', 'base64');
+  await page.locator('#ic-file').setInputFiles({ name: 'pixel.png', mimeType: 'image/png', buffer: pixel });
+  await page.locator('#ic-run').click();
+  await expect(page.locator('#ic-dl')).toBeVisible();
+  await expect(page.locator('#ic-status')).toContainText('1 × 1');
+});
+
+test('file metadata inspector calculates a local SHA-256 digest', async ({ page }) => {
+  await loadTool(page, 'file-metadata-inspector.html');
+  await page.locator('#fmi-file').setInputFiles({ name: 'note.txt', mimeType: 'text/plain', buffer: Buffer.from('abc') });
+  await page.locator('#fmi-run').click();
+  await expect(page.locator('#fmi-output')).toHaveValue(/SHA-256: ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad/);
+});
+
+test('PDF merger combines two browser-generated sample PDFs locally', async ({ page }) => {
+  await loadTool(page, 'pdf-merge.html');
+  await page.waitForFunction(() => Boolean(window.PDFLib), { timeout: 20000 });
+  const first = await page.evaluate(async () => { const d = await PDFLib.PDFDocument.create(); d.addPage(); return Array.from(await d.save()); });
+  const second = await page.evaluate(async () => { const d = await PDFLib.PDFDocument.create(); d.addPage(); d.addPage(); return Array.from(await d.save()); });
+  await page.locator('#pdfm-files').setInputFiles([
+    { name: 'first.pdf', mimeType: 'application/pdf', buffer: Buffer.from(first) },
+    { name: 'second.pdf', mimeType: 'application/pdf', buffer: Buffer.from(second) }
+  ]);
+  await page.locator('#pdfm-run').click();
+  await expect(page.locator('#pdfm-download')).toBeVisible();
+  await expect(page.locator('#pdfm-status')).toContainText('3 صفحات');
+});
+
 test('JSON formatter reports malformed JSON and formats valid input', async ({ page }) => {
   await loadTool(page, 'json-formatter.html');
   await page.locator('#ujf-input').fill('{"name":"Utilityra","active":true}');
