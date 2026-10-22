@@ -6,6 +6,7 @@ on:
     paths:
       - "blogger-pages/**"
       - "scripts/blogger-sync.mjs"
+      - ".github/workflows/publish-utilityra-brand-fix.yml"
 
 concurrency:
   group: utilityra-page-sync
