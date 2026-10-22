@@ -7,7 +7,7 @@ import xml.etree.ElementTree as ET
 
 ROOT=Path(__file__).resolve().parents[1]
 PAGES=ROOT/"blogger-pages"
-THEME=PAGES/"utilityra-theme-v4.xml"
+THEME=PAGES/"utilityra-theme-v5.xml"
 MANIFEST=PAGES/"manifest.json"
 
 def fail(message): raise SystemExit("VALIDATION FAILED: "+message)
@@ -89,7 +89,7 @@ missing=sorted(set(card_hrefs)-expected)
 if missing: fail("Tool card URLs do not match verified live URLs: "+", ".join(missing))
 tool_count=len(expected)
 if tool_count<50 or len(card_hrefs)<50: fail("Expected at least 50 dedicated tool pages and homepage cards")
-print("PASS: Utilityra v4 Blogger theme XML is well-formed.")
+print("PASS: Utilityra v5 Blogger theme XML is well-formed.")
 print(f"PASS: {len(pages)} manifest pages exist, keep their verified URLs and have valid embedded JavaScript.")
 print(f"PASS: {len(card_hrefs)} tool cards point to preserved live URLs.")
 print("PASS: AdSense publisher connection remains present; old brand is absent from the new theme.")
