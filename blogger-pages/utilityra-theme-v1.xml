@@ -156,6 +156,11 @@ html[data-theme=dark]{color-scheme:dark;--bg:#0d1222;--surface:#151c30;--ink:#ed
   const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
   const reviewParams=new URLSearchParams(location.search);
   const userAgent=navigator.userAgent||'';
+  try{
+    if(reviewParams.get('utilityra_owner')==='exclude')localStorage.setItem('ur-owner-exclude','1');
+    if(reviewParams.get('utilityra_owner')==='include')localStorage.removeItem('ur-owner-exclude');
+    if(reviewParams.has('utilityra_owner'))history.replaceState(null,'',location.pathname+location.hash);
+  }catch(e){}
   let ownerExcluded=false;
   try{ownerExcluded=localStorage.getItem('ur-owner-exclude')==='1'}catch(e){}
   const reviewMode=reviewParams.has('utilityra_review')||reviewParams.has('preview')||navigator.webdriver||/bot|crawler|spider|headless|playwright|puppeteer|lighthouse|google-inspectiontool|chatgpt|openai|anthropic|claude|perplexity|gemini|bingpreview/i.test(userAgent);
