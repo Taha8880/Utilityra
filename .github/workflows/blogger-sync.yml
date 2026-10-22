@@ -1,6 +1,12 @@
 name: Flarivo Blogger page sync
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'blogger-pages/**'
+      - 'scripts/blogger-sync.mjs'
+      - '.github/workflows/blogger-sync.yml'
   workflow_dispatch:
     inputs:
       publish:
@@ -34,5 +40,5 @@ jobs:
           GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.BLOGGER_CLIENT_ID }}
           GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.BLOGGER_CLIENT_SECRET }}
           GOOGLE_OAUTH_REFRESH_TOKEN: ${{ secrets.BLOGGER_REFRESH_TOKEN }}
-          PUBLISH_MODE: ${{ inputs.publish == true && 'publish' || 'draft' }}
+          PUBLISH_MODE: ${{ github.event_name == 'push' && 'publish' || (inputs.publish == true && 'publish' || 'draft') }}
         run: node scripts/blogger-sync.mjs
