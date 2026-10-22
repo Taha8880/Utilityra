@@ -45,34 +45,58 @@ const accessToken = await getAccessToken();
 const blogId = encodeURIComponent(process.env.BLOGGER_BLOG_ID);
 const api = `https://www.googleapis.com/blogger/v3/blogs/${blogId}`;
 
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+let lastRequestAt = 0;
 async function apiRequest(url, options = {}) {
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      authorization: `Bearer ${accessToken}`,
-      "content-type": "application/json",
-      ...(options.headers || {})
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    const gap = 900 - (Date.now() - lastRequestAt);
+    if (gap > 0) await delay(gap);
+    lastRequestAt = Date.now();
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        authorization: "Bearer " + accessToken,
+        "content-type": "application/json",
+        ...(options.headers || {})
+      }
+    });
+    if (response.ok) return await response.json().catch(() => ({}));
+    const retryable = response.status === 429 || [500, 502, 503, 504].includes(response.status);
+    if (retryable && attempt < 5) {
+      const retryAfter = Number(response.headers.get("retry-after"));
+      const waitMs = Number.isFinite(retryAfter) && retryAfter > 0
+        ? Math.min(30000, retryAfter * 1000)
+        : Math.min(30000, 1500 * (2 ** attempt));
+      console.warn("Blogger API returned HTTP " + response.status + "; retry " + (attempt + 1) + "/5 after " + waitMs + "ms.");
+      await delay(waitMs);
+      continue;
     }
-  });
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    const err = new Error(`Blogger API request failed (HTTP ${response.status}). Check blog ID, OAuth scope and page permissions.`);
+    const err = new Error("Blogger API request failed (HTTP " + response.status + "). Check blog ID, OAuth scope and page permissions.");
     err.status = response.status;
     throw err;
   }
-  return payload;
+  throw new Error("Blogger API request retry limit reached.");
 }
 
+async function listPages(status) {
+  const pages = [];
+  let pageToken;
+  do {
+    const url = new URL(api + "/pages");
+    url.searchParams.set("maxResults", "100");
+    url.searchParams.set("status", status);
+    if (pageToken) url.searchParams.set("pageToken", pageToken);
+    const result = await apiRequest(url.toString());
+    pages.push(...(result.items || []));
+    pageToken = result.nextPageToken;
+  } while (pageToken);
+  return pages;
+}
 const existing = [];
-let pageToken;
-do {
-  const url = new URL(`${api}/pages`);
-  url.searchParams.set("maxResults", "100");
-  if (pageToken) url.searchParams.set("pageToken", pageToken);
-  const result = await apiRequest(url.toString());
-  existing.push(...(result.items || []));
-  pageToken = result.nextPageToken;
-} while (pageToken);
+for (const status of ["LIVE", "DRAFT"]) {
+  existing.push(...await listPages(status));
+}
+const uniqueExisting = Array.from(new Map(existing.filter(page => page.id).map(page => [page.id, page])).values());
 
 for (const item of manifest.pages) {
   if (!item.title || !item.file) throw new Error("Every page needs title and file in manifest.json");
@@ -84,7 +108,7 @@ for (const item of manifest.pages) {
   const acceptedTitles = [item.title, item.legacyTitle].filter(Boolean);
   const normalizeTitle = title => String(title || "").replace(/\s*\|\s*(Toolora|Utilityra)$/i, "").trim().toLowerCase();
   const acceptedNormalizedTitles = acceptedTitles.map(normalizeTitle);
-  const match = existing.find(page =>
+  const match = uniqueExisting.find(page =>
     acceptedTitles.some(title => page.title?.trim().toLowerCase() === title.trim().toLowerCase()) ||
     acceptedNormalizedTitles.includes(normalizeTitle(page.title))
   );
