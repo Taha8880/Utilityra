@@ -1,4 +1,4 @@
-# Toolora Platform v1 — implementation blueprint
+# Flarivo Platform v1 — implementation blueprint
 
 ## Product direction
 Build a useful tools-and-data platform, not a collection of thin keyword pages. The current staging catalog has 69 standalone utility pages spanning study, office, developer, design, time, calculations and image editing, PDF merging/splitting and file metadata inspection; keep tools distinct and tested rather than padding the count. Every public tool should have a stable Blogger Page URL, a unique title and description, plain-language instructions, error states, and internal links to related tools.

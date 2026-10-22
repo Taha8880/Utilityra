@@ -1,372 +1,372 @@
 {
   "pages": [
     {
-      "title": "Word Counter | Toolora",
+      "title": "Word Counter | Flarivo",
       "file": "word-counter.html",
       "legacyTitle": "Word Counter | Utilityra"
     },
     {
-      "title": "JSON Formatter and Validator | Toolora",
+      "title": "JSON Formatter and Validator | Flarivo",
       "file": "json-formatter.html",
       "legacyTitle": "JSON Formatter and Validator | Utilityra"
     },
     {
-      "title": "CSV to JSON Converter | Toolora",
+      "title": "CSV to JSON Converter | Flarivo",
       "file": "csv-json-converter.html",
       "legacyTitle": "CSV to JSON Converter | Utilityra"
     },
     {
-      "title": "Text Cleaner and Formatter | Toolora",
+      "title": "Text Cleaner and Formatter | Flarivo",
       "file": "text-cleaner.html",
       "legacyTitle": "Text Cleaner and Formatter | Utilityra"
     },
     {
-      "title": "URL Encoder and Decoder | Toolora",
+      "title": "URL Encoder and Decoder | Flarivo",
       "file": "url-encoder-decoder.html",
       "legacyTitle": "URL Encoder and Decoder | Utilityra"
     },
     {
-      "title": "Base64 Encoder and Decoder | Toolora",
+      "title": "Base64 Encoder and Decoder | Flarivo",
       "file": "base64-encoder-decoder.html",
       "legacyTitle": "Base64 Encoder and Decoder | Utilityra"
     },
     {
-      "title": "UUID v4 Generator | Toolora",
+      "title": "UUID v4 Generator | Flarivo",
       "file": "uuid-generator.html",
       "legacyTitle": "UUID v4 Generator | Utilityra"
     },
     {
-      "title": "Secure Password Generator | Toolora",
+      "title": "Secure Password Generator | Flarivo",
       "file": "password-generator.html",
       "legacyTitle": "Secure Password Generator | Utilityra"
     },
     {
-      "title": "Unix Timestamp Converter | Toolora",
+      "title": "Unix Timestamp Converter | Flarivo",
       "file": "timestamp-converter.html",
       "legacyTitle": "Unix Timestamp Converter | Utilityra"
     },
     {
-      "title": "Percentage and Discount Calculator | Toolora",
+      "title": "Percentage and Discount Calculator | Flarivo",
       "file": "percentage-calculator.html",
       "legacyTitle": "Percentage and Discount Calculator | Utilityra"
     },
     {
-      "title": "HTML Entities Encoder and Decoder | Toolora",
+      "title": "HTML Entities Encoder and Decoder | Flarivo",
       "file": "html-entities.html",
       "legacyTitle": "HTML Entities Encoder and Decoder | Utilityra"
     },
     {
-      "title": "Image Compressor and Resizer | Toolora",
+      "title": "Image Compressor and Resizer | Flarivo",
       "file": "image-compressor.html",
       "legacyTitle": "Image Compressor and Resizer | Utilityra"
     },
     {
-      "title": "About | Toolora",
+      "title": "About | Flarivo",
       "file": "about.html",
       "legacyTitle": "About"
     },
     {
-      "title": "Privacy Policy | Toolora",
+      "title": "Privacy Policy | Flarivo",
       "file": "privacy-policy.html",
       "legacyTitle": "Privacy Policy"
     },
     {
-      "title": "Contact | Toolora",
+      "title": "Contact | Flarivo",
       "file": "contact.html",
       "legacyTitle": "Contact"
     },
     {
-      "title": "Disclaimer | Toolora",
+      "title": "Disclaimer | Flarivo",
       "file": "disclaimer.html",
       "legacyTitle": "Disclaimer"
     },
     {
-      "title": "Text Case Converter | Toolora",
+      "title": "Text Case Converter | Flarivo",
       "file": "case-converter.html",
       "legacyTitle": "Text Case Converter | Utilityra"
     },
     {
-      "title": "Sort Text Lines | Toolora",
+      "title": "Sort Text Lines | Flarivo",
       "file": "line-sorter.html",
       "legacyTitle": "Sort Text Lines | Utilityra"
     },
     {
-      "title": "Duplicate Line Remover | Toolora",
+      "title": "Duplicate Line Remover | Flarivo",
       "file": "duplicate-line-remover.html",
       "legacyTitle": "Duplicate Line Remover | Utilityra"
     },
     {
-      "title": "Find and Replace Text | Toolora",
+      "title": "Find and Replace Text | Flarivo",
       "file": "find-replace.html",
       "legacyTitle": "Find and Replace Text | Utilityra"
     },
     {
-      "title": "Text Difference Checker | Toolora",
+      "title": "Text Difference Checker | Flarivo",
       "file": "text-compare.html",
       "legacyTitle": "Text Difference Checker | Utilityra"
     },
     {
-      "title": "Lorem Ipsum Generator | Toolora",
+      "title": "Lorem Ipsum Generator | Flarivo",
       "file": "lorem-ipsum-generator.html",
       "legacyTitle": "Lorem Ipsum Generator | Utilityra"
     },
     {
-      "title": "Word Frequency Counter | Toolora",
+      "title": "Word Frequency Counter | Flarivo",
       "file": "word-frequency.html",
       "legacyTitle": "Word Frequency Counter | Utilityra"
     },
     {
-      "title": "Reading Time Estimator | Toolora",
+      "title": "Reading Time Estimator | Flarivo",
       "file": "reading-time.html",
       "legacyTitle": "Reading Time Estimator | Utilityra"
     },
     {
-      "title": "Study Flashcard Maker | Toolora",
+      "title": "Study Flashcard Maker | Flarivo",
       "file": "flashcard-maker.html",
       "legacyTitle": "Study Flashcard Maker | Utilityra"
     },
     {
-      "title": "Grade Average Calculator | Toolora",
+      "title": "Grade Average Calculator | Flarivo",
       "file": "grade-calculator.html",
       "legacyTitle": "Grade Average Calculator | Utilityra"
     },
     {
-      "title": "GPA Estimator | Toolora",
+      "title": "GPA Estimator | Flarivo",
       "file": "gpa-calculator.html",
       "legacyTitle": "GPA Estimator | Utilityra"
     },
     {
-      "title": "Weighted Grade Calculator | Toolora",
+      "title": "Weighted Grade Calculator | Flarivo",
       "file": "weighted-grade-calculator.html",
       "legacyTitle": "Weighted Grade Calculator | Utilityra"
     },
     {
-      "title": "Study Plan Builder | Toolora",
+      "title": "Study Plan Builder | Flarivo",
       "file": "study-plan-generator.html",
       "legacyTitle": "Study Plan Builder | Utilityra"
     },
     {
-      "title": "Age Calculator | Toolora",
+      "title": "Age Calculator | Flarivo",
       "file": "age-calculator.html",
       "legacyTitle": "Age Calculator | Utilityra"
     },
     {
-      "title": "Date Difference Calculator | Toolora",
+      "title": "Date Difference Calculator | Flarivo",
       "file": "date-difference.html",
       "legacyTitle": "Date Difference Calculator | Utilityra"
     },
     {
-      "title": "Everyday Unit Converter | Toolora",
+      "title": "Everyday Unit Converter | Flarivo",
       "file": "unit-converter.html",
       "legacyTitle": "Everyday Unit Converter | Utilityra"
     },
     {
-      "title": "Scientific Calculator | Toolora",
+      "title": "Scientific Calculator | Flarivo",
       "file": "scientific-calculator.html",
       "legacyTitle": "Scientific Calculator | Utilityra"
     },
     {
-      "title": "VAT and Tax Calculator | Toolora",
+      "title": "VAT and Tax Calculator | Flarivo",
       "file": "vat-calculator.html",
       "legacyTitle": "VAT and Tax Calculator | Utilityra"
     },
     {
-      "title": "Hourly Pay Calculator | Toolora",
+      "title": "Hourly Pay Calculator | Flarivo",
       "file": "hourly-pay-calculator.html",
       "legacyTitle": "Hourly Pay Calculator | Utilityra"
     },
     {
-      "title": "Statistics Calculator | Toolora",
+      "title": "Statistics Calculator | Flarivo",
       "file": "statistics-calculator.html",
       "legacyTitle": "Statistics Calculator | Utilityra"
     },
     {
-      "title": "Number Base Converter | Toolora",
+      "title": "Number Base Converter | Flarivo",
       "file": "number-base-converter.html",
       "legacyTitle": "Number Base Converter | Utilityra"
     },
     {
-      "title": "Binary and Hex Converter | Toolora",
+      "title": "Binary and Hex Converter | Flarivo",
       "file": "binary-hex-converter.html",
       "legacyTitle": "Binary and Hex Converter | Utilityra"
     },
     {
-      "title": "JSON to XML Converter | Toolora",
+      "title": "JSON to XML Converter | Flarivo",
       "file": "json-to-xml.html",
       "legacyTitle": "JSON to XML Converter | Utilityra"
     },
     {
-      "title": "XML Formatter and Validator | Toolora",
+      "title": "XML Formatter and Validator | Flarivo",
       "file": "xml-formatter.html",
       "legacyTitle": "XML Formatter and Validator | Utilityra"
     },
     {
-      "title": "SQL Query Formatter | Toolora",
+      "title": "SQL Query Formatter | Flarivo",
       "file": "sql-formatter.html",
       "legacyTitle": "SQL Query Formatter | Utilityra"
     },
     {
-      "title": "Regular Expression Tester | Toolora",
+      "title": "Regular Expression Tester | Flarivo",
       "file": "regex-tester.html",
       "legacyTitle": "Regular Expression Tester | Utilityra"
     },
     {
-      "title": "JWT Decoder | Toolora",
+      "title": "JWT Decoder | Flarivo",
       "file": "jwt-decoder.html",
       "legacyTitle": "JWT Decoder | Utilityra"
     },
     {
-      "title": "SHA-256 Hash Generator | Toolora",
+      "title": "SHA-256 Hash Generator | Flarivo",
       "file": "sha256-hash.html",
       "legacyTitle": "SHA-256 Hash Generator | Utilityra"
     },
     {
-      "title": "JSON Difference Checker | Toolora",
+      "title": "JSON Difference Checker | Flarivo",
       "file": "json-diff.html",
       "legacyTitle": "JSON Difference Checker | Utilityra"
     },
     {
-      "title": "HTML Formatter | Toolora",
+      "title": "HTML Formatter | Flarivo",
       "file": "html-formatter.html",
       "legacyTitle": "HTML Formatter | Utilityra"
     },
     {
-      "title": "CSS Formatter | Toolora",
+      "title": "CSS Formatter | Flarivo",
       "file": "css-formatter.html",
       "legacyTitle": "CSS Formatter | Utilityra"
     },
     {
-      "title": "Color Format Converter | Toolora",
+      "title": "Color Format Converter | Flarivo",
       "file": "color-converter.html",
       "legacyTitle": "Color Format Converter | Utilityra"
     },
     {
-      "title": "CSS Gradient Generator | Toolora",
+      "title": "CSS Gradient Generator | Flarivo",
       "file": "gradient-generator.html",
       "legacyTitle": "CSS Gradient Generator | Utilityra"
     },
     {
-      "title": "CSS Box Shadow Generator | Toolora",
+      "title": "CSS Box Shadow Generator | Flarivo",
       "file": "box-shadow-generator.html",
       "legacyTitle": "CSS Box Shadow Generator | Utilityra"
     },
     {
-      "title": "SEO Meta Tag Generator | Toolora",
+      "title": "SEO Meta Tag Generator | Flarivo",
       "file": "meta-tag-generator.html",
       "legacyTitle": "SEO Meta Tag Generator | Utilityra"
     },
     {
-      "title": "Robots.txt Builder | Toolora",
+      "title": "Robots.txt Builder | Flarivo",
       "file": "robots-txt-generator.html",
       "legacyTitle": "Robots.txt Builder | Utilityra"
     },
     {
-      "title": "Sitemap URL List Builder | Toolora",
+      "title": "Sitemap URL List Builder | Flarivo",
       "file": "sitemap-generator.html",
       "legacyTitle": "Sitemap URL List Builder | Utilityra"
     },
     {
-      "title": "URL Inspector | Toolora",
+      "title": "URL Inspector | Flarivo",
       "file": "url-parser.html",
       "legacyTitle": "URL Inspector | Utilityra"
     },
     {
-      "title": "Cron Expression Validator | Toolora",
+      "title": "Cron Expression Validator | Flarivo",
       "file": "cron-validator.html",
       "legacyTitle": "Cron Expression Validator | Utilityra"
     },
     {
-      "title": "CSV to Markdown Table | Toolora",
+      "title": "CSV to Markdown Table | Flarivo",
       "file": "csv-to-markdown.html",
       "legacyTitle": "CSV to Markdown Table | Utilityra"
     },
     {
-      "title": "Markdown Table Generator | Toolora",
+      "title": "Markdown Table Generator | Flarivo",
       "file": "markdown-table-generator.html",
       "legacyTitle": "Markdown Table Generator | Utilityra"
     },
     {
-      "title": "File Size Converter | Toolora",
+      "title": "File Size Converter | Flarivo",
       "file": "file-size-converter.html",
       "legacyTitle": "File Size Converter | Utilityra"
     },
     {
-      "title": "Random Number Generator | Toolora",
+      "title": "Random Number Generator | Flarivo",
       "file": "random-number-generator.html",
       "legacyTitle": "Random Number Generator | Utilityra"
     },
     {
-      "title": "Password Strength Checker | Toolora",
+      "title": "Password Strength Checker | Flarivo",
       "file": "password-strength-checker.html",
       "legacyTitle": "Password Strength Checker | Utilityra"
     },
     {
-      "title": "CSV Validator | Toolora",
+      "title": "CSV Validator | Flarivo",
       "file": "csv-validator.html",
       "legacyTitle": "CSV Validator | Utilityra"
     },
     {
-      "title": "Excel Formula Helper | Toolora",
+      "title": "Excel Formula Helper | Flarivo",
       "file": "excel-formula-helper.html",
       "legacyTitle": "Excel Formula Helper | Utilityra"
     },
     {
-      "title": "Time Zone Converter | Toolora",
+      "title": "Time Zone Converter | Flarivo",
       "file": "timezone-converter.html",
       "legacyTitle": "Time Zone Converter | Utilityra"
     },
     {
-      "title": "Citation Formatter | Toolora",
+      "title": "Citation Formatter | Flarivo",
       "file": "citation-formatter.html",
       "legacyTitle": "Citation Formatter | Utilityra"
     },
     {
-      "title": "Image Filter Studio | Toolora",
+      "title": "Image Filter Studio | Flarivo",
       "file": "image-filter-studio.html",
       "legacyTitle": "Image Filter Studio | Utilityra"
     },
     {
-      "title": "Image Rotate and Flip | Toolora",
+      "title": "Image Rotate and Flip | Flarivo",
       "file": "image-rotate-flip.html",
       "legacyTitle": "Image Rotate and Flip | Utilityra"
     },
     {
-      "title": "Image to Base64 Data URI | Toolora",
+      "title": "Image to Base64 Data URI | Flarivo",
       "file": "image-to-data-uri.html",
       "legacyTitle": "Image to Base64 Data URI | Utilityra"
     },
     {
-      "title": "AI Assistant | Toolora",
+      "title": "AI Assistant | Flarivo",
       "file": "ai-assistant.html",
       "legacyTitle": "AI Assistant | Utilityra"
     },
     {
-      "title": "PDF Merge | Toolora",
+      "title": "PDF Merge | Flarivo",
       "file": "pdf-merge.html",
       "legacyTitle": "PDF Merge | Utilityra"
     },
     {
-      "title": "PDF Page Extractor | Toolora",
+      "title": "PDF Page Extractor | Flarivo",
       "file": "pdf-split.html",
       "legacyTitle": "PDF Page Extractor | Utilityra"
     },
     {
-      "title": "PDF Page Counter and Info | Toolora",
+      "title": "PDF Page Counter and Info | Flarivo",
       "file": "pdf-page-info.html",
       "legacyTitle": "PDF Page Counter and Info | Utilityra"
     },
     {
-      "title": "Image Cropper | Toolora",
+      "title": "Image Cropper | Flarivo",
       "file": "image-cropper.html",
       "legacyTitle": "Image Cropper | Utilityra"
     },
     {
-      "title": "Image Watermark Tool | Toolora",
+      "title": "Image Watermark Tool | Flarivo",
       "file": "image-watermark.html",
       "legacyTitle": "Image Watermark Tool | Utilityra"
     },
     {
-      "title": "File Metadata Inspector | Toolora",
+      "title": "File Metadata Inspector | Flarivo",
       "file": "file-metadata-inspector.html",
       "legacyTitle": "File Metadata Inspector | Utilityra"
     }
