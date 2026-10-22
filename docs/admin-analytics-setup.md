@@ -6,9 +6,9 @@ The private dashboard is served at the Worker origin's `/admin`, is not linked f
 1. In GitHub repository Settings → Secrets and variables → Actions, add these secrets. Never paste values into chat or source files:
    - `CLOUDFLARE_API_TOKEN`: a Cloudflare API token scoped to the account and Workers/D1 permissions needed for this deployment.
    - `CLOUDFLARE_ACCOUNT_ID`: your Cloudflare account ID.
-   - `UTILITYRA_ADMIN_PASSWORD`: a unique password with at least 16 characters.
-   - `UTILITYRA_ADMIN_SESSION_SECRET`: a different random secret with at least 32 characters.
-   - At least one AI provider key: `UTILITYRA_OPENAI_API_KEY` or `UTILITYRA_GEMINI_API_KEY`. These may have provider usage costs; set usage limits with the provider.
+   - `FLARIVO_ADMIN_PASSWORD`: a unique password with at least 16 characters.
+   - `FLARIVO_ADMIN_SESSION_SECRET`: a different random secret with at least 32 characters.
+   - At least one AI provider key: `FLARIVO_OPENAI_API_KEY` or `FLARIVO_GEMINI_API_KEY`. These may have provider usage costs; set usage limits with the provider.
 2. Open Actions → **Deploy Flarivo API and private analytics** → Run workflow. The workflow finds or creates the D1 database, applies the schema and draft seed, writes Worker secrets, and deploys the API. It does not publish Blogger pages or change the live Blogger theme.
 3. Open the successful run log and Cloudflare Workers & Pages to copy the real Worker URL. Do not guess or use a placeholder URL.
 4. The Blogger theme must set `window.FLARIVO_API_BASE` to that exact Worker URL, then the new theme must be installed in Blogger. This is a one-time platform integration step; Blogger's public API does not provide a supported theme-upload endpoint. Export a theme backup first.
