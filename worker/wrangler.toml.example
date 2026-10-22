@@ -6,6 +6,7 @@ compatibility_date = "2026-10-22"
 [vars]
 ALLOWED_ORIGIN = "https://utilityra.blogspot.com"
 MAX_MESSAGE_CHARS = "8000"
+WORKERS_AI_MODEL = "@cf/meta/llama-3.1-8b-instruct"
 # Configure OPENAI_API_KEY and GEMINI_API_KEY using `wrangler secret put` or the Cloudflare dashboard.
 # Never add provider keys to this file.
 
@@ -13,3 +14,6 @@ MAX_MESSAGE_CHARS = "8000"
 binding = "DB"
 database_name = "utilityra-data"
 database_id = "REPLACE_AFTER_CREATING_D1"
+
+[ai]
+binding = "AI"
