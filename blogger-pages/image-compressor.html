@@ -1,0 +1,41 @@
+<!-- Utilityra tool page: image compression and resizing. Review as a Blogger draft before publishing. -->
+<section class="ur-tool" lang="en" aria-labelledby="uic-title">
+  <p class="ur-eyebrow">IMAGE TOOLS</p><h2 id="uic-title">Image Compressor and Resizer</h2>
+  <p>Compress or resize an image in your browser. Your selected file is processed on this device and is not uploaded to Utilityra.</p>
+  <label for="uic-file">Choose an image (PNG, JPEG or WebP; up to 15 MB)</label><input id="uic-file" type="file" accept="image/png,image/jpeg,image/webp"/>
+  <div class="ur-form-grid"><label for="uic-width">Maximum width in pixels<input id="uic-width" type="number" min="1" max="8000" value="1600"/></label><label for="uic-height">Maximum height in pixels<input id="uic-height" type="number" min="1" max="8000" value="1600"/></label></div>
+  <div class="ur-form-grid"><label for="uic-format">Output format<select id="uic-format"><option value="image/webp">WebP (smaller files)</option><option value="image/jpeg">JPEG</option><option value="image/png">PNG (lossless)</option></select></label><label for="uic-quality">Quality for WebP/JPEG (0.3–1)<input id="uic-quality" type="number" min="0.3" max="1" step="0.05" value="0.8"/></label></div>
+  <div class="ur-actions"><button type="button" id="uic-run" class="ur-primary">Compress image</button><button type="button" id="uic-clear" class="ur-secondary">Clear</button><a id="uic-download" class="ur-secondary ur-hidden" download="utilityra-compressed.webp">Download result</a></div>
+  <p id="uic-status" role="status" aria-live="polite"></p><div id="uic-preview" class="ur-hidden"><img id="uic-image" alt="Compressed image preview" style="display:block;max-width:100%;height:auto;border-radius:12px;margin:12px 0"/><p id="uic-stats"></p></div>
+  <p class="ur-note">Large images may use significant memory on older phones. If processing fails, try a smaller image. Transparency may be lost when exporting to JPEG.</p>
+</section>
+<script>
+(function(){
+const $=id=>document.getElementById(id),fileInput=$('uic-file'),status=$('uic-status'),download=$('uic-download'),preview=$('uic-preview'),image=$('uic-image'),stats=$('uic-stats');
+if(!fileInput||!status)return;let previewUrl=null,resultUrl=null;
+function clearOutput(){if(previewUrl)URL.revokeObjectURL(previewUrl);if(resultUrl)URL.revokeObjectURL(resultUrl);previewUrl=null;resultUrl=null;image.removeAttribute('src');download.removeAttribute('href');download.classList.add('ur-hidden');preview.classList.add('ur-hidden');stats.textContent=''}
+$('uic-run').addEventListener('click',async()=>{
+clearOutput();const file=fileInput.files&&fileInput.files[0];if(!file){status.textContent='Choose an image file first.';return}
+if(!['image/png','image/jpeg','image/webp'].includes(file.type)){status.textContent='Choose a PNG, JPEG or WebP image.';return}
+if(file.size>15*1024*1024){status.textContent='The image exceeds 15 MB. Choose a smaller file.';return}
+const maxW=Number($('uic-width').value),maxH=Number($('uic-height').value),quality=Number($('uic-quality').value),format=$('uic-format').value;
+if(!Number.isInteger(maxW)||!Number.isInteger(maxH)||maxW<1||maxH<1||maxW>8000||maxH>8000){status.textContent='Width and height must be whole numbers from 1 to 8000.';return}
+if(!Number.isFinite(quality)||quality<0.3||quality>1){status.textContent='Quality must be between 0.3 and 1.';return}
+status.textContent='Processing image locally…';
+let bitmap,canvas;
+try{
+if('createImageBitmap'in window){bitmap=await createImageBitmap(file)}
+else{bitmap=await new Promise((resolve,reject)=>{const im=new Image(),u=URL.createObjectURL(file);im.onload=()=>{URL.revokeObjectURL(u);resolve(im)};im.onerror=()=>{URL.revokeObjectURL(u);reject(Error('Could not read image'))};im.src=u})}
+const ratio=Math.min(1,maxW/bitmap.width,maxH/bitmap.height),width=Math.max(1,Math.round(bitmap.width*ratio)),height=Math.max(1,Math.round(bitmap.height*ratio));
+canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;const ctx=canvas.getContext('2d');if(!ctx)throw Error('Canvas is not available in this browser');
+if(format==='image/jpeg'){ctx.fillStyle='#ffffff';ctx.fillRect(0,0,width,height)}ctx.drawImage(bitmap,0,0,width,height);
+const blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(Error('This output format is not supported by the browser')),format,quality));
+const actualType=blob.type||format,ext=actualType==='image/jpeg'?'jpg':actualType==='image/png'?'png':'webp';resultUrl=URL.createObjectURL(blob);previewUrl=resultUrl;image.src=resultUrl;download.href=resultUrl;download.download='utilityra-compressed.'+ext;download.classList.remove('ur-hidden');preview.classList.remove('ur-hidden');
+const saved=file.size?Math.round((1-blob.size/file.size)*100):0;stats.textContent='Original: '+(file.size/1024).toFixed(1)+' KB · Result: '+(blob.size/1024).toFixed(1)+' KB · Dimensions: '+width+' × '+height+' px · '+(saved>=0?saved+'% smaller':Math.abs(saved)+'% larger');
+status.textContent=actualType===format?'Image ready to download.':'Browser exported '+actualType+' instead of the selected format; check the download extension.';
+}catch(error){status.textContent='Could not process this image: '+(error.message||'Unknown error')+'. Try another image or format.'}
+finally{if(bitmap&&typeof bitmap.close==='function')bitmap.close();if(canvas){canvas.width=1;canvas.height=1}}
+});
+$('uic-clear').addEventListener('click',()=>{fileInput.value='';clearOutput();status.textContent=''});
+})();
+</script>
