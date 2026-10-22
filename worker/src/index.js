@@ -521,6 +521,7 @@ export default {
     }
 
     if (request.method === "GET" && env.ASSETS && (
+      url.pathname === "/" ||
       /^\/tools\/[a-z0-9-]+\/?$/.test(url.pathname) ||
       ["/about", "/privacy", "/contact", "/terms"].includes(url.pathname)
     )) {
