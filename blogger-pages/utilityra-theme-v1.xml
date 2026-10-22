@@ -205,7 +205,7 @@ html.motion-ready .ur-card.is-visible{opacity:1;transform:none;transition:opacit
 @media(max-width:350px){.to-hero-stats{gap:8px}.to-stat strong{font-size:21px}.to-stat span{font-size:8px}.to-search button{padding:0 9px}.to-glass-title{font-size:11px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}html.motion-ready .to-reveal,html.motion-ready .to-reveal.is-visible,html.motion-ready .ur-card,html.motion-ready .ur-card.is-visible{opacity:1;transform:none}}
 
-  ]]>
+  
 html[data-theme=light]{color-scheme:light;--bg:#f4f5fb;--surface:#fff;--surface2:#f8f9ff;--ink:#141522;--muted:#626a80;--line:rgba(20,21,34,.12);--shadow:0 22px 65px rgba(28,29,56,.12)}
 html[data-theme=light] body{background:#f4f5fb;color:#171824}
 html[data-theme=light] .to-topline,html[data-theme=light] .to-footer{background:#11121b}
@@ -248,7 +248,8 @@ html[data-theme=light] .ur-secondary{background:#f5f5fb;color:#26283a;border-col
 html[data-theme=light] .post-outer,html[data-theme=light] .post{background:#fff;color:#191a28;border-color:#e0e2ee}
 html[data-theme=light] .post-body{color:#454b60}
 
-  </b:skin>in>
+  
+  0]]></b:skin>in>
   <link rel='preconnect' href='https://fonts.googleapis.com'/>
   <link rel='preconnect' href='https://fonts.gstatic.com' crossorigin='crossorigin'/>
   <link href='https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Inter:wght@300;400;500;600;700;800&amp;display=swap' rel='stylesheet'/>
