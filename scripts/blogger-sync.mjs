@@ -112,7 +112,6 @@ for (const item of manifest.pages) {
       });
     }
     console.log((mode === "draft" ? "Created draft" : "Created and published") + ": " + prepared.title + " " + (prepared.url || "") + " (legacy slug preserved where applicable)");
-  }
   } else if (mode === "draft") {
     // Do not overwrite an existing published page automatically in draft mode.
     console.log(`Skipped existing page in draft mode: ${item.title} (ID ${match.id})`);
