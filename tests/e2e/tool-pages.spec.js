@@ -1,0 +1,123 @@
+const { test, expect } = require('@playwright/test');
+const fs = require('node:fs');
+const path = require('node:path');
+
+const pagesDir = path.join(__dirname, '..', '..', 'blogger-pages');
+async function loadTool(page, filename) {
+  const html = fs.readFileSync(path.join(pagesDir, filename), 'utf8');
+  await page.setContent(html, { waitUntil: 'domcontentloaded' });
+}
+
+test('CSV to JSON converter preserves rows and headers', async ({ page }) => {
+  await loadTool(page, 'csv-json-converter.html');
+  await page.locator('#ucj-input').fill('name,age\nMona,25\nOmar,31');
+  await page.locator('#ucj-run').click();
+  const rows = JSON.parse(await page.locator('#ucj-output').inputValue());
+  expect(rows).toEqual([{ name: 'Mona', age: '25' }, { name: 'Omar', age: '31' }]);
+});
+
+test('CSV parser reports unclosed quoted fields', async ({ page }) => {
+  await loadTool(page, 'csv-json-converter.html');
+  await page.locator('#ucj-input').fill('name,note\nMona,"unfinished');
+  await page.locator('#ucj-run').click();
+  await expect(page.locator('#ucj-status')).toContainText('unclosed quoted field');
+});
+
+test('text cleaner removes duplicate and blank lines when selected', async ({ page }) => {
+  await loadTool(page, 'text-cleaner.html');
+  await page.locator('#utc-input').fill(' alpha   beta \n\nalpha beta\ngamma');
+  await page.locator('#utc-blank').check();
+  await page.locator('#utc-unique').check();
+  await page.locator('#utc-run').click();
+  await expect(page.locator('#utc-output')).toHaveValue('alpha beta\ngamma');
+});
+
+test('URL encoder and decoder round-trip Arabic text', async ({ page }) => {
+  await loadTool(page, 'url-encoder-decoder.html');
+  await page.locator('#uue-input').fill('أهلاً Utilityra & data');
+  await page.locator('#uue-encode').click();
+  const encoded = await page.locator('#uue-output').inputValue();
+  expect(encoded).toContain('%');
+  await page.locator('#uue-input').fill(encoded);
+  await page.locator('#uue-decode').click();
+  await expect(page.locator('#uue-output')).toHaveValue('أهلاً Utilityra & data');
+});
+
+test('Base64 encoder and decoder support UTF-8', async ({ page }) => {
+  await loadTool(page, 'base64-encoder-decoder.html');
+  await page.locator('#ube-input').fill('مرحبا Utilityra');
+  await page.locator('#ube-encode').click();
+  const encoded = await page.locator('#ube-output').inputValue();
+  expect(encoded.length).toBeGreaterThan(0);
+  await page.locator('#ube-input').fill(encoded);
+  await page.locator('#ube-decode').click();
+  await expect(page.locator('#ube-output')).toHaveValue('مرحبا Utilityra');
+});
+
+test('UUID generator produces the requested number of UUID v4 values', async ({ page }) => {
+  await loadTool(page, 'uuid-generator.html');
+  await page.locator('#uug-count').fill('3');
+  await page.locator('#uug-run').click();
+  const values = (await page.locator('#uug-output').inputValue()).split('\n');
+  expect(values).toHaveLength(3);
+  for (const value of values) expect(value).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
+});
+
+test('password generator respects requested length and count', async ({ page }) => {
+  await loadTool(page, 'password-generator.html');
+  await page.locator('#upg-length').fill('24');
+  await page.locator('#upg-count').fill('4');
+  await page.locator('#upg-run').click();
+  const values = (await page.locator('#upg-output').inputValue()).split('\n');
+  expect(values).toHaveLength(4);
+  for (const value of values) expect(value).toHaveLength(24);
+  expect(new Set(values).size).toBe(4);
+});
+
+test('timestamp converter handles Unix seconds correctly', async ({ page }) => {
+  await loadTool(page, 'timestamp-converter.html');
+  await page.locator('#uts-input').fill('0');
+  await page.locator('#uts-to-date').click();
+  await expect(page.locator('#uts-output')).toContainText('1970-01-01T00:00:00.000Z');
+});
+
+test('percentage calculator handles discount and rejects zero denominator', async ({ page }) => {
+  await loadTool(page, 'percentage-calculator.html');
+  await page.locator('#upc-mode').selectOption('discount');
+  await page.locator('#upc-a').fill('200');
+  await page.locator('#upc-b').fill('15');
+  await page.locator('#upc-run').click();
+  await expect(page.locator('#upc-output')).toContainText('Final price: 170.00');
+  await page.locator('#upc-mode').selectOption('change');
+  await page.locator('#upc-a').fill('0');
+  await page.locator('#upc-b').fill('10');
+  await page.locator('#upc-run').click();
+  await expect(page.locator('#upc-status')).toContainText('cannot be zero');
+});
+
+test('HTML entity encoder escapes markup rather than executing it', async ({ page }) => {
+  await loadTool(page, 'html-entities.html');
+  await page.locator('#uhe-input').fill('<script>alert(1)</script> &');
+  await page.locator('#uhe-encode').click();
+  await expect(page.locator('#uhe-output')).toHaveValue('&lt;script&gt;alert(1)&lt;/script&gt; &amp;');
+  await expect(page.locator('script')).toHaveCount(1);
+});
+
+test('JSON formatter reports malformed JSON and formats valid input', async ({ page }) => {
+  await loadTool(page, 'json-formatter.html');
+  await page.locator('#ujf-input').fill('{"name":"Utilityra","active":true}');
+  await page.locator('#ujf-format').click();
+  await expect(page.locator('#ujf-output')).toContainText('Utilityra');
+  await page.locator('#ujf-input').fill('{bad');
+  await page.locator('#ujf-format').click();
+  await expect(page.locator('#ujf-status')).toContainText('Invalid JSON');
+});
+
+test('word counter updates counts for empty and non-empty text', async ({ page }) => {
+  await loadTool(page, 'word-counter.html');
+  await page.locator('#uwc-input').fill('One two\nThree.');
+  await expect(page.locator('#uwc-words')).toHaveText('3');
+  await expect(page.locator('#uwc-chars')).toHaveText('14');
+  await page.locator('#uwc-clear').click();
+  await expect(page.locator('#uwc-words')).toHaveText('0');
+});
