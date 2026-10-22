@@ -145,7 +145,7 @@ test("admin login issues an HttpOnly Secure session and session check accepts it
       const statement = { sql, args: [],
         bind(...args) { this.args = args; return this; },
         first: async () => null,
-        run: async () => { statements.push({ sql: this.sql, args: this.args }); return { success: true }; },
+        run: async function() { statements.push({ sql: this.sql, args: this.args }); return { success: true }; },
         all: async () => ({ results: [] })
       };
       return statement;
@@ -186,8 +186,9 @@ test("analytics drops flagged review traffic and stores only minimized event fie
   assert.equal(writes.length, 1);
   assert.equal(writes[0].args[0], "visitor-session-123456");
   assert.equal(writes[0].args[1], "search_miss");
-  assert.match(writes[0].args[4], /\[email\]/);
-  assert.match(writes[0].args[4], /\[number\]/);
+  assert.match(writes[0].args[4], /email/);
+  assert.match(writes[0].args[4], /number/);
+  assert.doesNotMatch(writes[0].args[4], /user@example\\.com|123-456-7890/);
   assert.equal(writes[0].args[2], "/");
 });
 
