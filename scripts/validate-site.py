@@ -7,7 +7,7 @@ import xml.etree.ElementTree as ET
 
 ROOT=Path(__file__).resolve().parents[1]
 PAGES=ROOT/"blogger-pages"
-THEME=PAGES/"utilityra-theme-v2.xml"
+THEME=PAGES/"utilityra-theme-v3.xml"
 MANIFEST=PAGES/"manifest.json"
 
 def fail(message): raise SystemExit("VALIDATION FAILED: "+message)
@@ -78,6 +78,8 @@ for index,match in enumerate(re.finditer(r"<script\b([^>]*)>(.*?)</script\s*>",t
     result=subprocess.run(["node","--check",name],text=True,capture_output=True); Path(name).unlink(missing_ok=True)
     if result.returncode: fail(f"JavaScript syntax error in theme script {index}: {result.stderr.strip()}")
 if "ca-pub-1235197294708204" not in theme: fail("Existing AdSense publisher connection must be preserved")
+if "prefers-reduced-motion:reduce" not in theme: fail("Reduced-motion support must remain available")
+if "pillIn" not in theme or "animationend" not in theme: fail("Synchronous entrance lifecycle must remain available")
 if "Flarivo" in theme or "FLARIVO" in theme: fail("Old brand string remains in new theme")
 card_section=theme.split("<div class='ur-tool-grid' id='ur-tool-grid'>",1)[-1].split("</div><div class='empty'",1)[0]
 card_hrefs=re.findall(r"<a class='ur-card-foot' href='(/p/[^']+\.html)'",card_section)
@@ -87,7 +89,7 @@ missing=sorted(set(card_hrefs)-expected)
 if missing: fail("Tool card URLs do not match verified live URLs: "+", ".join(missing))
 tool_count=len(expected)
 if tool_count<50 or len(card_hrefs)<50: fail("Expected at least 50 dedicated tool pages and homepage cards")
-print("PASS: Utilityra v2 Blogger theme XML is well-formed.")
+print("PASS: Utilityra v3 Blogger theme XML is well-formed.")
 print(f"PASS: {len(pages)} manifest pages exist, keep their verified URLs and have valid embedded JavaScript.")
 print(f"PASS: {len(card_hrefs)} tool cards point to preserved live URLs.")
 print("PASS: AdSense publisher connection remains present; old brand is absent from the new theme.")
