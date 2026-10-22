@@ -1,7 +1,8 @@
 # Example only. Do not deploy until the D1 database is created and its real ID is filled in.
-name = "utilityra-platform-api"
+name = "utilityra"
 main = "src/index.js"
 compatibility_date = "2026-10-22"
+workers_dev = true
 
 [vars]
 ALLOWED_ORIGIN = "https://utilityra.blogspot.com"
