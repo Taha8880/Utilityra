@@ -10,6 +10,17 @@ Utilityra is an Arabic-first, Arabic/English tools platform. **The active fronte
 - Cloudflare-specific validation: `scripts/validate-cloudflare.mjs`
 - Browser regression tests: `tests/e2e/cloudflare-tools.spec.js` and `tests/e2e/tool-accuracy.spec.js`
 
+
+
+## Project records — included in ZIP
+
+- Arabic master technical reference: [docs/UTILITYRA_MASTER_REFERENCE_AR.md](docs/UTILITYRA_MASTER_REFERENCE_AR.md)
+- Requirements and completion ledger: [docs/UTILITYRA_REQUIREMENTS_AR.md](docs/UTILITYRA_REQUIREMENTS_AR.md)
+- Latest generated status snapshot: [docs/STATUS_LATEST_AR.md](docs/STATUS_LATEST_AR.md)
+- Full change history: GitHub commit history; each commit records an actual change.
+
+GitHub Actions refreshes the status snapshot after relevant pushes, after selected validation/browser/deployment workflows finish, and every six hours. A separate live monitor checks critical public routes every 30 minutes and opens a GitHub issue when a check fails. These automations detect and report issues; they do not claim to fix every code defect automatically.
+
 ## Main project reference
 
 The full Arabic master reference covering the current architecture, the 52-tool catalog, known failures and remedies, admin dashboard, AI providers, secure AI engineering-agent roadmap, deployment secrets, and release gates is in [`docs/UTILITYRA_MASTER_REFERENCE_AR.md`](docs/UTILITYRA_MASTER_REFERENCE_AR.md). It distinguishes verified implementation from pending work and known limitations.
