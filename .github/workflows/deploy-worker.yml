@@ -116,7 +116,7 @@ jobs:
           grep -qi '<title>Utilityra' "$RUNNER_TEMP/utilityra-home.html"
           curl --retry 5 --retry-delay 3 --retry-all-errors -fsS "$BASE/tools/word-counter" -o "$RUNNER_TEMP/utilityra-tool.html"
           grep -qi '<title>Utilityra' "$RUNNER_TEMP/utilityra-tool.html"
-          for slug in html-escape slug-generator sort-lines remove-duplicate-lines json-minifier regex-tester reverse-text json-to-csv character-frequency image-resizer text-to-speech html-preview qr-generator pdf-merge pdf-split image-compressor image-cropper markdown-preview seo-auditor api-tester ai-assistant json-diff password-strength image-to-pdf pdf-rotate favicon-generator accessibility-checker page-speed-checker security-header-checker contrast-checker; do
+          for slug in html-escape slug-generator sort-lines remove-duplicate-lines json-minifier regex-tester reverse-text json-to-csv character-frequency image-resizer text-to-speech html-preview qr-generator pdf-merge pdf-split image-compressor image-cropper markdown-preview seo-auditor api-tester ai-assistant json-diff password-strength image-to-pdf pdf-rotate favicon-generator accessibility-checker page-speed-checker security-header-checker contrast-checker accessibility-checker pdf-metadata; do
             curl --retry 3 --retry-delay 2 --retry-all-errors -fsS "$BASE/tools/$slug" -o "$RUNNER_TEMP/utilityra-route.html"
             grep -q "$slug" "$RUNNER_TEMP/utilityra-route.html" || { echo "::error::Tool route missing from delivered app: $slug"; exit 1; }
           done
