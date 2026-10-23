@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Build a portable status snapshot from GitHub Actions and public HTTP smoke checks.
 // Never logs secrets or response bodies.
+// Keep this script dependency-free so the status report can be regenerated in CI and from a ZIP checkout.
 import fs from 'node:fs';
 import path from 'node:path';
 
