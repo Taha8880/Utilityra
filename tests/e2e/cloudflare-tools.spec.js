@@ -94,7 +94,7 @@ test('QR generator creates a downloadable QR code', async ({ page }) => {
   await openTool(page, 'qr-generator');
   await page.locator('#input').fill('https://utilityra.tavengers16.workers.dev/');
   await page.locator('#makeQr').click();
-  await expect(page.locator('#qrCanvas canvas, #qrCanvas img').first()).toBeVisible({ timeout: 20000 });
+  await expect(page.locator('#qrCanvas canvas:visible, #qrCanvas img:visible').first()).toBeVisible({ timeout: 20000 });
   await expect(page.locator('#downloadQr')).toBeVisible();
 });
 
@@ -145,6 +145,7 @@ test('image compressor exports an image and markdown preview escapes HTML', asyn
     return c.toDataURL('image/png').split(',')[1];
   });
   await page.locator('#imageFile').setInputFiles({ name: 'tiny.png', mimeType: 'image/png', buffer: Buffer.from(png, 'base64') });
+  await expect(page.locator('#imagePreview')).toBeVisible({ timeout: 10000 });
   await page.locator('#compressImage').click();
   await expect(page.locator('#downloadImage')).toBeVisible();
   await openTool(page, 'markdown-preview');
