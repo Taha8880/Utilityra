@@ -1,6 +1,10 @@
 name: Utilityra live health monitor
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/utilityra-live-monitor.yml'
   schedule:
     - cron: '*/30 * * * *'
   workflow_dispatch:
