@@ -1,0 +1,60 @@
+name: Utilityra continuous project record
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'docs/STATUS_LATEST_AR.md'
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_run:
+    workflows:
+      - Validate Utilityra rebuild
+      - Cloudflare Utilityra browser tests
+      - Deploy Utilityra API and private analytics
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+  issues: write
+
+concurrency:
+  group: utilityra-continuous-project-record
+  cancel-in-progress: false
+
+jobs:
+  update-record:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout current main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          token: \${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Generate latest project status
+        env:
+          GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: \${{ github.repository }}
+        run: node scripts/update-project-status.mjs
+
+      - name: Commit updated status snapshot
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- docs/STATUS_LATEST_AR.md; then
+            echo "Status report unchanged."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/STATUS_LATEST_AR.md
+          git commit -m "docs: refresh automated Utilityra project status"
+          git push origin HEAD:main
