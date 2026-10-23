@@ -301,7 +301,7 @@ test('language switch localizes category filters and tool cards', async ({ page 
   await page.goto(BASE, { waitUntil: 'domcontentloaded' });
   await page.locator('#language').click();
   await expect(page.locator('.chip[data-cat="all"]')).toHaveText('All');
-  await expect(page.locator('.chip[data-cat="text"]')).toHaveText('Text');
+  await expect(page.locator('.chip[data-cat="office"]')).toHaveText('Office & business');
   await expect(page.locator('#grid')).toContainText('Word Counter');
   await page.locator('#language').click();
   await expect(page.locator('.chip[data-cat="all"]')).toHaveText('الكل');
