@@ -32,11 +32,20 @@ const clean = (v) => String(v ?? '').replaceAll('|', '\\|').replaceAll('\n', ' '
 const date = (v) => v ? new Date(v).toISOString().replace('T', ' ').replace(/\.\d{3}Z$/, ' UTC') : 'غير متاح';
 const outcome = (r) => !r ? 'لم يُعثر على تشغيل' : r.status !== 'completed' ? 'قيد التنفيذ: ' + r.status : ({success:'نجاح',failure:'فشل',cancelled:'أُلغي',timed_out:'انتهت المهلة',action_required:'يتطلب إجراء',skipped:'تخطٍّ'})[r.conclusion] || String(r.conclusion || 'غير معروف');
 
-let runs = [], commits = [], warning = '';
+let runs = [], commits = [], validateRuns = [], browserRuns = [], deployRuns = [], warning = '';
 try {
-  const results = await Promise.all([json(api + '/actions/runs?per_page=15'), json(api + '/commits?per_page=8')]);
+  const results = await Promise.all([
+    json(api + '/actions/runs?per_page=15'),
+    json(api + '/commits?per_page=8'),
+    json(api + '/actions/workflows/validate.yml/runs?per_page=3'),
+    json(api + '/actions/workflows/playwright.yml/runs?per_page=3'),
+    json(api + '/actions/workflows/deploy-worker.yml/runs?per_page=3')
+  ]);
   runs = results[0].workflow_runs || [];
   commits = results[1] || [];
+  validateRuns = results[2].workflow_runs || [];
+  browserRuns = results[3].workflow_runs || [];
+  deployRuns = results[4].workflow_runs || [];
 } catch (e) { warning = String(e.message || 'تعذر جلب بيانات GitHub'); }
 
 const checks = await Promise.all([
@@ -47,7 +56,7 @@ const checks = await Promise.all([
   check(base + '/tools/pdf-to-text')
 ]);
 const latest = (pattern) => runs.find((r) => pattern.test(r.name || ''));
-const validate = latest(/validate/i), browser = latest(/playwright|browser/i), deploy = latest(/deploy/i);
+const validate = validateRuns[0] || latest(/validate/i), browser = browserRuns[0] || latest(/playwright|browser/i), deploy = deployRuns[0] || latest(/deploy/i);
 const lines = [
   '# Utilityra — الحالة الآلية للمشروع',
   '',
