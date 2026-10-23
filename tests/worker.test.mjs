@@ -5,7 +5,7 @@ import { readFile } from "node:fs/promises";
 const source = await readFile(new URL("../worker/src/index.js", import.meta.url), "utf8");
 const workerModule = await import("data:text/javascript;base64," + Buffer.from(source).toString("base64"));
 const worker = workerModule.default;
-const origin = "https://utilityra.blogspot.com";
+const origin = "https://utilityra.tavengers16.workers.dev";
 
 function req(path, options = {}) {
   return new Request("https://api.example.test" + path, {
