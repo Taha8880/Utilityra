@@ -18,6 +18,7 @@ new vm.Script(html.slice(scriptStart + 8, scriptEnd), { filename: "worker/public
 if (!worker.includes('url.pathname !== "/api/ai"')) throw new Error("AI API route is missing");
 if (!worker.includes('homeUrl.pathname = "/"')) throw new Error("SPA root fallback is missing");
 if (!worker.includes("https://cdn.jsdelivr.net") || !worker.includes("https://cdnjs.cloudflare.com")) throw new Error("Trusted tool library origins are not allowed by CSP");
+if (!html.includes("Created by Taha")) throw new Error("Required creator footer is missing");
 console.log("PASS: Cloudflare HTML JavaScript parses.");
 console.log("PASS: " + slugs.length + " unique tool routes are registered.");
 console.log("PASS: Required QR, PDF, image, SEO, API and AI tools exist.");
