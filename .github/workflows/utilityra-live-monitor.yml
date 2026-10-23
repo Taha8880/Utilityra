@@ -38,10 +38,10 @@ jobs:
       - name: Open an incident issue if health checks fail
         if: failure()
         env:
-          GH_TOKEN: \${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPOSITORY: \${{ github.repository }}
-          GITHUB_SERVER_URL: \${{ github.server_url }}
-          GITHUB_RUN_ID: \${{ github.run_id }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_SERVER_URL: ${{ github.server_url }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
         run: |
           set -euo pipefail
           title='[Utilityra Monitor] فشل فحص حي للموقع'
