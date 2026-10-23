@@ -484,7 +484,7 @@ npx playwright test tests/e2e/cloudflare-tools.spec.js tests/e2e/tool-accuracy.s
 ## 14. أحدث حالة تم التحقق منها عند إعداد هذا التحديث
 
 - تحقق المستودع: أحدث تشغيل ظاهر لـ `Validate Utilityra rebuild` على commit `6bf9f6e` اكتمل بنجاح.
-- اختبارات المتصفح: التشغيلان المكتملان 357 و358 فشلا بسبب assertion قديم يتوقع اسم البطاقة `Word Counter` بدل الاسم الإنجليزي المعروض `Word & Character Counter`. عُدّل الاختبار ليتطابق مع النص الفعلي، وتوجد إعادة تشغيل أحدث قيد التنفيذ؛ لا تعلن النجاح حتى تكتمل. [آخر تشغيل](https://github.com/Taha8880/Utilityra/actions).
+- اختبارات المتصفح: أظهر تشغيل Playwright على فرع main أن 78 اختبارًا نجح واختبارين فشلا بسبب assertion قديم يتوقع اسم البطاقة `Word Counter` بدل الاسم الفعلي `Word & Character Counter`. تم تعديل assertion في commit `dfba138`، لكن إعادة التشغيل المقابلة كانت لا تزال قيد التنفيذ عند آخر فحص؛ لا تعلن اجتياز المجموعة حتى تكتمل. [آخر تشغيلات المتصفح](https://github.com/Taha8880/Utilityra/actions).
 - النشر: يلزم مراجعة أحدث تشغيل Deploy في [GitHub Actions](https://github.com/Taha8880/Utilityra/actions) قبل الجزم بأن آخر commit منشور على الموقع.
 - التصميم: ما زالت المراجعة المرئية على هاتف Android وكمبيوتر وباللغتين مطلوبة؛ تغييرات CSS لا تكفي وحدها لإثبات اختفاء العيوب.
 
