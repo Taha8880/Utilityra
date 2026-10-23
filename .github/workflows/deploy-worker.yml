@@ -112,7 +112,7 @@ jobs:
           BASE="https://utilityra.tavengers16.workers.dev"
           curl --retry 5 --retry-delay 3 --retry-all-errors -fsS "$BASE/" -o "$RUNNER_TEMP/utilityra-home.html"
           grep -qi '<title>Utilityra' "$RUNNER_TEMP/utilityra-home.html"
-          grep -Fq '<meta name="google-site-verification" content="I_qhjjUrrPOpBTL8a-yD9UzTVeiCEmSSE1_hxz-XzQc" />' "$RUNNER_TEMP/utilityra-home.html" || { echo "::error::Current Google Search Console meta verification tag is missing."; exit 1; }
+          grep -Fq '<meta name="google-site-verification" content="ya_wmTtBvVlS1ZhDID4BEQNmHigtrgRygoqc5uKp_DY" />' "$RUNNER_TEMP/utilityra-home.html" || { echo "::error::Current Google Search Console meta verification tag is missing."; exit 1; }
           test "$(grep -Eo '<meta name="google-site-verification"' "$RUNNER_TEMP/utilityra-home.html" | wc -l)" -eq 1 || { echo "::error::Homepage must contain exactly one Google Search Console verification tag."; exit 1; }
           curl --retry 5 --retry-delay 3 --retry-all-errors -fsS "$BASE/tools/word-counter" -o "$RUNNER_TEMP/utilityra-tool.html"
           grep -qi '<title>Utilityra' "$RUNNER_TEMP/utilityra-tool.html"
