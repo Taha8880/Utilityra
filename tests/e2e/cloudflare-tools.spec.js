@@ -297,6 +297,18 @@ test('tool pages expose unique titles, descriptions and creator credit', async (
 });
 
 
+
+test('private admin entry is discoverable and protected by login', async ({ page }) => {
+  await page.goto(BASE, { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('footer a[href="/admin"]')).toContainText('إدارة الموقع');
+  await page.locator('footer a[href="/admin"]').click();
+  await expect(page).toHaveURL(/\/admin\/?$/);
+  await expect(page).toHaveTitle(/Utilityra Admin/);
+  await expect(page.locator('#login-form')).toBeVisible();
+  await expect(page.locator('#password')).toHaveAttribute('type', 'password');
+});
+
+
 test('language switch localizes category filters and tool cards', async ({ page }) => {
   await page.goto(BASE, { waitUntil: 'domcontentloaded' });
   await page.locator('#language').click();
