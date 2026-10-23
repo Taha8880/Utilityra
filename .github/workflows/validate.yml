@@ -5,8 +5,12 @@ concurrency:
 on:
   pull_request:
     branches: [main, rebuild/utilityra-platform-v1]
+    paths-ignore:
+      - 'docs/STATUS_LATEST_AR.md'
   push:
     branches: [main, rebuild/utilityra-platform-v1]
+    paths-ignore:
+      - 'docs/STATUS_LATEST_AR.md'
   workflow_dispatch:
 jobs:
   validate:
