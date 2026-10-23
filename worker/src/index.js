@@ -385,6 +385,46 @@ function errorStatus(error) {
   return 502;
 }
 
+
+const INDEXABLE_TOOL_SLUGS = new Set("word-counter text-cleaner case-converter text-compare json-formatter csv-json-converter base64-encoder-decoder url-encoder-decoder uuid-generator password-generator timestamp-converter percentage-calculator scientific-calculator unit-converter color-converter number-base-converter reading-time random-number-generator age-calculator gpa-calculator html-escape slug-generator sort-lines remove-duplicate-lines json-minifier regex-tester reverse-text json-to-csv character-frequency image-resizer text-to-speech html-preview qr-generator pdf-merge pdf-split image-compressor image-cropper markdown-preview seo-auditor api-tester ai-assistant json-diff image-to-pdf pdf-rotate favicon-generator accessibility-checker page-speed-checker security-header-checker contrast-checker pdf-to-text pdf-metadata".split(" "));
+function seoMetadata(pathname, origin) {
+  const path = pathname === "/" ? "/" : pathname.replace(/\/+$/, "");
+  const pages = {
+    "/": ["Utilityra — أدوات رقمية مجانية", "مجموعة أدوات رقمية مجانية للكتابة والحساب والدراسة والبرمجة والملفات."],
+    "/about": ["عن Utilityra", "تعرف على Utilityra ومجموعة الأدوات الرقمية المجانية."],
+    "/privacy": ["سياسة الخصوصية — Utilityra", "سياسة الخصوصية وكيفية تعامل Utilityra مع البيانات والمدخلات."],
+    "/contact": ["اتصل بنا — Utilityra", "تواصل مع Utilityra للاستفسارات والملاحظات والإبلاغ عن المشكلات."],
+    "/terms": ["شروط الاستخدام — Utilityra", "شروط استخدام أدوات وخدمات Utilityra الرقمية."],
+    "/disclaimer": ["إخلاء المسؤولية — Utilityra", "حدود المسؤولية ودقة النتائج عند استخدام أدوات Utilityra."]
+  };
+  let title, description;
+  if (pages[path]) [title, description] = pages[path];
+  else if (path.startsWith("/tools/")) {
+    const slug = path.slice(7);
+    if (!INDEXABLE_TOOL_SLUGS.has(slug)) return null;
+    const name = slug.split("-").map(x => ["pdf","json","csv","html","url","api","seo","uuid","gpa","qr"].includes(x) ? x.toUpperCase() : x.charAt(0).toUpperCase()+x.slice(1)).join(" ");
+    title = name + " — Free Online Tool | Utilityra";
+    description = "Use Utilityra's free " + name + " online tool. A practical browser-based utility for everyday work, study and productivity.";
+  } else return null;
+  return { title, description, canonical: origin + path };
+}
+function rewriteSeoResponse(response, meta) {
+  const headers = new Headers(response.headers);
+  headers.set("cache-control", "public, max-age=120, stale-while-revalidate=600");
+  headers.set("x-content-type-options", "nosniff");
+  headers.set("referrer-policy", "strict-origin-when-cross-origin");
+  headers.set("content-security-policy", "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; worker-src 'self' blob: https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https: wss:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'");
+  return new HTMLRewriter()
+    .on("title", { element(e) { e.setInnerContent(meta.title); } })
+    .on('meta[name="description"]', { element(e) { e.setAttribute("content", meta.description); } })
+    .on('meta[property="og:title"]', { element(e) { e.setAttribute("content", meta.title); } })
+    .on('meta[property="og:description"]', { element(e) { e.setAttribute("content", meta.description); } })
+    .on('meta[name="twitter:title"]', { element(e) { e.setAttribute("content", meta.title); } })
+    .on('meta[name="twitter:description"]', { element(e) { e.setAttribute("content", meta.description); } })
+    .on("head", { element(e) { e.append('<link rel="canonical" href="' + meta.canonical + '"><meta property="og:url" content="' + meta.canonical + '">', { html: true }); } })
+    .transform(new Response(response.body, { status: response.status, statusText: response.statusText, headers }));
+}
+
 export default {
   async fetch(request, env) {
     const origin = allowedOrigin(request, env);
@@ -546,21 +586,23 @@ export default {
       }
     }
 
-    if (request.method === "GET" && env.ASSETS && (
-      url.pathname === "/" ||
-      /^\/tools\/[a-z0-9-]+\/?$/.test(url.pathname) ||
-      ["/about", "/privacy", "/contact", "/terms", "/disclaimer"].includes(url.pathname)
-    )) {
-      const homeUrl = new URL(request.url);
-      homeUrl.pathname = "/";
-      const appResponse = await env.ASSETS.fetch(new Request(homeUrl, request));
-      if (appResponse.ok) {
-        const headers = new Headers(appResponse.headers);
-        headers.set("cache-control", "public, max-age=120, stale-while-revalidate=600");
-        headers.set("x-content-type-options", "nosniff");
-        headers.set("referrer-policy", "strict-origin-when-cross-origin");
-        headers.set("content-security-policy", "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; worker-src 'self' blob: https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https: wss:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'");
-        return new Response(appResponse.body, { status: 200, headers });
+    if (request.method === "GET" && env.ASSETS) {
+      const pathname = url.pathname === "/" ? "/" : url.pathname.replace(/\/+$/, "");
+      const isToolPath = pathname.startsWith("/tools/");
+      const isPublicAppPath = pathname === "/" || isToolPath || ["/about", "/privacy", "/contact", "/terms", "/disclaimer"].includes(pathname);
+      if (isToolPath && !INDEXABLE_TOOL_SLUGS.has(pathname.slice(7))) {
+        return new Response("Not Found", { status: 404, headers: { "content-type": "text/plain; charset=utf-8", "x-robots-tag": "noindex", "cache-control": "no-store" } });
+      }
+      if (isPublicAppPath) {
+        const homeUrl = new URL(request.url);
+        homeUrl.pathname = "/";
+        homeUrl.search = "";
+        const appResponse = await env.ASSETS.fetch(new Request(homeUrl, request));
+        if (appResponse.ok) {
+          const meta = seoMetadata(pathname, url.origin);
+          if (!meta) return new Response("Not Found", { status: 404, headers: { "content-type": "text/plain; charset=utf-8", "x-robots-tag": "noindex", "cache-control": "no-store" } });
+          return rewriteSeoResponse(appResponse, meta);
+        }
       }
     }
 
