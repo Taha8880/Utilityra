@@ -533,7 +533,7 @@ export default {
         headers.set("cache-control", "public, max-age=120, stale-while-revalidate=600");
         headers.set("x-content-type-options", "nosniff");
         headers.set("referrer-policy", "strict-origin-when-cross-origin");
-        headers.set("content-security-policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'");
+        headers.set("content-security-policy", "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https: wss:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'");
         return new Response(appResponse.body, { status: 200, headers });
       }
     }
@@ -547,7 +547,7 @@ export default {
         headers.set("permissions-policy", "camera=(), microphone=(), geolocation=()");
         if (url.pathname === "/" || url.pathname.endsWith(".html")) {
           headers.set("cache-control", "public, max-age=300, stale-while-revalidate=3600");
-          headers.set("content-security-policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'");
+          headers.set("content-security-policy", "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https: wss:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'");
         }
         return new Response(assetResponse.body, { status: assetResponse.status, statusText: assetResponse.statusText, headers });
       }
