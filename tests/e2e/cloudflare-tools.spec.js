@@ -284,3 +284,13 @@ test('age calculator returns years, months and days', async ({ page }) => {
   await expect(page.locator('#out')).toContainText('شهر');
   await expect(page.locator('#out')).toContainText('يوم');
 });
+
+
+test('tool pages expose unique titles, descriptions and creator credit', async ({ page }) => {
+  await page.goto(BASE, { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('footer')).toContainText('Created by Taha');
+  await openTool(page, 'pdf-merge');
+  await expect(page).toHaveTitle(/دمج ملفات PDF|PDF Merger/);
+  await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', /PDF/);
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', /\/tools\/pdf-merge$/);
+});
