@@ -21,7 +21,7 @@ jobs:
         with:
           node-version: 22
       - name: Check Worker and Blogger sync JavaScript syntax
-        run: node --check worker/src/index.js && node --check scripts/blogger-sync.mjs
+        run: node --check worker/src/index.js && node --check scripts/blogger-sync.mjs && node --check scripts/update-project-status.mjs
       - name: Validate theme XML, tool scripts, and manifest
         run: python scripts/validate-site.py
       - name: Test Worker API behavior
