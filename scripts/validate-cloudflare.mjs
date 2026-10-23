@@ -3,11 +3,20 @@ import vm from "node:vm";
 
 const html = await readFile(new URL("../worker/public/index.html", import.meta.url), "utf8");
 const worker = await readFile(new URL("../worker/src/index.js", import.meta.url), "utf8");
+const browserTests = await readFile(new URL("../tests/e2e/tool-accuracy.spec.js", import.meta.url), "utf8");
 const match = html.match(/const T=\[([\s\S]*?)\n\];let lang=/);
 if (!match) throw new Error("Cloudflare tool registry not found");
 const slugs = [...match[1].matchAll(/\["([a-z0-9-]+)"/g)].map(m => m[1]);
 if (slugs.length !== 52) throw new Error("Expected exactly 52 registered Cloudflare tools; found " + slugs.length);
 if (new Set(slugs).size !== slugs.length) throw new Error("Duplicate tool slugs found");
+const testSlugBlock = browserTests.match(/const SLUGS = \[([\s\S]*?)\];/);
+if (!testSlugBlock) throw new Error("Browser tool route coverage list is missing");
+const testedSlugs = [...testSlugBlock[1].matchAll(/'([a-z0-9-]+)'/g)].map(m => m[1]);
+const missingBrowserTests = slugs.filter(slug => !testedSlugs.includes(slug));
+const staleBrowserTests = testedSlugs.filter(slug => !slugs.includes(slug));
+if (missingBrowserTests.length || staleBrowserTests.length || testedSlugs.length !== slugs.length) {
+  throw new Error("Tool registry and browser route coverage differ. Missing: " + (missingBrowserTests.join(", ") || "none") + "; stale: " + (staleBrowserTests.join(", ") || "none"));
+}
 const requiredSlugs = ["word-counter","json-formatter","qr-generator","pdf-merge","pdf-split","image-compressor","image-cropper","markdown-preview","seo-auditor","api-tester","ai-assistant","json-diff","password-strength","image-to-pdf","pdf-rotate","favicon-generator","accessibility-checker","page-speed-checker","security-header-checker","contrast-checker","pdf-metadata","pdf-to-text"];
 if (new Set(requiredSlugs).size !== requiredSlugs.length) throw new Error("Required tool validation list contains duplicate slugs");
 for (const slug of requiredSlugs) {
@@ -25,7 +34,7 @@ if (!html.includes("Created by Taha")) throw new Error("Required creator footer 
 if (!html.includes("extractPdfText") || !html.includes("pdfjsLib.getDocument")) throw new Error("PDF text extraction UI or processing handler is missing");
 if (!html.includes("Maximum PDF size is 25 MB") || !html.includes("Maximum supported length is 250 pages")) throw new Error("PDF text extraction safety limits are missing");
 console.log("PASS: Cloudflare HTML JavaScript parses.");
-console.log("PASS: " + slugs.length + " unique tool routes are registered.");
+console.log("PASS: " + slugs.length + " unique tool routes are registered and all have browser route coverage.");
 console.log("PASS: Required QR, PDF, image, SEO, API and AI tools exist.");
 console.log("PASS: PDF text extraction handler and file/page limits are present.");
 console.log("PASS: Worker AI endpoint, SPA fallback and trusted library CSP are present.");
