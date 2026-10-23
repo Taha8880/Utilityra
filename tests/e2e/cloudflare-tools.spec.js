@@ -251,3 +251,36 @@ test('PDF metadata editor reads, edits and exports metadata', async ({ page }) =
   await page.locator('#savePdfMeta').click();
   await expect(page.locator('#downloadPdf')).toBeVisible({ timeout: 30000 });
 });
+
+
+test('CSV parser preserves quoted commas and escaped quotes', async ({ page }) => {
+  await openTool(page, 'csv-json-converter');
+  await page.locator('#input').fill('name,note\n"A, B","said ""hello"""\nMona,ok');
+  await page.locator('#run').click();
+  await expect(page.locator('#out')).toContainText('"name": "A, B"');
+  await expect(page.locator('#out')).toContainText('said "hello"');
+});
+
+test('text case, number base and color tools return complete conversions', async ({ page }) => {
+  await openTool(page, 'case-converter');
+  await page.locator('#input').fill('hello utilityra');
+  await page.locator('#titlecase').click();
+  await expect(page.locator('#out')).toHaveValue('Hello Utilityra');
+  await openTool(page, 'number-base-converter');
+  await page.locator('#input').fill('101');
+  await page.locator('#numberBase').selectOption('2');
+  await page.locator('#run').click();
+  await expect(page.locator('#out')).toContainText('Decimal: 5');
+  await openTool(page, 'color-converter');
+  await page.locator('#input').fill('#ffffff');
+  await page.locator('#run').click();
+  await expect(page.locator('#out')).toContainText('HSL 0°, 0%, 100%');
+});
+
+test('age calculator returns years, months and days', async ({ page }) => {
+  await openTool(page, 'age-calculator');
+  await page.locator('#date').fill('2000-01-01');
+  await page.locator('#run').click();
+  await expect(page.locator('#out')).toContainText('شهر');
+  await expect(page.locator('#out')).toContainText('يوم');
+});
