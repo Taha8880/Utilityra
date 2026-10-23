@@ -269,7 +269,7 @@ h1,h2,h3,p{overflow-wrap:anywhere}.brand{letter-spacing:0;line-height:1.2}
 .card p{width:100%;min-height:3.4em;line-height:1.7;margin:0 0 15px}
 .card .open{margin-top:auto;display:inline-flex;align-items:center;gap:6px;line-height:1.5}
 .ico{display:grid;place-items:center;flex:0 0 44px;width:44px;height:44px;line-height:1;border:1px solid color-mix(in srgb,var(--brand) 12%,var(--line));box-shadow:inset 0 1px 0 rgba(255,255,255,.45);font-family:"Segoe UI Symbol","Noto Sans Symbols 2",Tahoma,sans-serif;font-size:21px;filter:grayscale(1);opacity:.9}
-.card:hover .ico{filter:none;opacity:1}.grid{align-items:stretch}.chip{white-space:nowrap;line-height:1.4}
+.card:hover .ico{filter:none;opacity:1}.tool-svg{display:block;width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.grid{align-items:stretch}.chip{white-space:nowrap;line-height:1.4}
 .btn{line-height:1.45;white-space:normal;text-align:center}input,textarea,select{min-width:0;max-width:100%;line-height:1.6}
 .panel h1,.panel h2,.panel h3{overflow-wrap:anywhere}.toolPage .panel{min-width:0;overflow-wrap:anywhere}.toolPage h1{line-height:1.4;letter-spacing:0}
 .toolPage .field label,.field label{line-height:1.55}.toolPage input,.toolPage textarea,.toolPage select{font-size:16px}
@@ -333,7 +333,22 @@ const T=[
 ["pdf-to-text","file","▤","استخراج النص من PDF","PDF Text Extractor","استخراج النص القابل للتحديد من ملفات PDF داخل المتصفح.","Extract selectable text from PDF files in your browser.","pdftext"],
 ["pdf-metadata","data","ⓘ","عرض وتحرير بيانات PDF","PDF Metadata Viewer & Editor","اعرض بيانات PDF الأساسية وعدّل العنوان والمؤلف والموضوع.","View and edit basic PDF metadata.","pdfmeta"],
 ];let lang="ar",cat="all",active=null,activePage=null;const $=s=>document.querySelector(s),tr=(a,b)=>lang==="ar"?a:b;
-const FILE_TOOLS=new Set(["image-resizer","qr-generator","pdf-merge","pdf-split","image-compressor","image-cropper","image-to-pdf","pdf-rotate","pdf-metadata","pdf-to-text"]);const OFFICE_TOOLS=new Set(["word-counter","text-cleaner","case-converter","text-compare","reading-time","sort-lines","remove-duplicate-lines","reverse-text","character-frequency","text-to-speech","markdown-preview"]);const STUDENT_TOOLS=new Set(["percentage-calculator","scientific-calculator","unit-converter","random-number-generator","age-calculator","gpa-calculator","timestamp-converter"]);function bucket(t){return FILE_TOOLS.has(t[0])?"files":OFFICE_TOOLS.has(t[0])?"office":STUDENT_TOOLS.has(t[0])?"students":(t[1]==="math"?"students":t[1]==="text"?"office":"dev")}function cards(){let g=$("#grid"),q=$("#q").value.trim().toLowerCase();g.innerHTML="";let n=0;T.forEach(t=>{let ok=(cat==="all"||cat===bucket(t))&&(!q||t.join(" ").toLowerCase().includes(q));let a=document.createElement("a");a.className="card";a.hidden=!ok;a.href="/tools/"+t[0];a.innerHTML='<span class="ico">'+t[2]+'</span><h3>'+tr(t[3],t[4])+'</h3><p>'+tr(t[5],t[6])+'</p><span class="open">'+tr("فتح الأداة ↗","Open tool ↗")+'</span>';g.append(a);if(ok)n++});$("#count").textContent=tr(n+" أداة",""+n+" tools")}
+const FILE_TOOLS=new Set(["image-resizer","qr-generator","pdf-merge","pdf-split","image-compressor","image-cropper","image-to-pdf","pdf-rotate","pdf-metadata","pdf-to-text"]);const OFFICE_TOOLS=new Set(["word-counter","text-cleaner","case-converter","text-compare","reading-time","sort-lines","remove-duplicate-lines","reverse-text","character-frequency","text-to-speech","markdown-preview"]);const STUDENT_TOOLS=new Set(["percentage-calculator","scientific-calculator","unit-converter","random-number-generator","age-calculator","gpa-calculator","timestamp-converter"]);function bucket(t){return FILE_TOOLS.has(t[0])?"files":OFFICE_TOOLS.has(t[0])?"office":STUDENT_TOOLS.has(t[0])?"students":(t[1]==="math"?"students":t[1]==="text"?"office":"dev")}function toolIcon(slug){
+const groups=[
+[/^(?:img|image|favicon|qr|compress|color)/i,'image'],
+[/^(?:pdf|doc|csv|json|markdown|text|file|xml|html|base64)/i,'file'],
+[/^(?:code|regex|api|http|url|slug|seo|accessibility|headers|pagespeed|security|contrast)/i,'code']
+];
+let type='tools';for(const [re,name] of groups){if(re.test(slug)){type=name;break}}
+const shapes={
+image:'<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="8.5" cy="9" r="1.5"/><path d="m21 15-5-5L5 20"/>',
+file:'<path d="M7 3h7l5 5v13H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M14 3v6h6M9 13h6M9 17h6"/>',
+code:'<path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 5l-4 14"/>',
+tools:'<rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 7h8M8 11h2m4 0h2M8 15h2m4 0h2M8 18h8"/>'
+};
+return '<svg class="tool-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">'+shapes[type]+'</svg>';
+}
+function cards(){let g=$("#grid"),q=$("#q").value.trim().toLowerCase();g.innerHTML="";let n=0;T.forEach(t=>{let ok=(cat==="all"||cat===bucket(t))&&(!q||t.join(" ").toLowerCase().includes(q));let a=document.createElement("a");a.className="card";a.hidden=!ok;a.href="/tools/"+t[0];a.innerHTML='<span class="ico">'+toolIcon(t[0])+'</span><h3>'+tr(t[3],t[4])+'</h3><p>'+tr(t[5],t[6])+'</p><span class="open">'+tr("فتح الأداة ↗","Open tool ↗")+'</span>';g.append(a);if(ok)n++});$("#count").textContent=tr(n+" أداة",""+n+" tools")}
 function field(id,label,area=false,placeholder=""){return '<div class="field"><label for="'+id+'">'+label+'</label>'+(area?'<textarea id="'+id+'" placeholder="'+placeholder+'"></textarea>':'<input id="'+id+'" placeholder="'+placeholder+'">')+'</div>'}
 function setPageMeta(title,description){document.title=title+" | Utilityra";const m=document.querySelector('meta[name="description"]');if(m)m.content=description;let canonical=document.querySelector('link[rel="canonical"]');if(!canonical){canonical=document.createElement("link");canonical.rel="canonical";document.head.appendChild(canonical)}canonical.href=location.origin+location.pathname;let og=document.querySelector('meta[property="og:title"]');if(!og){og=document.createElement("meta");og.setAttribute("property","og:title");document.head.appendChild(og)}og.content=title;let od=document.querySelector('meta[property="og:description"]');if(!od){od=document.createElement("meta");od.setAttribute("property","og:description");document.head.appendChild(od)}od.content=description}
 
