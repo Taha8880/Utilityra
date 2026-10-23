@@ -10,6 +10,10 @@ Utilityra is an Arabic-first, Arabic/English tools platform. **The active fronte
 - Cloudflare-specific validation: `scripts/validate-cloudflare.mjs`
 - Browser regression tests: `tests/e2e/cloudflare-tools.spec.js` and `tests/e2e/tool-accuracy.spec.js`
 
+## Main project reference
+
+The full Arabic master reference covering the current architecture, the 52-tool catalog, known failures and remedies, admin dashboard, AI providers, secure AI engineering-agent roadmap, deployment secrets, and release gates is in [`docs/UTILITYRA_MASTER_REFERENCE_AR.md`](docs/UTILITYRA_MASTER_REFERENCE_AR.md). It distinguishes verified implementation from pending work and known limitations.
+
 ## Current tool suite
 
 The Cloudflare app registers 52 distinct tool pages covering text, data/JSON, calculations, URLs, image operations, QR, PDF text extraction/merge/split/rotation/metadata, image-to-PDF, Markdown preview, SEO, PageSpeed, accessibility, security headers, contrast, API requests and the AI assistant. Each registered slug is served at `/tools/<slug>`; the Worker returns the SPA shell and the frontend loads the corresponding tool view.
