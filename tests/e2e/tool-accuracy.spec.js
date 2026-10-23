@@ -11,7 +11,7 @@ const SLUGS = [
   'json-to-csv','character-frequency','image-resizer','text-to-speech','html-preview',
   'qr-generator','pdf-merge','pdf-split','image-compressor','image-cropper','markdown-preview',
   'seo-auditor','api-tester','ai-assistant','json-diff','password-strength','image-to-pdf',
-  'pdf-rotate','favicon-generator','accessibility-checker','page-speed-checker',
+  'pdf-rotate','pdf-to-text','favicon-generator','accessibility-checker','page-speed-checker',
   'security-header-checker','contrast-checker','pdf-metadata'
 ];
 
@@ -155,4 +155,11 @@ test('contrast ratio matches WCAG reference for black text on white', async ({ p
   await page.locator('#background').fill('#ffffff');
   await page.locator('#checkContrast').click();
   await expect(page.locator('#contrastResults')).toContainText('21.00:1');
+});
+
+
+test('PDF text extractor clearly rejects missing file input', async ({ page }) => {
+  await openTool(page, 'pdf-to-text');
+  await page.locator('#extractPdfText').click();
+  await expect(page.locator('#status')).toContainText('خطأ');
 });
