@@ -526,7 +526,7 @@ export default {
       ["/about", "/privacy", "/contact", "/terms"].includes(url.pathname)
     )) {
       const homeUrl = new URL(request.url);
-      homeUrl.pathname = "/index.html";
+      homeUrl.pathname = "/";
       const appResponse = await env.ASSETS.fetch(new Request(homeUrl, request));
       if (appResponse.ok) {
         const headers = new Headers(appResponse.headers);
