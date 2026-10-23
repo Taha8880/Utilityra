@@ -116,8 +116,7 @@ test('PDF merger merges two browser-generated PDFs', async ({ page }) => {
   })));
   await page.locator('#mergePdf').click();
   await expect(page.locator('#downloadPdf')).toBeVisible({ timeout: 30000 });
-  const href = await page.locator('#downloadPdf').getAttribute('href');
-  expect(href).toMatch(/^blob:/);
+  await expect(page.locator('#downloadPdf')).toHaveAttribute('href', /^blob:/, { timeout: 10000 });
 });
 
 test('PDF page extractor validates page ranges and exports a PDF', async ({ page }) => {
@@ -258,8 +257,9 @@ test('CSV parser preserves quoted commas and escaped quotes', async ({ page }) =
   await openTool(page, 'csv-json-converter');
   await page.locator('#input').fill('name,note\n"A, B","said ""hello"""\nMona,ok');
   await page.locator('#run').click();
-  await expect(page.locator('#out')).toContainText('"name": "A, B"');
-  await expect(page.locator('#out')).toContainText('said "hello"');
+  const converted = JSON.parse(await page.locator('#out').inputValue());
+  expect(converted[0].name).toBe('A, B');
+  expect(converted[0].note).toBe('said "hello"');
 });
 
 test('text case, number base and color tools return complete conversions', async ({ page }) => {
@@ -271,19 +271,19 @@ test('text case, number base and color tools return complete conversions', async
   await page.locator('#input').fill('101');
   await page.locator('#numberBase').selectOption('2');
   await page.locator('#run').click();
-  await expect(page.locator('#out')).toContainText('Decimal: 5');
+  await expect(page.locator('#out')).toHaveValue(/Decimal: 5/);
   await openTool(page, 'color-converter');
   await page.locator('#input').fill('#ffffff');
   await page.locator('#run').click();
-  await expect(page.locator('#out')).toContainText('HSL 0°, 0%, 100%');
+  await expect(page.locator('#out')).toHaveValue(/HSL 0°, 0%, 100%/);
 });
 
 test('age calculator returns years, months and days', async ({ page }) => {
   await openTool(page, 'age-calculator');
   await page.locator('#date').fill('2000-01-01');
   await page.locator('#run').click();
-  await expect(page.locator('#out')).toContainText('شهر');
-  await expect(page.locator('#out')).toContainText('يوم');
+  await expect(page.locator('#out')).toHaveValue(/شهر/);
+  await expect(page.locator('#out')).toHaveValue(/يوم/);
 });
 
 
@@ -301,7 +301,7 @@ test('language switch localizes category filters and tool cards', async ({ page 
   await page.goto(BASE, { waitUntil: 'domcontentloaded' });
   await page.locator('#language').click();
   await expect(page.locator('.chip[data-cat="all"]')).toHaveText('All tools');
-  await expect(page.locator('.chip[data-cat="office"]')).toHaveText('Office & business');
+  await expect(page.locator('.chip[data-cat="office"]')).toHaveText('Work & productivity');
   await expect(page.locator('.chip[data-cat="files"]')).toHaveText('Files & images');
   await expect(page.locator('#grid')).toContainText('Word Counter');
   await page.locator('#language').click();
