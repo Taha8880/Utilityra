@@ -250,7 +250,7 @@ function reviewOrBot(request, body) {
   if (body?.reviewMode === true) return true;
   const url = new URL(request.url);
   if (url.searchParams.has("utilityra_review") || url.searchParams.has("preview")) return true;
-  if (cookieValue(request, ADMIN_COOKIE)) return true;
+  if (cookieValue(request, ADMIN_COOKIE) || cookieValue(request, "utilityra_owner_excluded") === "1") return true;
   const ua = request.headers.get("User-Agent") || "";
   return /bot|crawler|spider|headless|playwright|puppeteer|lighthouse|google-inspectiontool|chatgpt|openai|anthropic|claude|perplexity|gemini|bingpreview/i.test(ua);
 }
