@@ -7,9 +7,9 @@ const match = html.match(/const T=\[([\s\S]*?)\n\];let lang=/);
 if (!match) throw new Error("Cloudflare tool registry not found");
 const entries = [...match[1].matchAll(/\["([a-z0-9-]+)","(text|data|web|math)","[^"]*","[^"]*","[^"]*","[^"]*","[^"]*","([a-z]+)"\]/g)];
 const slugs = entries.map(m => m[1]);
-if (slugs.length < 40) throw new Error("Expected at least 40 registered Cloudflare tools; found " + slugs.length);
+if (slugs.length < 50) throw new Error("Expected at least 50 registered Cloudflare tools; found " + slugs.length);
 if (new Set(slugs).size !== slugs.length) throw new Error("Duplicate tool slugs found");
-for (const slug of ["word-counter","json-formatter","qr-generator","pdf-merge","pdf-split","image-compressor","image-cropper","markdown-preview","seo-auditor","api-tester","ai-assistant","json-diff","password-strength"]) {
+for (const slug of ["word-counter","json-formatter","qr-generator","pdf-merge","pdf-split","image-compressor","image-cropper","markdown-preview","seo-auditor","api-tester","ai-assistant","json-diff","password-strength","image-to-pdf","pdf-rotate","favicon-generator","accessibility-checker","page-speed-checker","security-header-checker","contrast-checker"]) {
   if (!slugs.includes(slug)) throw new Error("Required tool missing: " + slug);
 }
 const scriptStart = html.indexOf("<script>");
