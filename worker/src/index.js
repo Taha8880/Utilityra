@@ -414,6 +414,14 @@ function rewriteSeoResponse(response, meta) {
   headers.set("x-content-type-options", "nosniff");
   headers.set("referrer-policy", "strict-origin-when-cross-origin");
   headers.set("content-security-policy", "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; worker-src 'self' blob: https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https: wss:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'");
+  if (typeof HTMLRewriter === "undefined") {
+    return response.text().then(body => {
+      body = body.replace(/<title>[^<]*<\\/title>/i, "<title>" + meta.title + "</title>")
+        .replace(/(<meta\\s+name=["']description["']\\s+content=["'])[^"']*(["'][^>]*>)/i, "$1" + meta.description + "$2")
+        .replace(/<head([^>]*)>/i, '<head$1><link rel="canonical" href="' + meta.canonical + '"><meta property="og:url" content="' + meta.canonical + '">');
+      return new Response(body, { status: response.status, statusText: response.statusText, headers });
+    });
+  }
   return new HTMLRewriter()
     .on("title", { element(e) { e.setInnerContent(meta.title); } })
     .on('meta[name="description"]', { element(e) { e.setAttribute("content", meta.description); } })
