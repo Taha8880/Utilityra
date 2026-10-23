@@ -14,6 +14,24 @@ function req(path, options = {}) {
   });
 }
 
+test("tool routes fall back to the root SPA asset", async () => {
+  const requested = [];
+  const ASSETS = {
+    fetch: async request => {
+      const path = new URL(request.url).pathname;
+      requested.push(path);
+      if (path === "/") return new Response("<!doctype html><title>Utilityra</title>", {
+        status: 200, headers: { "content-type": "text/html; charset=utf-8" }
+      });
+      return new Response("Not found", { status: 404 });
+    }
+  };
+  const response = await worker.fetch(req("/tools/image-resizer"), { ASSETS });
+  assert.equal(response.status, 200);
+  assert.match(await response.text(), /Utilityra/);
+  assert.ok(requested.includes("/"), "SPA fallback must request the root asset");
+});
+
 test("health endpoint reports safe capability flags without exposing secrets", async () => {
   const response = await worker.fetch(req("/health"), {});
   const body = await response.json();
