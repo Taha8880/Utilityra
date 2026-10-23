@@ -1,0 +1,54 @@
+name: Utilityra live health monitor
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: utilityra-live-health-monitor
+  cancel-in-progress: false
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check public homepage and critical routes
+        shell: bash
+        run: |
+          set +e
+          failures=0
+          for path in / /robots.txt /sitemap.xml /tools/word-counter /tools/pdf-to-text; do
+            code=$(curl -L -sS -o /dev/null -w '%{http_code}' --max-time 15 "https://utilityra.tavengers16.workers.dev$path")
+            result=$?
+            if [ "$result" -ne 0 ] || [ "$code" -lt 200 ] || [ "$code" -ge 400 ]; then
+              echo "FAIL $path HTTP=$code curl_exit=$result"
+              failures=$((failures + 1))
+            else
+              echo "PASS $path HTTP=$code"
+            fi
+          done
+          echo "failures=$failures" >> "$GITHUB_OUTPUT"
+          if [ "$failures" -gt 0 ]; then exit 1; fi
+
+      - name: Open an incident issue if health checks fail
+        if: failure()
+        env:
+          GH_TOKEN: \${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: \${{ github.repository }}
+          GITHUB_SERVER_URL: \${{ github.server_url }}
+          GITHUB_RUN_ID: \${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          title='[Utilityra Monitor] فشل فحص حي للموقع'
+          existing=$(gh issue list --state open --search "$title in:title" --json title --jq 'length')
+          if [ "$existing" -gt 0 ]; then
+            echo "An open monitoring incident already exists; avoiding duplicate issue."
+            exit 0
+          fi
+          body=$(printf 'فشل فحص دوري للموقع العام.\\n\\nراجع سجل GitHub Actions: %s/%s/actions/runs/%s\\n\\nالمسارات المفحوصة: /, /robots.txt, /sitemap.xml, /tools/word-counter, /tools/pdf-to-text\\n\\nهذا تنبيه وليس تأكيدًا أن الإصلاح تم. افحص سجلات Cloudflare والـ workflow قبل إغلاق البلاغ.' "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID")
+          gh issue create --title "$title" --body "$body"
