@@ -608,11 +608,24 @@ export default {
         const homeUrl = new URL(request.url);
         homeUrl.pathname = "/";
         homeUrl.search = "";
-        const appResponse = await env.ASSETS.fetch(new Request(homeUrl, request));
+        const appResponse = await env.ASSETS.fetch(new Request(homeUrl.toString(), {
+          method: "GET",
+          headers: request.headers
+        }));
         if (appResponse.ok) {
           const meta = seoMetadata(pathname, url.origin);
           if (!meta) return new Response("Not Found", { status: 404, headers: { "content-type": "text/plain; charset=utf-8", "x-robots-tag": "noindex", "cache-control": "no-store" } });
-          return rewriteSeoResponse(appResponse, meta);
+          try {
+            return await rewriteSeoResponse(appResponse, meta);
+          } catch (error) {
+            // SEO rewriting must never take the public tools offline.
+            const fallbackHeaders = new Headers(appResponse.headers);
+            fallbackHeaders.set("content-security-policy", "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; worker-src 'self' blob: https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https: wss:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'");
+            fallbackHeaders.set("x-content-type-options", "nosniff");
+            fallbackHeaders.set("referrer-policy", "strict-origin-when-cross-origin");
+            fallbackHeaders.set("cache-control", "no-store");
+            return new Response(appResponse.body, { status: appResponse.status, statusText: appResponse.statusText, headers: fallbackHeaders });
+          }
         }
       }
     }
