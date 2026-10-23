@@ -302,7 +302,7 @@ test('language switch localizes category filters and tool cards', async ({ page 
   await page.locator('#language').click();
   await expect(page.locator('.chip[data-cat="all"]')).toHaveText('All tools');
   await expect(page.locator('.chip[data-cat="office"]')).toHaveText('Work & productivity');
-  await expect(page.locator('.chip[data-cat="files"]')).toHaveText('Files & images');
+  await expect(page.locator('.chip[data-cat="files"]')).toHaveText('Files & media');
   await expect(page.locator('#grid')).toContainText('Word Counter');
   await page.locator('#language').click();
   await expect(page.locator('.chip[data-cat="all"]')).toHaveText('كل الأدوات');
