@@ -36,8 +36,7 @@ test('percentage calculator matches hand-calculated reference values and rejects
   await page.locator('#a').fill('200');
   await page.locator('#b').fill('12.5');
   await page.locator('#run').click();
-  await expect(page.locator('#out')).toContainText('25.00');
-  await expect(page.locator('#out')).toContainText('225.00');
+  await expect(page.locator('#out')).toHaveValue(/25\.00[\s\S]*225\.00/);
   await page.locator('#a').fill('');
   await page.locator('#run').click();
   await expect(page.locator('#status')).toContainText('خطأ');
@@ -84,8 +83,7 @@ test('timestamp conversion treats a 10-digit Unix value as seconds', async ({ pa
   await openTool(page, 'timestamp-converter');
   await page.locator('#input').fill('0');
   await page.locator('#run').click();
-  await expect(page.locator('#out')).toContainText('1970-01-01T00:00:00.000Z');
-  await expect(page.locator('#out')).toContainText('Unix: 0');
+  await expect(page.locator('#out')).toHaveValue(/1970-01-01T00:00:00\.000Z[\s\S]*Unix: 0/);
 });
 
 test('random number generator respects inclusive bounds', async ({ page }) => {
@@ -133,8 +131,7 @@ test('text comparison identifies changed content and duplicate cleanup preserves
   await page.locator('#input').fill('alpha\nbeta');
   await page.locator('#second').fill('alpha\ngamma');
   await page.locator('#run').click();
-  await expect(page.locator('#out')).toContainText('beta');
-  await expect(page.locator('#out')).toContainText('gamma');
+  await expect(page.locator('#out')).toHaveValue(/beta[\s\S]*gamma/);
   await openTool(page, 'text-cleaner');
   await page.locator('#input').fill('  alpha   beta  \n\nalpha   beta');
   await page.locator('#run').click();
