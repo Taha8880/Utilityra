@@ -86,5 +86,5 @@ test('text-to-speech and isolated HTML preview controls initialize', async ({ pa
   await page.locator('#input').fill('<h2>Preview works</h2>');
   await page.locator('#previewHtml').click();
   await expect(page.locator('#htmlFrame')).toHaveAttribute('sandbox', '');
-  await expect(page.locator('#htmlFrame')).toHaveJSProperty('srcdoc', /Preview works/);
+  await expect(page.frameLocator('#htmlFrame').locator('h2')).toHaveText('Preview works');
 });
