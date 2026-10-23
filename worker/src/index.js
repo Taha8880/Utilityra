@@ -402,6 +402,21 @@ export default {
     if (!origin) return json({ error: "ORIGIN_NOT_ALLOWED" }, 403, "null");
     const url = new URL(request.url);
 
+    if (request.method === "GET" && url.pathname === "/robots.txt") {
+      const body = "User-agent: *\\nAllow: /\\nDisallow: /admin\\nDisallow: /api/\\nSitemap: " + url.origin + "/sitemap.xml\\n";
+      return new Response(body, { status: 200, headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "public, max-age=3600", "x-content-type-options": "nosniff" } });
+    }
+
+    if (request.method === "GET" && url.pathname === "/sitemap.xml") {
+      const paths = ["/", "/about", "/privacy", "/contact", "/terms", "/tools/word-counter", "/tools/text-cleaner", "/tools/case-converter", "/tools/text-compare", "/tools/json-formatter", "/tools/csv-json-converter", "/tools/base64-encoder-decoder", "/tools/url-encoder-decoder", "/tools/uuid-generator", "/tools/password-generator", "/tools/timestamp-converter", "/tools/percentage-calculator", "/tools/scientific-calculator", "/tools/unit-converter", "/tools/color-converter", "/tools/number-base-converter", "/tools/reading-time", "/tools/random-number-generator", "/tools/age-calculator", "/tools/gpa-calculator", "/tools/html-escape", "/tools/slug-generator", "/tools/sort-lines", "/tools/remove-duplicate-lines", "/tools/json-minifier", "/tools/regex-tester", "/tools/reverse-text", "/tools/json-to-csv", "/tools/character-frequency", "/tools/image-resizer", "/tools/text-to-speech", "/tools/html-preview", "/tools/qr-generator", "/tools/pdf-merge", "/tools/pdf-split", "/tools/image-compressor", "/tools/image-cropper", "/tools/markdown-preview", "/tools/seo-auditor", "/tools/api-tester", "/tools/ai-assistant", "/tools/json-diff", "/tools/password-strength", "/tools/image-to-pdf", "/tools/pdf-rotate", "/tools/favicon-generator", "/tools/accessibility-checker", "/tools/page-speed-checker", "/tools/security-header-checker", "/tools/contrast-checker", "/tools/pdf-metadata"];
+      const lastmod = new Date().toISOString().slice(0, 10);
+      const xml = '<?xml version="1.0" encoding="UTF-8"?>' +
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' +
+        paths.map(path => '<url><loc>' + url.origin + path + '</loc><lastmod>' + lastmod + '</lastmod></url>').join('') +
+        '</urlset>';
+      return new Response(xml, { status: 200, headers: { "content-type": "application/xml; charset=utf-8", "cache-control": "public, max-age=3600", "x-content-type-options": "nosniff" } });
+    }
+
 
     if (request.method === "GET" && (url.pathname === "/admin" || url.pathname === "/admin/")) {
       return serveAdminPage(request, env);
