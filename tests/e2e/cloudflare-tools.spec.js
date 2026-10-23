@@ -88,3 +88,99 @@ test('text-to-speech and isolated HTML preview controls initialize', async ({ pa
   await expect(page.locator('#htmlFrame')).toHaveAttribute('sandbox', '');
   await expect(page.frameLocator('#htmlFrame').locator('h2')).toHaveText('Preview works');
 });
+
+
+test('QR generator creates a downloadable QR code', async ({ page }) => {
+  await openTool(page, 'qr-generator');
+  await page.locator('#input').fill('https://utilityra.tavengers16.workers.dev/');
+  await page.locator('#makeQr').click();
+  await expect(page.locator('#qrCanvas canvas, #qrCanvas img').first()).toBeVisible({ timeout: 20000 });
+  await expect(page.locator('#downloadQr')).toBeVisible();
+});
+
+test('PDF merger merges two browser-generated PDFs', async ({ page }) => {
+  await openTool(page, 'pdf-merge');
+  await page.addScriptTag({ url: 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js' });
+  const pdfs = await page.evaluate(async () => {
+    const result = [];
+    for (const text of ['First page', 'Second page']) {
+      const doc = await PDFLib.PDFDocument.create();
+      const p = doc.addPage([300, 200]);
+      p.drawText(text, { x: 20, y: 100 });
+      result.push(Array.from(await doc.save()));
+    }
+    return result;
+  });
+  await page.locator('#pdfFiles').setInputFiles(pdfs.map((bytes, i) => ({
+    name: 'sample-' + i + '.pdf', mimeType: 'application/pdf', buffer: Buffer.from(bytes)
+  })));
+  await page.locator('#mergePdf').click();
+  await expect(page.locator('#downloadPdf')).toBeVisible({ timeout: 30000 });
+  const href = await page.locator('#downloadPdf').getAttribute('href');
+  expect(href).toMatch(/^blob:/);
+});
+
+test('PDF page extractor validates page ranges and exports a PDF', async ({ page }) => {
+  await openTool(page, 'pdf-split');
+  await page.addScriptTag({ url: 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js' });
+  const bytes = await page.evaluate(async () => {
+    const doc = await PDFLib.PDFDocument.create();
+    doc.addPage([300, 200]); doc.addPage([300, 200]);
+    return Array.from(await doc.save());
+  });
+  await page.locator('#pdfFile').setInputFiles({ name: 'two-pages.pdf', mimeType: 'application/pdf', buffer: Buffer.from(bytes) });
+  await page.locator('#pages').fill('2');
+  await page.locator('#splitPdf').click();
+  await expect(page.locator('#downloadPdf')).toBeVisible({ timeout: 30000 });
+  await page.locator('#pages').fill('0');
+  await page.locator('#splitPdf').click();
+  await expect(page.locator('#status')).toContainText('خطأ');
+});
+
+test('image compressor exports an image and markdown preview escapes HTML', async ({ page }) => {
+  await openTool(page, 'image-compressor');
+  const png = await page.evaluate(() => {
+    const c = document.createElement('canvas'); c.width = 4; c.height = 4;
+    c.getContext('2d').fillRect(0, 0, 4, 4);
+    return c.toDataURL('image/png').split(',')[1];
+  });
+  await page.locator('#imageFile').setInputFiles({ name: 'tiny.png', mimeType: 'image/png', buffer: Buffer.from(png, 'base64') });
+  await page.locator('#compressImage').click();
+  await expect(page.locator('#downloadImage')).toBeVisible();
+  await openTool(page, 'markdown-preview');
+  await page.locator('#input').fill('# Heading\n\n<script>bad()</script>\n\n**bold**');
+  await page.locator('#renderMarkdown').click();
+  await expect(page.locator('#markdownOutput h1')).toHaveText('Heading');
+  await expect(page.locator('#markdownOutput strong')).toHaveText('bold');
+  await expect(page.locator('#markdownOutput script')).toHaveCount(0);
+});
+
+test('SEO audit and JSON diff produce useful results', async ({ page }) => {
+  await openTool(page, 'seo-auditor');
+  await page.locator('#input').fill('<html><head><title>Test page title long enough for auditing</title><meta name="description" content="This is a description with enough words to make the SEO checker analyze the page description content correctly."><link rel="canonical" href="https://example.com"><meta property="og:title" content="Test"></head><body><h1>Main</h1><img src="x"></body></html>');
+  await page.locator('#auditSeo').click();
+  await expect(page.locator('#seoResults')).toContainText('H1: 1');
+  await openTool(page, 'json-diff');
+  await page.locator('#input').fill('{"name":"A","count":1}');
+  await page.locator('#second').fill('{"name":"B","count":1}');
+  await page.locator('#compareJson').click();
+  await expect(page.locator('#jsonDiffResult')).toContainText('name');
+});
+
+test('API tester and AI workspace have live controls', async ({ page }) => {
+  await openTool(page, 'api-tester');
+  await page.locator('#apiUrl').fill(new URL('/', BASE).toString());
+  await page.locator('#sendApi').click();
+  await expect(page.locator('#apiResult')).toContainText('Utilityra', { timeout: 15000 });
+  await openTool(page, 'ai-assistant');
+  await expect(page.locator('#aiProvider')).toBeVisible();
+  await expect(page.locator('#askAi')).toBeVisible();
+});
+
+test('password strength is evaluated locally', async ({ page }) => {
+  await openTool(page, 'password-strength');
+  await page.locator('#input').fill('mV!9qP2#xL7@aZ4');
+  await page.locator('#checkPassword').click();
+  await expect(page.locator('#passwordResult')).toContainText('/10');
+  await expect(page.locator('#status')).toContainText('لم تُرسل');
+});
