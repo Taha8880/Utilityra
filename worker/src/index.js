@@ -416,7 +416,7 @@ function rewriteSeoResponse(response, meta) {
   headers.set("content-security-policy", "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; worker-src 'self' blob: https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https: wss:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'");
   if (typeof HTMLRewriter === "undefined") {
     return response.text().then(body => {
-      body = body.replace(/<title>[\\s\\S]*?title>/i, "<title>" + meta.title + "</title>");
+      body = body.replace(/<title>.*?title>/i, "<title>" + meta.title + "</title>");
       body = body.replace(/<meta name="description"[^>]*>/i, '<meta name="description" content="' + meta.description + '">');
       body = body.replace(/<head[^>]*>/i, head => head + '<link rel="canonical" href="' + meta.canonical + '"><meta property="og:url" content="' + meta.canonical + '">');
       return new Response(body, { status: response.status, statusText: response.statusText, headers });
