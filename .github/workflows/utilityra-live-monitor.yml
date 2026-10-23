@@ -21,13 +21,16 @@ jobs:
   monitor:
     runs-on: ubuntu-latest
     steps:
-      - name: Check public homepage and critical routes
+      - name: Check homepage, sitemap and every published route
         shell: bash
         run: |
-          set +e
+          set -uo pipefail
+          BASE="https://utilityra.tavengers16.workers.dev"
           failures=0
-          for path in / /robots.txt /sitemap.xml /tools/word-counter /tools/pdf-to-text; do
-            code=$(curl -L -sS -o /dev/null -w '%{http_code}' --max-time 15 "https://utilityra.tavengers16.workers.dev$path")
+          check_path() {
+            local path="$1"
+            local code result
+            code=$(curl -L -sS -o /dev/null -w '%{http_code}' --max-time 12 "$BASE$path")
             result=$?
             if [ "$result" -ne 0 ] || ! [[ "$code" =~ ^[0-9]{3}$ ]] || [ "$code" -lt 200 ] || [ "$code" -ge 400 ]; then
               echo "FAIL $path HTTP=$code curl_exit=$result"
@@ -35,10 +38,26 @@ jobs:
             else
               echo "PASS $path HTTP=$code"
             fi
+          }
+          for path in / /robots.txt /sitemap.xml /tools/word-counter /tools/pdf-to-text /admin; do
+            check_path "$path"
           done
-          echo "failures=$failures" >> "$GITHUB_OUTPUT"
+          sitemap=$(curl -fsS --max-time 20 "$BASE/sitemap.xml")
+          if [ $? -ne 0 ] || [ -z "$sitemap" ]; then
+            echo "FAIL sitemap could not be downloaded or was empty"
+            failures=$((failures + 1))
+          else
+            mapfile -t routes < <(printf '%s' "$sitemap" | grep -oE '<loc>[^<]+' | sed 's#<loc>##' | sed "s#^$BASE##" | grep '^/' | sort -u)
+            if [ "${#routes[@]}" -eq 0 ]; then
+              echo "FAIL sitemap contained no usable local routes"
+              failures=$((failures + 1))
+            else
+              echo "Discovered ${#routes[@]} routes from sitemap; checking each published URL."
+              for path in "${routes[@]}"; do check_path "$path"; done
+            fi
+          fi
+          echo "Total route failures: $failures"
           if [ "$failures" -gt 0 ]; then exit 1; fi
-
       - name: Open an incident issue if health checks fail
         if: failure()
         env:
