@@ -115,15 +115,31 @@ jobs:
           grep -Fq '<meta name="google-site-verification" content="I_qhjjUrrPOpBTL8a-yD9UzTVeiCEmSSE1_hxz-XzQc" />' "$RUNNER_TEMP/utilityra-home.html" || { echo "::error::Current Google Search Console meta verification tag is missing."; exit 1; }
           test "$(grep -Eo '<meta name="google-site-verification"' "$RUNNER_TEMP/utilityra-home.html" | wc -l)" -eq 1 || { echo "::error::Homepage must contain exactly one Google Search Console verification tag."; exit 1; }
           curl --retry 5 --retry-delay 3 --retry-all-errors -fsS "$BASE/tools/word-counter" -o "$RUNNER_TEMP/utilityra-tool.html"
-          grep -qi '<title>Utilityra' "$RUNNER_TEMP/utilityra-tool.html"
+          # Tool pages use their own title followed by the Utilityra brand; do not require the brand to be first.
+          grep -qi '<title>.*Utilityra' "$RUNNER_TEMP/utilityra-tool.html" || { echo "::error::Tool page title or Utilityra brand is missing."; exit 1; }
+          curl --retry 5 --retry-delay 3 --retry-all-errors -fsS "$BASE/admin" -o "$RUNNER_TEMP/utilityra-admin.html"
+          grep -qi '<meta name="robots" content="noindex,nofollow,noarchive">' "$RUNNER_TEMP/utilityra-admin.html" || { echo "::error::Admin dashboard must remain noindex."; exit 1; }
           curl --retry 5 --retry-delay 3 --retry-all-errors -fsS "$BASE/google1dc3867d61891f77.html" -o "$RUNNER_TEMP/google-verification.html"
           grep -qx 'google-site-verification: google1dc3867d61891f77.html' "$RUNNER_TEMP/google-verification.html" || { echo "::error::Google verification file is missing or has incorrect content."; exit 1; }
           echo "Google Search Console verification file is reachable at the site root."
-          for slug in word-counter text-cleaner case-converter text-compare json-formatter csv-json-converter base64-encoder-decoder url-encoder-decoder uuid-generator password-generator timestamp-converter percentage-calculator scientific-calculator unit-converter color-converter number-base-converter reading-time random-number-generator age-calculator gpa-calculator html-escape slug-generator sort-lines remove-duplicate-lines json-minifier regex-tester reverse-text json-to-csv character-frequency image-resizer text-to-speech html-preview qr-generator pdf-merge pdf-split image-compressor image-cropper markdown-preview seo-auditor api-tester ai-assistant json-diff password-strength image-to-pdf pdf-rotate favicon-generator accessibility-checker page-speed-checker security-header-checker contrast-checker pdf-metadata; do
+          # Derive the smoke-test routes from the same authoritative slug list checked against the registry by validation.
+          node <<'NODE' > "$RUNNER_TEMP/tool-slugs.txt"
+          const fs = require('node:fs');
+          const source = fs.readFileSync('tests/e2e/tool-accuracy.spec.js', 'utf8');
+          const match = source.match(/const SLUGS = \[([\s\S]*?)\];/);
+          if (!match) throw new Error('Could not read the registered browser-test slug list.');
+          const slugs = [...match[1].matchAll(/'([^']+)'/g)].map(item => item[1]);
+          if (slugs.length !== 52 || new Set(slugs).size !== slugs.length) {
+            throw new Error('Expected 52 unique registered tool routes; found ' + slugs.length);
+          }
+          process.stdout.write(slugs.join('\n') + '\n');
+          NODE
+          while IFS= read -r slug; do
+            [ -n "$slug" ] || continue
             curl --retry 3 --retry-delay 2 --retry-all-errors -fsS "$BASE/tools/$slug" -o "$RUNNER_TEMP/utilityra-route.html"
-            grep -q "$slug" "$RUNNER_TEMP/utilityra-route.html" || { echo "::error::Tool route missing from delivered app: $slug"; exit 1; }
-          done
-          echo "Smoke tests passed: homepage and every registered tool route are reachable."
+            grep -qi '<title>.*Utilityra' "$RUNNER_TEMP/utilityra-route.html" || { echo "::error::Tool title/brand missing from delivered route: $slug"; exit 1; }
+          done < "$RUNNER_TEMP/tool-slugs.txt"
+          echo "Smoke tests passed: homepage, private admin page, Google verification and all 52 registered tool routes are reachable."
           # The public /health path is currently returning 404 on the deployed workers.dev host.
           # Keep that API diagnostic separate from the user-facing static tool page deployment.
 
