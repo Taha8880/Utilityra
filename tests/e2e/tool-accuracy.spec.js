@@ -164,3 +164,20 @@ test('PDF text extractor clearly rejects missing file input', async ({ page }) =
   await page.locator('#extractPdfText').click();
   await expect(page.locator('#status')).toContainText('خطأ');
 });
+
+test('calculator works under the production CSP without unsafe-eval', async ({ page }) => {
+  const response = await page.goto(`${BASE}/tools/scientific-calculator`, { waitUntil: 'domcontentloaded' });
+  expect(response).toBeTruthy();
+  expect(response.status()).toBe(200);
+  const csp = response.headers()['content-security-policy'] || '';
+  expect(csp).not.toMatch(/unsafe-eval/i);
+  await page.locator('#input').fill('(2+3)*4');
+  await page.locator('#run').click();
+  await expect(page.locator('#out')).toHaveValue('20');
+  await page.locator('#input').fill('2^3');
+  await page.locator('#run').click();
+  await expect(page.locator('#out')).toHaveValue('8');
+  await page.locator('#input').fill('8/0');
+  await page.locator('#run').click();
+  await expect(page.locator('#status')).toContainText('خطأ');
+});
