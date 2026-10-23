@@ -235,3 +235,19 @@ test('PageSpeed tool exposes a valid public URL and device selector', async ({ p
   await expect(page.locator('#strategy option')).toHaveCount(2);
   await expect(page.locator('#runPageSpeed')).toBeVisible();
 });
+
+
+test('PDF metadata editor reads, edits and exports metadata', async ({ page }) => {
+  await openTool(page, 'pdf-metadata');
+  await page.addScriptTag({ url: 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js' });
+  const bytes = await page.evaluate(async () => {
+    const doc = await PDFLib.PDFDocument.create();
+    doc.addPage([300, 200]); doc.setTitle('Original title');
+    return Array.from(await doc.save());
+  });
+  await page.locator('#pdfFile').setInputFiles({ name: 'metadata.pdf', mimeType: 'application/pdf', buffer: Buffer.from(bytes) });
+  await expect(page.locator('#metaTitle')).toHaveValue('Original title', { timeout: 20000 });
+  await page.locator('#metaTitle').fill('Updated Utilityra title');
+  await page.locator('#savePdfMeta').click();
+  await expect(page.locator('#downloadPdf')).toBeVisible({ timeout: 30000 });
+});
