@@ -419,7 +419,7 @@ export default {
     }
 
     if (request.method === "GET" && url.pathname === "/sitemap.xml") {
-      const paths = ["/","/about","/privacy","/contact","/terms","/tools/word-counter","/tools/text-cleaner","/tools/case-converter","/tools/text-compare","/tools/json-formatter","/tools/csv-json-converter","/tools/base64-encoder-decoder","/tools/url-encoder-decoder","/tools/uuid-generator","/tools/password-generator","/tools/timestamp-converter","/tools/percentage-calculator","/tools/scientific-calculator","/tools/unit-converter","/tools/color-converter","/tools/number-base-converter","/tools/reading-time","/tools/random-number-generator","/tools/age-calculator","/tools/gpa-calculator","/tools/html-escape","/tools/slug-generator","/tools/sort-lines","/tools/remove-duplicate-lines","/tools/json-minifier","/tools/regex-tester","/tools/reverse-text","/tools/json-to-csv","/tools/character-frequency","/tools/image-resizer","/tools/text-to-speech","/tools/html-preview","/tools/qr-generator","/tools/pdf-merge","/tools/pdf-split","/tools/image-compressor","/tools/image-cropper","/tools/markdown-preview","/tools/seo-auditor","/tools/api-tester","/tools/ai-assistant","/tools/json-diff","/tools/password-strength","/tools/image-to-pdf","/tools/pdf-rotate","/tools/favicon-generator","/tools/accessibility-checker","/tools/page-speed-checker","/tools/security-header-checker","/tools/contrast-checker","/tools/pdf-metadata"];
+      const paths = ["/","/about","/privacy","/contact","/terms","/disclaimer","/tools/word-counter","/tools/text-cleaner","/tools/case-converter","/tools/text-compare","/tools/json-formatter","/tools/csv-json-converter","/tools/base64-encoder-decoder","/tools/url-encoder-decoder","/tools/uuid-generator","/tools/password-generator","/tools/timestamp-converter","/tools/percentage-calculator","/tools/scientific-calculator","/tools/unit-converter","/tools/color-converter","/tools/number-base-converter","/tools/reading-time","/tools/random-number-generator","/tools/age-calculator","/tools/gpa-calculator","/tools/html-escape","/tools/slug-generator","/tools/sort-lines","/tools/remove-duplicate-lines","/tools/json-minifier","/tools/regex-tester","/tools/reverse-text","/tools/json-to-csv","/tools/character-frequency","/tools/image-resizer","/tools/text-to-speech","/tools/html-preview","/tools/qr-generator","/tools/pdf-merge","/tools/pdf-split","/tools/image-compressor","/tools/image-cropper","/tools/markdown-preview","/tools/seo-auditor","/tools/api-tester","/tools/ai-assistant","/tools/json-diff","/tools/password-strength","/tools/image-to-pdf","/tools/pdf-rotate","/tools/favicon-generator","/tools/accessibility-checker","/tools/page-speed-checker","/tools/security-header-checker","/tools/contrast-checker","/tools/pdf-metadata"];
       const lastmod = new Date().toISOString().slice(0, 10);
       const xml = '<?xml version="1.0" encoding="UTF-8"?>' +
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' +
@@ -549,7 +549,7 @@ export default {
     if (request.method === "GET" && env.ASSETS && (
       url.pathname === "/" ||
       /^\/tools\/[a-z0-9-]+\/?$/.test(url.pathname) ||
-      ["/about", "/privacy", "/contact", "/terms"].includes(url.pathname)
+      ["/about", "/privacy", "/contact", "/terms", "/disclaimer"].includes(url.pathname)
     )) {
       const homeUrl = new URL(request.url);
       homeUrl.pathname = "/";
