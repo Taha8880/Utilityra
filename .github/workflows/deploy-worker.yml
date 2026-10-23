@@ -132,4 +132,4 @@ jobs:
         run: |
           set -euo pipefail
           npx --yes wrangler@4 deployments list --json > "$RUNNER_TEMP/deployments.json"
-          echo "Worker deployment completed. Open Cloudflare Workers & Pages to copy the public workers.dev URL into the Blogger theme configuration before launch."
+          echo "Worker deployment completed. Public app: https://utilityra.tavengers16.workers.dev/"
