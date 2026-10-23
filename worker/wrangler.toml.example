@@ -5,7 +5,7 @@ compatibility_date = "2026-10-22"
 workers_dev = true
 
 [vars]
-ALLOWED_ORIGIN = "https://utilityra.blogspot.com"
+ALLOWED_ORIGIN = "https://utilityra.tavengers16.workers.dev"
 MAX_MESSAGE_CHARS = "8000"
 WORKERS_AI_MODEL = "@cf/meta/llama-3.1-8b-instruct"
 # Configure OPENAI_API_KEY and GEMINI_API_KEY using `wrangler secret put` or the Cloudflare dashboard.
