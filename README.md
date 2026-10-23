@@ -8,19 +8,19 @@ Utilityra is an Arabic-first, Arabic/English tools platform. **The active fronte
 - D1 schema and seed data: `worker/schema.sql`, `worker/seed.sql`
 - Deployment: `.github/workflows/deploy-worker.yml`
 - Cloudflare-specific validation: `scripts/validate-cloudflare.mjs`
-- Browser regression tests: `tests/e2e/cloudflare-tools.spec.js`
+- Browser regression tests: `tests/e2e/cloudflare-tools.spec.js` and `tests/e2e/tool-accuracy.spec.js`
 
 ## Current tool suite
 
-The Cloudflare app registers 51 distinct tool pages covering text, data/JSON, calculations, URLs, image operations, QR, PDF merge/split/rotation/metadata, image-to-PDF, Markdown preview, SEO, PageSpeed, accessibility, security headers, contrast, API requests and the AI assistant. Each registered slug is served at `/tools/<slug>`; the Worker returns the SPA shell and the frontend loads the corresponding tool view.
+The Cloudflare app registers 52 distinct tool pages covering text, data/JSON, calculations, URLs, image operations, QR, PDF text extraction/merge/split/rotation/metadata, image-to-PDF, Markdown preview, SEO, PageSpeed, accessibility, security headers, contrast, API requests and the AI assistant. Each registered slug is served at `/tools/<slug>`; the Worker returns the SPA shell and the frontend loads the corresponding tool view.
 
-QR and PDF operations use trusted browser libraries from public CDNs. Those tools require an internet connection to load the library, but the selected file/content operations are performed in the browser. The PageSpeed tool calls Google's PageSpeed Insights API and can be rate-limited; the API tester is subject to target-server CORS rules. The accessibility checker is a basic static HTML audit, not a complete WCAG certification. The security-header checker evaluates pasted response headers and does not silently scan a URL.
+QR and PDF operations use trusted browser libraries from public CDNs. Those tools require an internet connection to load the library, but the selected file/content operations are performed in the browser. The PageSpeed tool calls Google's PageSpeed Insights API and can be rate-limited; the API tester is subject to target-server CORS rules. The PDF text extractor reads selectable text only (up to 25 MB and 250 pages); scanned/image-only PDFs need OCR, which this tool does not provide. The accessibility checker is a basic static HTML audit, not a complete WCAG certification. The security-header checker evaluates pasted response headers and does not silently scan a URL.
 
 ## Validation and deployment
 
 - The Cloudflare deployment workflow configures D1, sets the required admin/session secrets, deploys the Worker and smoke-tests the homepage plus registered tool routes.
 - The Cloudflare browser workflow checks tool interactions on desktop and mobile. A successful deployment proves delivery, not that every browser-side tool passed its functional tests; consult the latest GitHub Actions result before calling the whole suite verified.
-- Run `node scripts/validate-cloudflare.mjs`, `node --check worker/src/index.js`, and `node --test tests/worker.test.mjs` for local validation.
+- Run `node scripts/validate-cloudflare.mjs`, `node --check worker/src/index.js`, and `node --test tests/worker.test.mjs` for local validation. Run `npx playwright test tests/e2e/cloudflare-tools.spec.js tests/e2e/tool-accuracy.spec.js --project=chromium-desktop --project=chromium-mobile` to test live tool routes and representative calculations/conversions on desktop and mobile.
 - Required GitHub Actions secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `UTILITYRA_ADMIN_PASSWORD` (16+ characters), and `UTILITYRA_ADMIN_SESSION_SECRET` (32+ characters). Optional provider secrets: `UTILITYRA_OPENAI_API_KEY`, `UTILITYRA_GEMINI_API_KEY`. Never put secrets in browser code or committed files.
 
 ## Legacy files
