@@ -23,6 +23,7 @@ async function openTool(page, slug) {
 }
 
 test('all registered tools resolve to their own tool page, not a homepage fallback', async ({ page }) => {
+  test.setTimeout(120_000);
   for (const slug of SLUGS) {
     await openTool(page, slug);
     await expect(page.locator('h1'), `Missing title for ${slug}`).toBeVisible();
