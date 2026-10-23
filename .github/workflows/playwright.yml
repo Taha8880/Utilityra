@@ -1,4 +1,4 @@
-name: Playwright tool tests
+name: Cloudflare Utilityra browser tests
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
@@ -6,10 +6,16 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+    paths:
+      - 'worker/**'
+      - 'tests/e2e/cloudflare-tools.spec.js'
+      - 'tests/worker.test.mjs'
+      - 'scripts/validate-cloudflare.mjs'
+      - '.github/workflows/playwright.yml'
   pull_request:
     branches: [main]
 jobs:
-  browser-tests:
+  cloudflare-tools:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,17 +23,15 @@ jobs:
         with:
           node-version: 22
       - run: npm install
-      - run: npx playwright install --with-deps chromium
-      - name: Test local tool interactions on desktop and mobile
-        run: npx playwright test tests/e2e/tool-pages.spec.js --project=chromium-desktop --project=chromium-mobile
+      - name: Validate Cloudflare app and tool registry
+        run: node scripts/validate-cloudflare.mjs
+      - name: Validate Worker JavaScript syntax
+        run: node --check worker/src/index.js
+      - name: Test Worker API and route behavior
+        run: node --test tests/worker.test.mjs
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Test published Cloudflare tools on desktop and mobile
+        run: npx playwright test tests/e2e/cloudflare-tools.spec.js --project=chromium-desktop --project=chromium-mobile
         env:
           CI: true
-      - name: Test live Cloudflare Worker tool pages
-        run: npx playwright test tests/e2e/cloudflare-tools.spec.js --project=chromium-desktop
-        env:
-          CI: true
-      - name: Smoke test the live Blogger site
-        run: npx playwright test tests/e2e/site-smoke.spec.js --project=chromium-desktop --project=chromium-mobile
-        env:
-          CI: true
-          UTILITYRA_BASE_URL: https://utilityra.blogspot.com
