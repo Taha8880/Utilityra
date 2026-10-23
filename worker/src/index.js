@@ -21,7 +21,7 @@ function json(data, status = 200, origin = "*", extraHeaders = {}) {
 
 function allowedOrigin(request, env) {
   const requestOrigin = request.headers.get("Origin") || "";
-  const allowed = (env.ALLOWED_ORIGIN || "https://utilityra.blogspot.com")
+  const allowed = (env.ALLOWED_ORIGIN || "https://utilityra.tavengers16.workers.dev")
     .split(",").map(value => value.trim()).filter(Boolean);
   if (!requestOrigin) return allowed[0] || "null";
   if (requestOrigin === new URL(request.url).origin) return requestOrigin;
