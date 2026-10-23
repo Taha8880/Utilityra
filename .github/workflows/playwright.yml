@@ -9,6 +9,7 @@ on:
     paths:
       - 'worker/**'
       - 'tests/e2e/cloudflare-tools.spec.js'
+      - 'tests/e2e/tool-accuracy.spec.js'
       - 'tests/worker.test.mjs'
       - 'scripts/validate-cloudflare.mjs'
       - '.github/workflows/playwright.yml'
@@ -32,6 +33,6 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
       - name: Test published Cloudflare tools on desktop and mobile
-        run: npx playwright test tests/e2e/cloudflare-tools.spec.js --project=chromium-desktop --project=chromium-mobile
+        run: npx playwright test tests/e2e/cloudflare-tools.spec.js tests/e2e/tool-accuracy.spec.js --project=chromium-desktop --project=chromium-mobile
         env:
           CI: true
