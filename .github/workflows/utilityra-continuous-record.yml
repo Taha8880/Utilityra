@@ -9,6 +9,7 @@ on:
     - cron: '17 */6 * * *'
   workflow_run:
     workflows:
+      - Validate Utilityra rebuild
       - Cloudflare Utilityra browser tests
       - Deploy Utilityra API and private analytics
     types: [completed]
