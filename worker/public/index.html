@@ -285,7 +285,7 @@ file:'<path d="M7 3h7l5 5v13H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M14 3v6
 code:'<path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 5l-4 14"/>',
 tools:'<rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 7h8M8 11h2m4 0h2M8 15h2m4 0h2M8 18h8"/>'
 };
-return '<svg class="tool-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">'+shapes[type]+'</svg>';
+return '<svg class="tool-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'+shapes[type]+'</svg>';
 }
 function cards(){let g=$("#grid"),q=$("#q").value.trim().toLowerCase();g.innerHTML="";let n=0;T.forEach(t=>{let ok=(cat==="all"||cat===bucket(t))&&(!q||t.join(" ").toLowerCase().includes(q));let a=document.createElement("a");a.className="card";a.hidden=!ok;a.href="/tools/"+t[0];a.innerHTML='<span class="ico">'+toolIcon(t[0])+'</span><h3>'+tr(t[3],t[4])+'</h3><p>'+tr(t[5],t[6])+'</p><span class="open">'+tr("فتح الأداة ↗","Open tool ↗")+'</span>';g.append(a);if(ok)n++});$("#count").textContent=tr(n+" أداة",""+n+" tools")}
 function field(id,label,area=false,placeholder=""){return '<div class="field"><label for="'+id+'">'+label+'</label>'+(area?'<textarea id="'+id+'" placeholder="'+placeholder+'"></textarea>':'<input id="'+id+'" placeholder="'+placeholder+'">')+'</div>'}
