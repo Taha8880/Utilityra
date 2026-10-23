@@ -402,6 +402,17 @@ export default {
     if (!origin) return json({ error: "ORIGIN_NOT_ALLOWED" }, 403, "null");
     const url = new URL(request.url);
 
+    if (request.method === "GET" && url.pathname === "/google1dc3867d61891f77.html") {
+      return new Response("google-site-verification: google1dc3867d61891f77.html\n", {
+        status: 200,
+        headers: {
+          "content-type": "text/html; charset=utf-8",
+          "cache-control": "public, max-age=300",
+          "x-content-type-options": "nosniff"
+        }
+      });
+    }
+
     if (request.method === "GET" && url.pathname === "/robots.txt") {
       const body = "User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /api/\nSitemap: " + url.origin + "/sitemap.xml\n";
       return new Response(body, { status: 200, headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "public, max-age=3600", "x-content-type-options": "nosniff" } });
