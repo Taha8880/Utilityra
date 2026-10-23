@@ -6,10 +6,11 @@
   "scripts": {
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:syntax": "node --check worker/src/index.js && node --check scripts/blogger-sync.mjs",
+    "test:syntax": "node --check worker/src/index.js && node --check scripts/validate-cloudflare.mjs && node --check scripts/blogger-sync.mjs",
     "test:site": "python scripts/validate-site.py",
-    "test": "npm run test:site && npm run test:syntax && npm run test:worker",
-    "test:worker": "node --test tests/worker.test.mjs"
+    "test": "npm run test:site && npm run test:syntax && npm run test:cloudflare:validate && npm run test:worker",
+    "test:worker": "node --test tests/worker.test.mjs",
+    "test:cloudflare:validate": "node scripts/validate-cloudflare.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.55.0"
