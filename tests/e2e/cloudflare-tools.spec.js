@@ -300,7 +300,7 @@ test('tool pages expose unique titles, descriptions and creator credit', async (
 test('language switch localizes category filters and tool cards', async ({ page }) => {
   await page.goto(BASE, { waitUntil: 'domcontentloaded' });
   await page.locator('#language').click();
-  await expect(page.locator('.chip[data-cat="all"]')).toHaveText('All');
+  await expect(page.locator('.chip[data-cat="all"]')).toHaveText('All tools');
   await expect(page.locator('.chip[data-cat="office"]')).toHaveText('Office & business');
   await expect(page.locator('.chip[data-cat="files"]')).toHaveText('Files & images');
   await expect(page.locator('#grid')).toContainText('Word Counter');
