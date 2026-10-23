@@ -311,9 +311,12 @@ async function buildOpportunities(env) {
 }
 async function serveAdminPage(request, env) {
   if (!env.ASSETS) return new Response("Admin interface asset is not configured.", { status: 503, headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" } });
-  const assetUrl = new URL(request.url);
-  assetUrl.pathname = "/admin.html";
-  const asset = await env.ASSETS.fetch(new Request(assetUrl, request));
+  const assetUrl = new URL("/admin.html", request.url);
+  // Fetch the named static asset with a clean GET request; do not carry over route-specific request metadata.
+  const asset = await env.ASSETS.fetch(new Request(assetUrl.toString(), {
+    method: "GET",
+    headers: request.headers
+  }));
   if (!asset.ok) return new Response("Admin interface unavailable.", { status: 503 });
   const headers = new Headers(asset.headers);
   headers.set("cache-control", "no-store");
