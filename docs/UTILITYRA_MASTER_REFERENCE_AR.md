@@ -98,33 +98,32 @@ Cloudflare Worker + Static Assets
 28. `page-speed-checker` — تحليل PageSpeed عبر Google API.
 29. `security-header-checker` — تحليل ترويسات يزوّد بها المستخدم الأداة؛ ليس ماسحًا تلقائيًا للمواقع.
 30. `contrast-checker` — فحص تباين الألوان.
+31. `seo-auditor` — فحص عناصر SEO الأساسية للصفحة.
 
 ### الحسابات والأرقام والوقت
-31. `password-generator` — إنشاء كلمات مرور.
-32. `timestamp-converter` — تحويل Unix timestamp.
-33. `percentage-calculator` — حساب النسب المئوية.
-34. `scientific-calculator` — آلة حاسبة علمية.
-35. `unit-converter` — تحويل الوحدات.
-36. `color-converter` — تحويل صيغ الألوان.
-37. `number-base-converter` — تحويل أنظمة الأعداد.
-38. `random-number-generator` — توليد أرقام عشوائية.
-39. `age-calculator` — حساب العمر.
-40. `gpa-calculator` — حساب المعدل التراكمي.
-41. `password-strength` — تقدير قوة كلمة المرور.
+32. `password-generator` — إنشاء كلمات مرور.
+33. `timestamp-converter` — تحويل Unix timestamp.
+34. `percentage-calculator` — حساب النسب المئوية.
+35. `scientific-calculator` — آلة حاسبة علمية.
+36. `unit-converter` — تحويل الوحدات.
+37. `color-converter` — تحويل صيغ الألوان.
+38. `number-base-converter` — تحويل أنظمة الأعداد.
+39. `random-number-generator` — توليد أرقام عشوائية.
+40. `age-calculator` — حساب العمر.
+41. `gpa-calculator` — حساب المعدل التراكمي.
+42. `password-strength` — تقدير قوة كلمة المرور.
 
 ### الصور وPDF
-42. `image-resizer` — تغيير أبعاد الصورة.
-43. `qr-generator` — إنشاء QR.
-44. `pdf-merge` — دمج PDF.
-45. `pdf-split` — تقسيم PDF إلى صفحات/ملفات.
-46. `image-compressor` — ضغط الصور.
-47. `image-cropper` — قص الصور.
-48. `image-to-pdf` — تحويل الصور إلى PDF.
-49. `pdf-rotate` — تدوير صفحات PDF.
-50. `pdf-to-text` — استخراج النص المحدد من PDF.
-51. `pdf-metadata` — قراءة بيانات PDF الوصفية.
-52. `security-header-checker` و`favicon-generator` مدرجان ضمن المجموع أعلاه؛ لا تكرر إضافة أداة تحمل نفس slug.
-
+43. `image-resizer` — تغيير أبعاد الصورة.
+44. `qr-generator` — إنشاء QR.
+45. `pdf-merge` — دمج PDF.
+46. `pdf-split` — تقسيم PDF إلى صفحات/ملفات.
+47. `image-compressor` — ضغط الصور.
+48. `image-cropper` — قص الصور.
+49. `image-to-pdf` — تحويل الصور إلى PDF.
+50. `pdf-rotate` — تدوير صفحات PDF.
+51. `pdf-to-text` — استخراج النص المحدد من PDF.
+52. `pdf-metadata` — قراءة بيانات PDF الوصفية.
 > تنبيه صيانة: القائمة العددية أعلاه تصنيف توثيقي، أما القائمة المرجعية الدقيقة للمسارات فهي `const T` داخل الواجهة وقائمة `SLUGS` في `tests/e2e/tool-accuracy.spec.js`. سكربت التحقق يقارن السجل بالاختبارات ويمنع الاختلاف. عند تعديل الكتالوج يجب تحديث السجل والاختبارات سويًا.
 
 ## 5. التصميم وتجربة الاستخدام
