@@ -29,18 +29,10 @@ jobs:
         env:
           CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          ADMIN_PASSWORD: ${{ secrets.UTILITYRA_ADMIN_PASSWORD }}
-          ADMIN_SESSION_SECRET: ${{ secrets.UTILITYRA_ADMIN_SESSION_SECRET }}
-          OPENAI_API_KEY: ${{ secrets.UTILITYRA_OPENAI_API_KEY }}
-          GEMINI_API_KEY: ${{ secrets.UTILITYRA_GEMINI_API_KEY }}
         run: |
           set -euo pipefail
           test -n "$CF_API_TOKEN" || { echo "::error::Add CLOUDFLARE_API_TOKEN to repository Actions secrets."; exit 1; }
           test -n "$CF_ACCOUNT_ID" || { echo "::error::Add CLOUDFLARE_ACCOUNT_ID to repository Actions secrets."; exit 1; }
-          test -n "$ADMIN_PASSWORD" || { echo "::error::Add UTILITYRA_ADMIN_PASSWORD (16+ characters) to repository Actions secrets."; exit 1; }
-          test "${#ADMIN_PASSWORD}" -ge 16 || { echo "::error::UTILITYRA_ADMIN_PASSWORD must be at least 16 characters."; exit 1; }
-          test -n "$ADMIN_SESSION_SECRET" || { echo "::error::Add UTILITYRA_ADMIN_SESSION_SECRET (32+ characters) to repository Actions secrets."; exit 1; }
-          test "${#ADMIN_SESSION_SECRET}" -ge 32 || { echo "::error::UTILITYRA_ADMIN_SESSION_SECRET must be at least 32 characters."; exit 1; }
 
       - name: Install Wrangler
         run: npm install --global wrangler@4
@@ -84,8 +76,14 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.UTILITYRA_GEMINI_API_KEY }}
         run: |
           set -euo pipefail
-          printf '%s' "$ADMIN_PASSWORD" | npx --yes wrangler@4 secret put ADMIN_PASSWORD
-          printf '%s' "$ADMIN_SESSION_SECRET" | npx --yes wrangler@4 secret put ADMIN_SESSION_SECRET
+          if [ -n "$ADMIN_PASSWORD" ] && [ -n "$ADMIN_SESSION_SECRET" ]; then
+            test "${#ADMIN_PASSWORD}" -ge 16 || { echo "::error::UTILITYRA_ADMIN_PASSWORD must be at least 16 characters."; exit 1; }
+            test "${#ADMIN_SESSION_SECRET}" -ge 32 || { echo "::error::UTILITYRA_ADMIN_SESSION_SECRET must be at least 32 characters."; exit 1; }
+            printf '%s' "$ADMIN_PASSWORD" | npx --yes wrangler@4 secret put ADMIN_PASSWORD
+            printf '%s' "$ADMIN_SESSION_SECRET" | npx --yes wrangler@4 secret put ADMIN_SESSION_SECRET
+          else
+            echo "::warning::Admin login remains unavailable until both admin secrets are configured."
+          fi
           if [ -n "$OPENAI_API_KEY" ]; then printf '%s' "$OPENAI_API_KEY" | npx --yes wrangler@4 secret put OPENAI_API_KEY; fi
           if [ -n "$GEMINI_API_KEY" ]; then printf '%s' "$GEMINI_API_KEY" | npx --yes wrangler@4 secret put GEMINI_API_KEY; fi
 
@@ -116,6 +114,9 @@ jobs:
           grep -qi '<title>Utilityra' "$RUNNER_TEMP/utilityra-home.html"
           curl --retry 5 --retry-delay 3 --retry-all-errors -fsS "$BASE/tools/word-counter" -o "$RUNNER_TEMP/utilityra-tool.html"
           grep -qi '<title>Utilityra' "$RUNNER_TEMP/utilityra-tool.html"
+          curl --retry 5 --retry-delay 3 --retry-all-errors -fsS "$BASE/google1dc3867d61891f77.html" -o "$RUNNER_TEMP/google-verification.html"
+          grep -qx 'google-site-verification: google1dc3867d61891f77.html' "$RUNNER_TEMP/google-verification.html" || { echo "::error::Google verification file is missing or has incorrect content."; exit 1; }
+          echo "Google Search Console verification file is reachable at the site root."
           for slug in word-counter text-cleaner case-converter text-compare json-formatter csv-json-converter base64-encoder-decoder url-encoder-decoder uuid-generator password-generator timestamp-converter percentage-calculator scientific-calculator unit-converter color-converter number-base-converter reading-time random-number-generator age-calculator gpa-calculator html-escape slug-generator sort-lines remove-duplicate-lines json-minifier regex-tester reverse-text json-to-csv character-frequency image-resizer text-to-speech html-preview qr-generator pdf-merge pdf-split image-compressor image-cropper markdown-preview seo-auditor api-tester ai-assistant json-diff password-strength image-to-pdf pdf-rotate favicon-generator accessibility-checker page-speed-checker security-header-checker contrast-checker pdf-metadata; do
             curl --retry 3 --retry-delay 2 --retry-all-errors -fsS "$BASE/tools/$slug" -o "$RUNNER_TEMP/utilityra-route.html"
             grep -q "$slug" "$RUNNER_TEMP/utilityra-route.html" || { echo "::error::Tool route missing from delivered app: $slug"; exit 1; }
