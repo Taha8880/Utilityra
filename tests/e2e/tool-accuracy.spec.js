@@ -75,6 +75,12 @@ test('calculator handles precedence and refuses non-arithmetic expressions', asy
   await page.locator('#input').fill('2+3*4');
   await page.locator('#run').click();
   await expect(page.locator('#out')).toHaveValue('14');
+  await page.locator('#input').fill('-2^2');
+  await page.locator('#run').click();
+  await expect(page.locator('#out')).toHaveValue('-4');
+  await page.locator('#input').fill('2^-2');
+  await page.locator('#run').click();
+  await expect(page.locator('#out')).toHaveValue('0.25');
   await page.locator('#input').fill('alert(1)');
   await page.locator('#run').click();
   await expect(page.locator('#status')).toContainText('خطأ');
@@ -123,6 +129,7 @@ test('URL component encoding safely round-trips reserved characters', async ({ p
   await page.locator('#input').fill('a b&c=1');
   await page.locator('#run').click();
   await expect(page.locator('#out')).toHaveValue('a%20b%26c%3D1');
+  await page.locator('#input').fill('a different source');
   await page.locator('#reverse').click();
   await expect(page.locator('#out')).toHaveValue('a b&c=1');
 });
