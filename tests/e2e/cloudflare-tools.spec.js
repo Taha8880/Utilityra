@@ -184,3 +184,54 @@ test('password strength is evaluated locally', async ({ page }) => {
   await expect(page.locator('#passwordResult')).toContainText('/10');
   await expect(page.locator('#status')).toContainText('لم تُرسل');
 });
+
+
+test('image-to-PDF creates a downloadable PDF from an image', async ({ page }) => {
+  await openTool(page, 'image-to-pdf');
+  await page.addScriptTag({ url: 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js' });
+  const png = await page.evaluate(() => {
+    const c = document.createElement('canvas'); c.width = 8; c.height = 8;
+    c.getContext('2d').fillRect(0, 0, 8, 8);
+    return c.toDataURL('image/png').split(',')[1];
+  });
+  await page.locator('#imageFiles').setInputFiles([{ name: 'photo.png', mimeType: 'image/png', buffer: Buffer.from(png, 'base64') }]);
+  await page.locator('#makePdf').click();
+  await expect(page.locator('#downloadPdf')).toBeVisible({ timeout: 30000 });
+});
+
+test('PDF rotator exports a rotated document', async ({ page }) => {
+  await openTool(page, 'pdf-rotate');
+  await page.addScriptTag({ url: 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js' });
+  const bytes = await page.evaluate(async () => {
+    const doc = await PDFLib.PDFDocument.create(); doc.addPage([300, 200]);
+    return Array.from(await doc.save());
+  });
+  await page.locator('#pdfFile').setInputFiles({ name: 'rotate.pdf', mimeType: 'application/pdf', buffer: Buffer.from(bytes) });
+  await page.locator('#rotatePdf').click();
+  await expect(page.locator('#downloadPdf')).toBeVisible({ timeout: 30000 });
+});
+
+test('favicon, contrast, security headers and accessibility tools work', async ({ page }) => {
+  await openTool(page, 'favicon-generator');
+  await page.locator('#makeFavicon').click();
+  await expect(page.locator('#downloadFavicon')).toBeVisible();
+  await openTool(page, 'contrast-checker');
+  await page.locator('#checkContrast').click();
+  await expect(page.locator('#contrastResults')).toContainText(':1');
+  await openTool(page, 'security-header-checker');
+  await page.locator('#input').fill('Strict-Transport-Security: max-age=31536000\nContent-Security-Policy: default-src self\nX-Content-Type-Options: nosniff');
+  await page.locator('#checkHeaders').click();
+  await expect(page.locator('#headerResults')).toContainText('PASS — HSTS');
+  await openTool(page, 'accessibility-checker');
+  await page.locator('#input').fill('<html><head><title>Sample</title></head><body><h1>Title</h1><img src="x"><button></button></body></html>');
+  await page.locator('#auditA11y').click();
+  await expect(page.locator('#a11yResults')).toContainText('language');
+  await expect(page.locator('#a11yResults')).toContainText('alt');
+});
+
+test('PageSpeed tool exposes a valid public URL and device selector', async ({ page }) => {
+  await openTool(page, 'page-speed-checker');
+  await expect(page.locator('#pageUrl')).toBeVisible();
+  await expect(page.locator('#strategy option')).toHaveCount(2);
+  await expect(page.locator('#runPageSpeed')).toBeVisible();
+});
