@@ -29,7 +29,7 @@ jobs:
           for path in / /robots.txt /sitemap.xml /tools/word-counter /tools/pdf-to-text; do
             code=$(curl -L -sS -o /dev/null -w '%{http_code}' --max-time 15 "https://utilityra.tavengers16.workers.dev$path")
             result=$?
-            if [ "$result" -ne 0 ] || [ "$code" -lt 200 ] || [ "$code" -ge 400 ]; then
+            if [ "$result" -ne 0 ] || ! [[ "$code" =~ ^[0-9]{3}$ ]] || [ "$code" -lt 200 ] || [ "$code" -ge 400 ]; then
               echo "FAIL $path HTTP=$code curl_exit=$result"
               failures=$((failures + 1))
             else
@@ -42,7 +42,7 @@ jobs:
       - name: Open an incident issue if health checks fail
         if: failure()
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_SERVER_URL: ${{ github.server_url }}
           GITHUB_RUN_ID: ${{ github.run_id }}
@@ -54,5 +54,5 @@ jobs:
             echo "An open monitoring incident already exists; avoiding duplicate issue."
             exit 0
           fi
-          body=$(printf 'فشل فحص دوري للموقع العام.\\n\\nراجع سجل GitHub Actions: %s/%s/actions/runs/%s\\n\\nالمسارات المفحوصة: /, /robots.txt, /sitemap.xml, /tools/word-counter, /tools/pdf-to-text\\n\\nهذا تنبيه وليس تأكيدًا أن الإصلاح تم. افحص سجلات Cloudflare والـ workflow قبل إغلاق البلاغ.' "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID")
+          body=$(printf 'فشل فحص دوري للموقع العام.\n\nراجع سجل GitHub Actions: %s/%s/actions/runs/%s\n\nالمسارات المفحوصة: /, /robots.txt, /sitemap.xml, /tools/word-counter, /tools/pdf-to-text\n\nهذا تنبيه وليس تأكيدًا أن الإصلاح تم. افحص سجلات Cloudflare والـ workflow قبل إغلاق البلاغ.' "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID")
           gh issue create --title "$title" --body "$body"
