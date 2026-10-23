@@ -53,7 +53,7 @@ const T=[
 ["page-speed-checker","web","⚡","فاحص سرعة الصفحة","PageSpeed Insights","اجلب تقرير Lighthouse من Google PageSpeed Insights.","Fetch a Lighthouse report from Google PageSpeed Insights.","pagespeed"],
 ["security-header-checker","web","⌑","فاحص ترويسات الأمان","Security Headers Checker","افحص ترويسات HTTP التي تلصقها من استجابة الخادم.","Check HTTP response headers pasted from your server.","headers"],
 ["contrast-checker","web","◐","فاحص تباين الألوان","Color Contrast Checker","احسب نسبة التباين وفق WCAG بين لونين.","Calculate WCAG contrast ratio between two colors.","contrast"],
-["accessibility-checker","web","♿","فاحص إمكانية الوصول","Accessibility Checker","افحص مؤشرات الوصول الأساسية من HTML ملصوق.","Check basic accessibility signals from pasted HTML.","a11y"],
+,
 ["pdf-metadata","data","ⓘ","معلومات وبيانات PDF","PDF Metadata Editor","اعرض بيانات PDF الأساسية وعدّل العنوان والمؤلف والموضوع.","View and edit basic PDF metadata.","pdfmeta"]
 ];let lang="ar",cat="all",active=null;const $=s=>document.querySelector(s),tr=(a,b)=>lang==="ar"?a:b;
 function cards(){let g=$("#grid"),q=$("#q").value.trim().toLowerCase();g.innerHTML="";let n=0;T.forEach(t=>{let ok=(cat==="all"||cat===t[1])&&(!q||t.join(" ").toLowerCase().includes(q));let a=document.createElement("a");a.className="card";a.hidden=!ok;a.href="/tools/"+t[0];a.innerHTML='<span class="ico">'+t[2]+'</span><h3>'+tr(t[3],t[4])+'</h3><p>'+tr(t[5],t[6])+'</p><span class="open">'+tr("فتح الأداة ↗","Open tool ↗")+'</span>';g.append(a);if(ok)n++});$("#count").textContent=tr(n+" أداة",""+n+" tools")}
