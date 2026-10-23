@@ -157,5 +157,5 @@ test('contrast ratio matches WCAG reference for black text on white', async ({ p
   await page.locator('#foreground').fill('#000000');
   await page.locator('#background').fill('#ffffff');
   await page.locator('#checkContrast').click();
-  await expect(page.locator('#contrastResults')).toContainText('21:1');
+  await expect(page.locator('#contrastResults')).toContainText('21.00:1');
 });
