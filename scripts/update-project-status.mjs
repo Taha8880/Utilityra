@@ -37,9 +37,9 @@ try {
   const results = await Promise.all([
     json(api + '/actions/runs?per_page=15'),
     json(api + '/commits?per_page=8'),
-    json(api + '/actions/workflows/validate.yml/runs?per_page=3'),
-    json(api + '/actions/workflows/playwright.yml/runs?per_page=3'),
-    json(api + '/actions/workflows/deploy-worker.yml/runs?per_page=3')
+    json(api + '/actions/workflows/validate.yml/runs?branch=main&per_page=3'),
+    json(api + '/actions/workflows/playwright.yml/runs?branch=main&per_page=3'),
+    json(api + '/actions/workflows/deploy-worker.yml/runs?branch=main&per_page=3')
   ]);
   runs = results[0].workflow_runs || [];
   commits = results[1] || [];
