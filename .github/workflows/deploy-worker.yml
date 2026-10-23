@@ -116,6 +116,10 @@ jobs:
           grep -qi '<title>Utilityra' "$RUNNER_TEMP/utilityra-home.html"
           curl --retry 5 --retry-delay 3 --retry-all-errors -fsS "$BASE/tools/word-counter" -o "$RUNNER_TEMP/utilityra-tool.html"
           grep -qi '<title>Utilityra' "$RUNNER_TEMP/utilityra-tool.html"
+          for slug in html-escape slug-generator sort-lines remove-duplicate-lines json-minifier regex-tester reverse-text json-to-csv character-frequency image-resizer text-to-speech html-preview; do
+            curl --retry 3 --retry-delay 2 --retry-all-errors -fsS "$BASE/tools/$slug" -o "$RUNNER_TEMP/utilityra-route.html"
+            grep -q "$slug" "$RUNNER_TEMP/utilityra-route.html" || { echo "::error::Tool route missing from delivered app: $slug"; exit 1; }
+          done
           curl --retry 5 --retry-delay 3 --retry-all-errors -fsS "$BASE/health" -o "$RUNNER_TEMP/utilityra-health.json"
           node -e 'const d=require(process.argv[1]); if(d.ok!==true) process.exit(1); console.log("Worker health endpoint: OK")' "$RUNNER_TEMP/utilityra-health.json"
           echo "Smoke tests passed: homepage, tool route, and health endpoint are reachable."
