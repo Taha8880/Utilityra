@@ -403,7 +403,7 @@ export default {
     const url = new URL(request.url);
 
     if (request.method === "GET" && url.pathname === "/robots.txt") {
-      const body = "User-agent: *\\nAllow: /\\nDisallow: /admin\\nDisallow: /api/\\nSitemap: " + url.origin + "/sitemap.xml\\n";
+      const body = "User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /api/\nSitemap: " + url.origin + "/sitemap.xml\n";
       return new Response(body, { status: 200, headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "public, max-age=3600", "x-content-type-options": "nosniff" } });
     }
 
