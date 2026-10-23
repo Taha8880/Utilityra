@@ -66,7 +66,7 @@ function missingTool(slug){
   $("#app").innerHTML='<section class="toolPage"><div class="wrap"><a class="back" href="/#tools">← '+tr("العودة إلى كل الأدوات","Back to all tools")+'</a><div class="panel"><div class="kicker">UTILITYRA / TOOL</div><h1>'+title+'</h1><p class="muted">'+tr("الرابط موجود، لكن وظيفة هذه الأداة غير مسجلة في إصدار الموقع الحالي. لن نعرض الصفحة الرئيسية بدلًا منها أو ندّعي أن الأداة تعمل.","This URL exists, but this tool is not registered in the current site build. We will not show the homepage in its place or pretend the tool works.")+'</p><p class="muted"><code>/tools/'+slug+'</code></p><a class="btn primary" href="/#tools">'+tr("استعراض الأدوات المتاحة","Browse available tools")+'</a></div></div></section>';
 }
 function route(){
-  const match=location.pathname.match(/^\\/tools\\/([a-z0-9-]+)\\/?$/i);
+  const match=location.pathname.match(new RegExp("^/tools/([a-z0-9-]+)/?$","i"));
   if(match){
     const slug=match[1].toLowerCase();
     const tool=T.find(item=>item[0]===slug);
