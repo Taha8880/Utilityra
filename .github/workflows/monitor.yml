@@ -1,0 +1,26 @@
+name: Live monitor (technical engineer)
+on:
+  schedule: [{ cron: "*/30 * * * *" }]
+  workflow_dispatch:
+permissions: { contents: read, issues: write }
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Run checks
+        id: run
+        env: { SITE_URL: "${{ vars.SITE_URL }}" }
+        run: node scripts/monitor.mjs --report monitor-report.md || echo "failed=1" >> "$GITHUB_OUTPUT"
+      - name: Open / update incident issue on failure
+        if: steps.run.outputs.failed == '1'
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          n=$(gh issue list --label incident --state open --json number -q '.[0].number')
+          if [ -n "$n" ]; then gh issue comment "$n" --body-file monitor-report.md; else gh issue create --title "Incident: live site check failed" --label incident --body-file monitor-report.md; fi
+      - name: Close incident when healthy
+        if: steps.run.outputs.failed != '1'
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: for n in $(gh issue list --label incident --state open --json number -q '.[].number'); do gh issue close "$n" --comment "Checks passing again."; done

@@ -1,49 +1,28 @@
-# Utilityra — Cloudflare tools workspace
+# Utilityra
 
-Utilityra is an Arabic-first, Arabic/English tools platform. **The active frontend and API are deployed on Cloudflare Workers**:
+موقع أدوات مجانية ثنائي اللغة (عربي/إنجليزي): **115 أداة**، كل أداة في صفحتها المستقلة `/tools/<slug>/`، منها 19 أداة ذكاء اصطناعي.
+A free bilingual toolbox: **115 tools**, each on its own page, including 19 AI tools.
 
-- Public app: https://utilityra.tavengers16.workers.dev/
-- Source: `worker/public/index.html` (single-page app with individual `/tools/<slug>` routes)
-- API/Worker: `worker/src/index.js`
-- D1 schema and seed data: `worker/schema.sql`, `worker/seed.sql`
-- Deployment: `.github/workflows/deploy-worker.yml`
-- Cloudflare-specific validation: `scripts/validate-cloudflare.mjs`
-- Browser regression tests: `tests/e2e/cloudflare-tools.spec.js` and `tests/e2e/tool-accuracy.spec.js`
+## How it works
+- `node build.mjs` generates a static site into `dist/` (home, categories, 115 tool pages, SEO files, redirects).
+- `worker/src/index.js` is a Cloudflare Worker that serves `dist/` and exposes `/api/ai`, `/api/inspect`, `/health`, and (optional, needs D1) `/api/analytics/event` + `/api/admin/*`.
+- Tool logic lives in `src/assets/js/tools/*.js`; the tool list in `src/meta.mjs` (single source of truth).
 
+## Run / test
+```
+npm run build        # -> dist/
+npm test             # build + Worker tests (node:test)
+npm run test:e2e     # Playwright: every tool page, functions, nav, 404, overflow, screenshots
+npm run dev          # wrangler dev
+```
+Latest recorded results: `docs/test-logs/e2e-latest.md`.
 
+## Deploy (Cloudflare — the supported host)
+See `docs/DEPLOY_AR.md`. Short version: GitHub secrets `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID`, push to `main`, `.github/workflows/deploy.yml` builds, tests and deploys.
+Blogger cannot host this project (no Workers/static assets/API). Old Blogger files are archived in `legacy-blogger/`.
 
-## Project records — included in ZIP
+## Environment knobs (build time)
+`SITE_URL`, `API_BASE`, `ADSENSE_ID`, `GA_ID`, `CONTACT_EMAIL`.
 
-- Arabic master technical reference: [docs/UTILITYRA_MASTER_REFERENCE_AR.md](docs/UTILITYRA_MASTER_REFERENCE_AR.md)
-- Requirements and completion ledger: [docs/UTILITYRA_REQUIREMENTS_AR.md](docs/UTILITYRA_REQUIREMENTS_AR.md)
-- Latest generated status snapshot: [docs/STATUS_LATEST_AR.md](docs/STATUS_LATEST_AR.md)
-- Full change history: GitHub commit history; each commit records an actual change.
-
-GitHub Actions refreshes the status snapshot after relevant pushes, after selected validation/browser/deployment workflows finish, and every six hours. A separate live monitor checks critical public routes every 30 minutes and opens a GitHub issue when a check fails. These automations detect and report issues; they do not claim to fix every code defect automatically.
-
-## Main project reference
-
-The full Arabic master reference covering the current architecture, the 52-tool catalog, known failures and remedies, admin dashboard, AI providers, secure AI engineering-agent roadmap, deployment secrets, and release gates is in [`docs/UTILITYRA_MASTER_REFERENCE_AR.md`](docs/UTILITYRA_MASTER_REFERENCE_AR.md). It distinguishes verified implementation from pending work and known limitations.
-
-## Current tool suite
-
-The Cloudflare app registers 52 distinct tool pages covering text, data/JSON, calculations, URLs, image operations, QR, PDF text extraction/merge/split/rotation/metadata, image-to-PDF, Markdown preview, SEO, PageSpeed, accessibility, security headers, contrast, API requests and the AI assistant. Each registered slug is served at `/tools/<slug>`; the Worker returns the SPA shell and the frontend loads the corresponding tool view.
-
-QR and PDF operations use trusted browser libraries from public CDNs. Those tools require an internet connection to load the library, but the selected file/content operations are performed in the browser. The PageSpeed tool calls Google's PageSpeed Insights API and can be rate-limited; the API tester is subject to target-server CORS rules. The PDF text extractor reads selectable text only (up to 25 MB and 250 pages); scanned/image-only PDFs need OCR, which this tool does not provide. The accessibility checker is a basic static HTML audit, not a complete WCAG certification. The security-header checker evaluates pasted response headers and does not silently scan a URL.
-
-## Validation and deployment
-
-- The Cloudflare deployment workflow configures D1, sets the required admin/session secrets, deploys the Worker and smoke-tests the homepage plus registered tool routes.
-- The Cloudflare browser workflow checks tool interactions on desktop and mobile. A successful deployment proves delivery, not that every browser-side tool passed its functional tests; consult the latest GitHub Actions result before calling the whole suite verified.
-- Run `node scripts/validate-cloudflare.mjs`, `node --check worker/src/index.js`, and `node --test tests/worker.test.mjs` for local validation. Run `npx playwright test tests/e2e/cloudflare-tools.spec.js tests/e2e/tool-accuracy.spec.js --project=chromium-desktop --project=chromium-mobile` to test live tool routes and representative calculations/conversions on desktop and mobile.
-- Required GitHub Actions secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `UTILITYRA_ADMIN_PASSWORD` (16+ characters), and `UTILITYRA_ADMIN_SESSION_SECRET` (32+ characters). Optional provider secrets: `UTILITYRA_OPENAI_API_KEY`, `UTILITYRA_GEMINI_API_KEY`. Never put secrets in browser code or committed files.
-
-## Legacy files
-
-`blogger-pages/`, the Blogger workflows and `scripts/validate-site.py` are retained as **legacy artifacts** for reference and URL history. They are not the active Cloudflare frontend deployment target. Changes to the Cloudflare app should be made in `worker/` and validated through the Cloudflare workflows.
-
-## Privacy and limitations
-
-- The AI assistant sends the prompt and optional context to the selected configured provider through the Worker.
-- Local text, image and PDF tools are designed to process inputs in the browser. QR/PDF library scripts are fetched from the named CDNs.
-- Google controls indexing, PageSpeed API quotas and AdSense approval; none can be guaranteed by this repository.
+## Secrets
+Never commit keys. Optional Worker secrets: `OPENAI_API_KEY`, `GEMINI_API_KEY`, `ADMIN_PASSWORD`, `ADMIN_SESSION_SECRET`.

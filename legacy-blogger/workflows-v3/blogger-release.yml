@@ -1,0 +1,44 @@
+name: Utilityra Blogger Release
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "blogger-pages/**"
+      - "scripts/validate-site.py"
+      - ".github/workflows/blogger-release.yml"
+permissions:
+  contents: read
+  actions: write
+jobs:
+  validate-and-package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate Blogger theme and pages
+        run: python scripts/validate-site.py
+      - name: Package Blogger theme for release
+        run: |
+          mkdir -p release
+          cp blogger-pages/utilityra-theme-v5.xml release/utilityra-theme-v5.xml
+          cp blogger-pages/manifest.json release/manifest.json
+          cat > release/README.txt <<'EOF'
+          Utilityra Blogger release package
+          
+          The XML file is the Blogger theme source. GitHub Actions can validate and package it,
+          but Blogger's public API does not expose an endpoint to install/update the blog theme.
+          Page synchronization is handled separately by the existing Blogger API workflow.
+          EOF
+          cd release && zip -r ../utilityra-blogger-release.zip .
+      - name: Upload release package
+        uses: actions/upload-artifact@v4
+        with:
+          name: utilityra-blogger-release
+          path: utilityra-blogger-release.zip
+          if-no-files-found: error
+          retention-days: 30

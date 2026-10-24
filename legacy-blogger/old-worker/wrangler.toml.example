@@ -1,0 +1,26 @@
+# Example only. Do not deploy until the D1 database is created and its real ID is filled in.
+name = "utilityra"
+main = "src/index.js"
+compatibility_date = "2026-10-22"
+workers_dev = true
+
+[vars]
+ALLOWED_ORIGIN = "https://utilityra.blogspot.com"
+MAX_MESSAGE_CHARS = "8000"
+WORKERS_AI_MODEL = "@cf/meta/llama-3.1-8b-instruct"
+# Configure OPENAI_API_KEY and GEMINI_API_KEY using `wrangler secret put` or the Cloudflare dashboard.
+# Never add provider keys to this file.
+
+[[d1_databases]]
+binding = "DB"
+database_name = "utilityra-data"
+database_id = "REPLACE_AFTER_CREATING_D1"
+
+# Cloudflare Workers AI powers the default assistant provider. Review account limits and pricing.
+[ai]
+binding = "AI"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+run_worker_first = true

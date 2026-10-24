@@ -1,0 +1,31 @@
+name: AI engineer (proposes fixes as PRs)
+on:
+  workflow_dispatch:
+    inputs:
+      problem: { description: "Describe the problem (or leave empty to use the latest monitor check)", required: false }
+  workflow_run:
+    workflows: ["Live monitor (technical engineer)"]
+    types: [completed]
+permissions: { contents: write, pull-requests: write, issues: read }
+jobs:
+  fix:
+    # Only when the monitor failed, or manually. Needs repo secret ANTHROPIC_API_KEY (or OPENAI_API_KEY).
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Gather incident
+        env: { SITE_URL: "${{ vars.SITE_URL }}", PROBLEM: "${{ inputs.problem }}" }
+        run: |
+          node scripts/monitor.mjs --report monitor-report.md || echo "site check failing" >> monitor-report.md
+          [ -n "$PROBLEM" ] && printf '\n\nReported problem:\n%s\n' "$PROBLEM" >> monitor-report.md
+          if grep -q "FAIL\|failing" monitor-report.md || [ -n "$PROBLEM" ]; then echo "go=1" >> $GITHUB_ENV; fi
+      - name: Run AI engineer
+        if: env.go == '1'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/engineer-fix.mjs --incident monitor-report.md
