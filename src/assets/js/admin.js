@@ -1,7 +1,7 @@
 (function () {
   const $ = (s, r) => (r || document).querySelector(s);
   const base = (window.UTILITYRA || {}).apiBase || '';
-  const api = (p, o) => fetch(base + p, Object.assign({ credentials: 'same-origin' }, o)).then(async (r) => ({ ok: r.ok, status: r.status, j: await r.json().catch(() => ({})) }));
+  const api = (p, o) => fetch(base + p, Object.assign({ credentials: 'same-origin', headers: { 'accept': 'application/json' } }, o)).then(async (r) => ({ ok: r.ok, status: r.status, j: await r.json().catch(() => ({})) })).catch(() => ({ ok: false, status: 0, j: { error: 'NETWORK_ERROR' } }));
   const post = (p, body) => api(p, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body || {}) });
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const root = $('#admin-root'); const ar = () => document.documentElement.lang !== 'en'; const t = (a, e) => (ar() ? a : e);
@@ -11,27 +11,40 @@
   function login(msg) {
     root.innerHTML = `<form id="lf" class="panel" style="max-width:420px"><h2>${t('تسجيل دخول المسؤول', 'Admin sign-in')}</h2>${msg ? `<p class="tool-status err" role="alert">${esc(msg)}</p>` : ''}<div class="fld"><label for="pw">${t('كلمة المرور', 'Password')}</label><input id="pw" type="password" dir="ltr" autocomplete="current-password" required></div><button class="btn primary" type="submit">${t('دخول', 'Sign in')}</button></form>`;
     $('#lf').addEventListener('submit', async (e) => {
-      e.preventDefault(); const r = await post('/api/admin/login', { password: $('#pw').value });
-      if (r.ok) return shell();
-      login(r.status === 503 ? t('لوحة الإدارة غير مهيأة بعد: تحتاج قاعدة D1 وأسرار ADMIN_PASSWORD وADMIN_SESSION_SECRET (انظر docs/DEPLOY_AR.md).', 'Admin is not configured yet: it needs D1 and the ADMIN_PASSWORD / ADMIN_SESSION_SECRET secrets (see docs/DEPLOY_AR.md).') : r.status === 429 ? t('محاولات كثيرة. حاول بعد 15 دقيقة.', 'Too many attempts. Try again in 15 minutes.') : t('كلمة المرور غير صحيحة.', 'Wrong password.'));
+      e.preventDefault(); const button = $('#lf button[type="submit"]'); button.disabled = true; button.textContent = t('جارٍ التحقق…', 'Checking…');
+      const r = await post('/api/admin/login', { password: $('#pw').value });
+      if (r.ok) {
+        const session = await api('/api/admin/session');
+        if (session.ok && session.j && session.j.authenticated) return shell();
+        login(session.status === 0
+          ? t('تم قبول كلمة المرور، لكن تعذّر تأكيد الجلسة. افحص إعدادات النطاق والكوكيز في Cloudflare.', 'Password accepted, but the session could not be verified. Check Cloudflare domain and cookie settings.')
+          : t('تم قبول كلمة المرور لكن جلسة الإدارة لم تُحفظ. تحقق من نشر آخر إصدار وإعدادات الكوكيز.', 'Password accepted, but the admin session was not retained. Check the deployed version and cookie settings.'));
+        return;
+      }
+      const error = r.j && r.j.error;
+      const message = r.status === 0 ? t('تعذّر الاتصال بالخادم. تحقق من الإنترنت وحاول مجددًا.', 'Could not reach the server. Check your connection and try again.') : r.status === 503 || error === 'ADMIN_NOT_CONFIGURED' ? t('لوحة الإدارة غير مهيأة: تحقق من أسرار الإدارة وربط قاعدة D1.', 'Admin is not configured: check admin secrets and the D1 binding.') : r.status === 429 ? t('محاولات دخول كثيرة. انتظر 15 دقيقة قبل المحاولة مجددًا.', 'Too many login attempts. Wait 15 minutes before trying again.') : r.status === 401 ? t('كلمة المرور غير صحيحة. تأكد من ADMIN_PASSWORD المحفوظ في Cloudflare، ولا ترسلها هنا.', 'Incorrect password. Verify the ADMIN_PASSWORD secret in Cloudflare; do not send it here.') : t('حدث خطأ في الخادم أثناء تسجيل الدخول. راجع إعدادات Cloudflare وسجلات Worker.', 'The server failed during sign-in. Check Cloudflare settings and Worker logs.');
+      login(message);
     });
   }
   const tbl = (head, rows) => `<div class="tblwrap"><table class="tbl"><thead><tr>${head.map((h) => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.map((r) => `<tr>${r.map((c) => `<td>${esc(c)}</td>`).join('')}</tr>`).join('') || `<tr><td colspan="${head.length}">—</td></tr>`}</tbody></table></div>`;
-  const TABS = [['dash', 'لوحة المعلومات', 'Dashboard'], ['tools', 'إدارة الأدوات', 'Tools'], ['inc', 'المهندس التقني', 'Engineer'], ['reports', 'بلاغات الزوار', 'Reports'], ['set', 'إعدادات الموقع', 'Settings'], ['dev', 'مساعد المطوّر', 'Dev assistant'], ['log', 'سجل النشاط', 'Activity log']];
+  const TABS = [['dash', 'لوحة المعلومات', 'Dashboard'], ['tools', 'إدارة الأدوات', 'Tools'], ['inc', 'المهندس التقني', 'Engineer'], ['reports', 'بلاغات الزوار', 'Reports'], ['knowledge', 'ذاكرة المعرفة', 'AI Knowledge'], ['set', 'إعدادات الموقع', 'Settings'], ['dev', 'مساعد المطوّر', 'Dev assistant'], ['log', 'سجل النشاط', 'Activity log']];
   function shell() {
     root.innerHTML = `<div class="chips" role="tablist">${TABS.map((x) => `<button class="chip${x[0] === tab ? ' on' : ''}" role="tab" aria-selected="${x[0] === tab}" data-tab="${x[0]}">${t(x[1], x[2])}</button>`).join('')}<button class="chip" id="out" style="margin-inline-start:auto">${t('تسجيل الخروج', 'Sign out')}</button></div><div id="view" aria-live="polite"></div>`;
     root.querySelectorAll('[data-tab]').forEach((b) => b.addEventListener('click', () => { tab = b.dataset.tab; shell(); }));
     $('#out').onclick = async () => { await post('/api/admin/logout'); login(); };
-    ({ dash, tools, inc, reports, set, dev, log })[tab]();
+    ({ dash, tools, inc, reports, knowledge, set, dev, log })[tab]();
   }
   const guard = (r) => { if (r.status === 401) { login(); return false; } if (!r.ok) { $('#view').innerHTML = `<p class="tool-status err">${t('تعذّر جلب البيانات.', 'Could not load data.')}</p>`; return false; } return true; };
 
   async function dash() {
     const r = await api('/api/admin/stats'); if (!guard(r)) return; const j = r.j, m = j.summary || {};
-    const days = j.daily || [], max = Math.max(1, ...days.map((d) => d.page_views || 0));
-    const bars = days.map((d, i) => { const h = Math.round(((d.page_views || 0) / max) * 90); return `<rect x="${i * 14}" y="${100 - h}" width="10" height="${h}" rx="2" fill="currentColor"><title>${esc(d.day)}: ${d.page_views} / ${d.visitors}</title></rect>`; }).join('');
-    $('#view').innerHTML = `<div class="cards">${[['الزوار (30 يومًا)', 'Visitors (30d)', m.visitors], ['مشاهدات الصفحات', 'Page views', m.page_views], ['فتح الأدوات', 'Tool opens', m.tool_opens], ['عمليات البحث', 'Searches', m.searches], ['بحث بلا نتيجة', 'Missed searches', m.search_misses]].map((c) => `<div class="rc"><span class="rc-l">${t(c[0], c[1])}</span><b class="rc-v">${esc(c[2] || 0)}</b></div>`).join('')}</div>
-    <h2>${t('مشاهدات يومية', 'Daily page views')}</h2><svg viewBox="0 0 ${Math.max(days.length * 14, 14)} 100" role="img" aria-label="${t('رسم المشاهدات اليومية', 'Daily page views chart')}" style="width:100%;height:140px;color:var(--accent)" preserveAspectRatio="none">${bars}</svg>
+    const days = Array.isArray(j.daily) ? j.daily : [];
+    const hasData = Number(m.events) > 0;
+    const metric = (value) => value == null ? t('غير متاح', 'Unavailable') : (!hasData ? t('لا توجد بيانات بعد', 'No data yet') : Number(value).toLocaleString(ar() ? 'ar-EG' : 'en-US'));
+    const max = Math.max(1, ...days.map((d) => Number(d.page_views) || 0));
+    const bars = days.map((d, i) => { const h = Math.round(((Number(d.page_views) || 0) / max) * 90); return `<rect x="${i * 14}" y="${100 - h}" width="10" height="${h}" rx="2" fill="currentColor"><title>${esc(d.day)}: ${esc(d.page_views)} / ${esc(d.visitors)}</title></rect>`; }).join('');
+    $('#view').innerHTML = `<p class="stats-note">${hasData ? t('بيانات فعلية مسجلة خلال آخر 30 يومًا.', 'Recorded analytics from the last 30 days.') : t('لم تُسجّل بيانات زيارات بعد. لن نعرض أصفارًا على أنها إحصائيات فعلية.', 'No visit data has been recorded yet. Zeros are not presented as real analytics.')}</p><div class="cards">${[['الزوار (30 يومًا)', 'Visitors (30d)', m.visitors], ['مشاهدات الصفحات', 'Page views', m.page_views], ['فتح الأدوات', 'Tool opens', m.tool_opens], ['عمليات البحث', 'Searches', m.searches], ['بحث بلا نتيجة', 'Missed searches', m.search_misses]].map((c) => `<div class="rc"><span class="rc-l">${t(c[0], c[1])}</span><b class="rc-v">${metric(c[2])}</b></div>`).join('')}
+    <h2>${t('مشاهدات يومية', 'Daily page views')}</h2>${days.length ? `<svg viewBox="0 0 ${Math.max(days.length * 14, 14)} 100" role="img" aria-label="${t('رسم المشاهدات اليومية', 'Daily page views chart')}" style="width:100%;height:140px;color:var(--accent)" preserveAspectRatio="none">${bars}</svg>` : `<p>${t('لا يوجد سجل يومي متاح حتى الآن.', 'No daily records available yet.')}</p>`}
     <h2>${t('الأدوات الأكثر استخدامًا', 'Top tools')}</h2>${tbl([t('الأداة', 'Tool'), t('فتح', 'Opens'), t('تشغيل', 'Runs')], (j.topTools || []).map((x) => [x.tool_key, x.opens, x.actions]))}
     <h2>${t('الصفحات الأكثر زيارة', 'Top pages')}</h2>${tbl([t('الصفحة', 'Path'), t('مشاهدات', 'Views')], (j.topPages || []).map((x) => [x.path, x.views]))}
     <h2>${t('عمليات بحث بلا نتيجة (أفكار أدوات جديدة)', 'Searches with no result (new tool ideas)')}</h2>${tbl([t('الكلمة', 'Term'), t('العدد', 'Count')], (j.missedSearches || []).map((x) => [x.search_term, x.searches]))}`;
@@ -60,6 +73,34 @@
       const saved = await post('/api/admin/reports/status', { id: Number(button.dataset.report), status: button.dataset.st });
       if (!saved.ok) { button.disabled = false; alert(t('تعذّر تحديث حالة البلاغ.', 'Could not update report status.')); return; }
       reports();
+    };
+  }
+  async function knowledge() {
+    const r = await api('/api/admin/knowledge'); if (!guard(r)) return;
+    const entries = r.j.entries || [];
+    $('#view').innerHTML = `<p>${t('هذه ذاكرة معرفة موثقة يراجعها المسؤول ويعتمدها قبل أن يستخدمها المساعد. لا يتعلم النظام تلقائيًا من محادثات الزوار ولا يحوّل إجابات غير مؤكدة إلى حقائق.', 'This is a curated knowledge memory. An administrator reviews and approves entries before the assistant can use them. The system does not automatically learn facts from visitor chats or turn unverified answers into truth.')}</p>
+      <form id="kf" class="panel" style="max-width:760px"><h3>${t('إضافة معرفة للمراجعة', 'Add knowledge for review')}</h3>
+      <div class="fld"><label for="kt">${t('العنوان', 'Title')}</label><input id="kt" required minlength="3" maxlength="180"></div>
+      <div class="fld"><label for="kc">${t('المعلومة أو الملخص', 'Fact or summary')}</label><textarea id="kc" required minlength="20" maxlength="5000" rows="4"></textarea></div>
+      <div class="fld"><label for="ku">${t('رابط المصدر (مستحسن)', 'Source URL (recommended)')}</label><input id="ku" type="url" maxlength="1000" placeholder="https://..."></div>
+      <label class="ck"><input id="ka" type="checkbox"> ${t('اعتمادها فورًا بعد المراجعة', 'Approve after review')}</label>
+      <button class="btn primary" type="submit">${t('حفظ المعرفة', 'Save knowledge')}</button><span id="km" role="status"></span></form>
+      <h3>${t('المعرفة المحفوظة', 'Saved knowledge')}</h3>
+      ${entries.length ? entries.map(x => `<details class="panel" style="margin-block:10px"><summary><b>#${x.id}</b> ${esc(x.title)} — <span class="label">${Number(x.approved) ? t('معتمدة', 'Approved') : t('بانتظار المراجعة', 'Pending review')}</span></summary><p style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(x.content)}</p>${x.source_url ? `<p><a href="${esc(x.source_url)}" target="_blank" rel="noopener noreferrer">${esc(x.source_url)}</a></p>` : ''}<button class="btn ghost" data-kid="${x.id}" data-approved="${Number(x.approved) ? '0' : '1'}">${Number(x.approved) ? t('إلغاء الاعتماد', 'Unapprove') : t('اعتماد المعرفة', 'Approve knowledge')}</button></details>`).join('') : `<p>${t('لا توجد معرفة محفوظة بعد.', 'No saved knowledge yet.')}</p>`}`;
+    $('#kf').onsubmit = async (e) => {
+      e.preventDefault();
+      const button = $('#kf button[type="submit"]'); button.disabled = true;
+      const saved = await post('/api/admin/knowledge', { title: $('#kt').value.trim(), content: $('#kc').value.trim(), source_url: $('#ku').value.trim(), approved: $('#ka').checked });
+      button.disabled = false;
+      $('#km').textContent = saved.ok ? t('تم الحفظ ✓', 'Saved ✓') : t('تعذّر الحفظ. تحقق من البيانات وقاعدة البيانات.', 'Could not save. Check the fields and database.');
+      if (saved.ok) knowledge();
+    };
+    $('#view').onclick = async (e) => {
+      const b = e.target.closest('[data-kid]'); if (!b) return;
+      b.disabled = true;
+      const saved = await post('/api/admin/knowledge/status', { id: Number(b.dataset.kid), approved: b.dataset.approved === '1' });
+      if (!saved.ok) { b.disabled = false; alert(t('فشل تحديث حالة المعرفة.', 'Could not update knowledge status.')); return; }
+      knowledge();
     };
   }
   async function set() {
