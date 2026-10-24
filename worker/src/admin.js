@@ -152,6 +152,17 @@ export async function handleAdmin(request, env, url, json, origin, readJson, ask
   if (!(await isAdmin(request, env))) return json({ error: "UNAUTHORIZED" }, 401, origin);
   if (p === "/api/admin/session") return json({ authenticated: true }, 200, origin);
   try {
+    if (p === "/api/admin/reports" && m === "GET") {
+      const reports = (await env.DB.prepare("SELECT id,type,page,email,message,status,created_at,updated_at FROM contact_reports ORDER BY CASE status WHEN 'new' THEN 0 WHEN 'reviewing' THEN 1 ELSE 2 END, id DESC LIMIT 200").all()).results || [];
+      return json({ reports }, 200, origin);
+    }
+    if (p === "/api/admin/reports/status" && m === "POST") {
+      const b = await readJson(request, 1000);
+      if (!Number.isInteger(b.id) || !["new", "reviewing", "resolved", "closed"].includes(b.status)) return json({ error: "INVALID_REQUEST" }, 400, origin);
+      const r = await env.DB.prepare("UPDATE contact_reports SET status=?, updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(b.status, b.id).run();
+      await audit(env, "report_status", `#${b.id} -> ${b.status}`);
+      return json({ ok: true, changed: r.meta?.changes || 0 }, 200, origin);
+    }
     if (p === "/api/admin/stats" && m === "GET") return json(await stats(env), 200, origin);
     if (p === "/api/admin/incidents" && m === "GET") return json({ incidents: await listIncidents(env) }, 200, origin);
     if (p === "/api/admin/engineer/run" && m === "POST") { await audit(env, "health_check", "manual run"); return json(await engineerRun(env, url.origin, ask), 200, origin); }
