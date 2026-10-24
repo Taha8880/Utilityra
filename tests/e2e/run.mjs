@@ -18,7 +18,7 @@ const srv = http.createServer((req, res) => {
 await new Promise((r) => srv.listen(0, r)); const base = `http://127.0.0.1:${srv.address().port}`;
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined });
 const results = []; let fails = 0;
-const rec = (name, ok, note = '') => { results.push({ name, ok, note }); if (!ok) { fails++; console.log('FAIL', name, note); } };
+const rec = (name, ok, note = '') => { results.push({ name, ok, note }); if (!ok) { fails++; console.log('FAIL', name, note); if (process.env.GITHUB_ACTIONS) console.log('::error title=e2e ' + name + '::' + String(note).replace(/[\r\n]+/g, ' ').slice(0, 300)); } };
 async function open(ctx, path) { const page = await ctx.newPage(); const errs = []; page.on('pageerror', (e) => errs.push('pageerror: ' + e.message)); page.on('console', (m) => { if (m.type() === 'error' && !/favicon|fonts\.g|ERR_(NAME|INTERNET|CONNECTION|BLOCKED)|Failed to load resource/i.test(m.text())) errs.push('console: ' + m.text()); }); await page.goto(base + path, { waitUntil: 'domcontentloaded' }); return { page, errs }; }
 const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 }, acceptDownloads: true });
 await ctx.route(/fonts\.(googleapis|gstatic)\.com|googlesyndication|googletagmanager/, (r) => r.abort());
