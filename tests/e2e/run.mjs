@@ -12,6 +12,8 @@ const srv = http.createServer((req, res) => {
   const u = new URL(req.url, 'http://x'); let p = decodeURIComponent(u.pathname);
   if (p === '/api/ai') { let b = ''; req.on('data', (c) => { b += c; }); req.on('end', () => { let j = {}; try { j = JSON.parse(b); } catch (e) { /* ignore */ } if (j.stream) { res.setHeader('content-type', 'text/event-stream'); res.write('data: ' + JSON.stringify({ sources: [{ title: 'Cairo', url: 'https://en.wikipedia.org/wiki/Cairo' }] }) + '\n\n'); res.write('data: ' + JSON.stringify({ response: '**mock ' }) + '\n\n'); setTimeout(() => { res.write('data: ' + JSON.stringify({ response: 'stream answer**' }) + '\n\n'); res.end('data: [DONE]\n\n'); }, 60); } else { res.setHeader('content-type', 'application/json'); res.end(JSON.stringify({ answer: '**mock answer**', provider: 'mock' })); } }); return; }
   if (p === '/api/inspect') { res.setHeader('content-type', 'application/json'); return res.end(JSON.stringify({ url: 'https://example.com/', httpStatus: 200, redirects: [], ttfbMs: 120, totalMs: 130, bytes: 900, truncated: false, headers: { 'strict-transport-security': 'max-age=1', 'x-content-type-options': 'nosniff', server: 'x' }, html: '<!doctype html><html lang="en"><head><title>Example page title ok</title><meta name="description" content="A description that is long enough to pass the audit check for meta descriptions in tests."></head><body><main><h1>Hi</h1><img src="a.png"></main></body></html>' })); }
+  if (p === '/api/admin/session') { res.statusCode = 401; res.setHeader('content-type', 'application/json'); return res.end('{}'); }
+  if (p === '/api/admin/login') { res.statusCode = 503; res.setHeader('content-type', 'application/json'); return res.end('{"error":"ADMIN_NOT_CONFIGURED"}'); }
   if (p.startsWith('/api/')) { res.statusCode = 204; return res.end(); }
   let f = join(DIST, p); if (existsSync(f) && statSync(f).isDirectory()) f = join(f, 'index.html');
   if (!existsSync(f)) { res.statusCode = 404; res.setHeader('content-type', T['.html']); return res.end(readFileSync(join(DIST, '404.html'))); }
@@ -85,18 +87,24 @@ await run('contrast-checker', { fg: '#000000', bg: '#ffffff' }, '21.00', { click
     await page.waitForFunction(() => document.querySelector('.chat-log').innerText.includes('mock stream answer'), null, { timeout: 8000 });
     rec('chat:streams-answer', true); rec('chat:shows-sources', (await page.locator('.srcs a').count()) === 1);
     await page.reload(); await page.waitForSelector('.chat-log'); await page.waitForTimeout(300);
-    rec('chat:history-persists', (await page.locator('.chat-log').innerText()).includes('mock stream answer')); rec('chat:memory-persists', (await page.inputValue('.mem')) === 'I am a student');
-    await page.click('.rg'); await page.waitForFunction(() => document.querySelectorAll('.msg.bot').length >= 2, null, { timeout: 8000 }); rec('chat:regenerate', true);
+    rec('chat:starts-fresh-but-archives-past', (await page.locator('.msg.user').count()) === 0 && (await page.evaluate(() => JSON.parse(localStorage.getItem('ur-past') || '[]').length)) === 1); rec('chat:memory-persists', (await page.inputValue('.mem')) === 'I am a student');
+    await page.fill('.chat-form textarea', 'second question about egypt capital'); await page.click('.chat-form button[type=submit]'); await page.waitForFunction(() => document.querySelector('.chat-log').innerText.includes('mock stream answer'), null, { timeout: 8000 }); await page.waitForTimeout(500); await page.click('.rg'); await page.waitForFunction(() => document.querySelectorAll('.msg.bot').length >= 2, null, { timeout: 8000 }); rec('chat:regenerate', true);
     await page.waitForTimeout(700); await page.click('.nw'); await page.waitForTimeout(200); rec('chat:new-chat-clears', (await page.locator('.msg.user').count()) === 0);
     rec('chat:no-errors', !errs.length, errs.join('|'));
   } catch (e) { rec('chat:flow', false, e.message.split('\n')[0]); }
+  await page.close(); }
+
+// 2c) admin page renders (login form) and shows a clear message when the backend is not configured
+{ const { page, errs } = await open(ctx, '/admin/');
+  try { await page.waitForSelector('#admin-root form#lf', { timeout: 8000 }); rec('admin:login-form-renders', true); await page.fill('#pw', 'x'); await page.click('#lf button'); await page.waitForSelector('#lf .tool-status.err', { timeout: 5000 }); rec('admin:shows-error-state', true); rec('admin:no-js-errors', !errs.length, errs.join('|')); }
+  catch (e) { rec('admin:renders', false, e.message.split('\n')[0]); }
   await page.close(); }
 
 // 3) navigation, 404, redirects, search
 { const { page, errs } = await open(ctx, '/');
   rec('home:renders', (await page.locator('h1').count()) > 0 && !errs.length, errs.join('|'));
   await page.locator('a[href="/tools/"]').first().click(); await page.waitForURL('**/tools/'); rec('nav:tools-index', true);
-  const cards = await page.locator('a.tcard').count(); rec('tools-index:cards=' + TOOLS.length, cards === TOOLS.length, 'found ' + cards);
+  const cards = await page.locator('main .tgrid:not(#favrec *) a.tcard').count(); rec('tools-index:cards=' + TOOLS.length, cards === TOOLS.length, 'found ' + cards);
   await page.locator('a.tcard[href="/tools/word-counter/"]').first().click(); await page.waitForURL('**/tools/word-counter/'); rec('nav:card->own-page', (await page.locator('#tool-root').getAttribute('data-tool')) === 'word-counter');
   await page.goBack(); rec('nav:back', page.url().endsWith('/tools/'));
   await page.close(); }

@@ -154,7 +154,7 @@ test('anthropic provider is preferred when key is set and is called with system 
   } finally { globalThis.fetch = realFetch; }
 });
 test('assistant prompt keeps the answer on topic', () => {
-  const m = buildMessages({ tool: 'ai-assistant', message: 'x' })[0].content; assert.match(m, /unrelated code/); assert.match(m, /conversation history/);
+  const m = buildMessages({ tool: 'ai-assistant', message: 'x' })[0].content; assert.match(m, /inside or outside this website/); assert.match(m, /history/);
 });
 test('dev assistant: auth required and message builder trims history', async () => {
   const env = { DB: {}, ADMIN_PASSWORD: 'p', ADMIN_SESSION_SECRET: 's' };
@@ -174,4 +174,22 @@ test('ai-assistant with ground:true returns sources and injects them into the pr
   const f = async (u) => (/list=search/.test(u) ? new Response(JSON.stringify({ query: { search: [{ title: 'Cairo' }] } })) : new Response(JSON.stringify({ title: 'Cairo', extract: 'Capital of Egypt.', content_urls: { desktop: { page: 'https://en.wikipedia.org/wiki/Cairo' } } })));
   const r = await ai({ tool: 'ai-assistant', message: 'what is the capital of Egypt please', lang: 'en', ground: true, memory: 'I am a student' }, { AI, _fetch: f }); const j = await r.json();
   assert.equal(j.sources[0].title, 'Cairo'); assert.match(sys, /SOURCES/); assert.match(sys, /Capital of Egypt/); assert.match(sys, /USER NOTES[\s\S]*I am a student/);
+});
+
+test('assistant is aware of the site: catalog and changelog are in its prompt', async () => {
+  _resetRate(); let sys = ''; const AI = { run: async (m, i) => { sys = i.messages[0].content; return { response: 'ok' }; } };
+  await ai({ tool: 'ai-assistant', message: 'which tool merges pdf files?' }, { AI });
+  assert.match(sys, /pdf-merge \| PDF Merger/); assert.match(sys, /CHANGELOG/); assert.match(sys, /\/tools\/<id>\//);
+  _resetRate(); await ai({ tool: 'ai-summarizer', message: 'text' }, { AI }); assert.ok(!/TOOL CATALOG/.test(sys));
+});
+
+test('assistant gets current date and user time zone; saved memory is included', async () => {
+  _resetRate(); let sys = ''; const AI = { run: async (m, i) => { sys = i.messages[0].content; return { response: 'ok' }; } };
+  await ai({ tool: 'ai-assistant', message: 'ايه تاريخ النهارده؟', tz: 'Africa/Cairo', memory: 'EARLIER CONVERSATIONS:\n- User: hi' }, { AI });
+  assert.match(sys, /CURRENT DATE\/TIME: \d{4}-\d{2}-\d{2}T/); assert.match(sys, /Africa\/Cairo/); assert.match(sys, /EARLIER CONVERSATIONS/);
+});
+test('grounding skips meta questions about the assistant and uses Tavily web search when a key exists', async () => {
+  assert.equal(wantsGrounding('انت مين وايه اخر تحديث عليك'), false); assert.equal(wantsGrounding('ok then'), false);
+  let called = ''; const f = async (u) => { called = u; return new Response(JSON.stringify({ results: [{ title: 'News', url: 'https://example.com/n', content: 'Latest facts.' }] })); };
+  const s = await ground('latest news about the space station today', 'en', f, 'tvly-key'); assert.match(called, /tavily\.com/); assert.equal(s[0].url, 'https://example.com/n');
 });
