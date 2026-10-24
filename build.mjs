@@ -33,15 +33,17 @@ mkdirSync(join(OUT, 'assets/vendor'), { recursive: true });
 const hash = (s) => createHash('sha1').update(s).digest('hex').slice(0, 8);
 const css = readFileSync(join(ROOT, 'src/assets/css/app.css'), 'utf8');
 const appJs = readFileSync(join(ROOT, 'src/assets/js/app.js'), 'utf8');
+const adminJs = readFileSync(join(ROOT, 'src/assets/js/admin.js'), 'utf8');
 const toolFiles = readdirSync(join(ROOT, 'src/assets/js/tools')).filter((f) => f.endsWith('.js')).sort();
 const toolsJs = toolFiles.map((f) => readFileSync(join(ROOT, 'src/assets/js/tools', f), 'utf8')).join('\n;\n');
 const indexJs = 'window.UT_INDEX=' + JSON.stringify(tools.map((t) => [t.id, t.cat, iconFor(t.id, t.cat), t.ar, t.en, t.dAr, t.dEn])) + ';window.UT_ICONS=' + JSON.stringify(ICONS) + ';';
 writeFileSync(join(OUT, 'assets/css/app.css'), css);
 writeFileSync(join(OUT, 'assets/js/app.js'), appJs);
+writeFileSync(join(OUT, 'assets/js/admin.js'), adminJs);
 writeFileSync(join(OUT, 'assets/js/tools.js'), toolsJs);
 writeFileSync(join(OUT, 'assets/js/index.js'), indexJs);
 cpSync(join(ROOT, 'src/assets/vendor'), join(OUT, 'assets/vendor'), { recursive: true });
-const V = { css: hash(css), app: hash(appJs), tools: hash(toolsJs), idx: hash(indexJs) };
+const V = { css: hash(css), app: hash(appJs), admin: hash(adminJs), tools: hash(toolsJs), idx: hash(indexJs) };
 
 // ---------- shared layout ----------
 const FONTS = 'https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Inter+Tight:wght@300;400&family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Noto+Naskh+Arabic:wght@500;600&display=swap';
@@ -276,7 +278,7 @@ function misc() {
 
 function adminPage() {
   const h = head({ titleAr: 'لوحة الإدارة', titleEn: 'Admin', descAr: 'لوحة إدارة Utilityra', path: '/admin/', noindex: true });
-  write('/admin/', page(h, `<main id="main"><div class="wrap"><div class="phead"><span class="label">ADMIN</span><h1>${Le('لوحة الإدارة', 'Admin dashboard')}</h1></div><div id="admin-root"></div></div></main><script src="/assets/js/admin.js?v=${V.app}" defer></script>`));
+  write('/admin/', page(h, `<main id="main"><div class="wrap"><div class="phead"><span class="label">ADMIN</span><h1>${Le('لوحة الإدارة', 'Admin dashboard')}</h1></div><div id="admin-root"></div></div></main><script src="/assets/js/admin.js?v=${V.admin}" defer></script>`));
 }
 
 home();
