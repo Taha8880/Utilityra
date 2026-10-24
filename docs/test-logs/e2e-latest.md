@@ -1,8 +1,8 @@
 # E2E test log
 
-Generated: 2026-10-24T08:10:22.721Z
+Generated: 2026-10-24T17:44:45.614Z
 
-**290/290 passed**, 0 failed.
+**293/293 passed**, 0 failed.
 
 | test | result | note |
 |---|---|---|
@@ -251,11 +251,14 @@ Generated: 2026-10-24T08:10:22.721Z
 | func:contrast-checker | PASS |  |
 | chat:streams-answer | PASS |  |
 | chat:shows-sources | PASS |  |
-| chat:history-persists | PASS |  |
+| chat:starts-fresh-but-archives-past | PASS |  |
 | chat:memory-persists | PASS |  |
 | chat:regenerate | PASS |  |
 | chat:new-chat-clears | PASS |  |
 | chat:no-errors | PASS |  |
+| admin:login-form-renders | PASS |  |
+| admin:shows-error-state | PASS |  |
+| admin:no-js-errors | PASS |  |
 | home:renders | PASS |  |
 | nav:tools-index | PASS |  |
 | tools-index:cards=115 | PASS | found 115 |

@@ -25,7 +25,12 @@
   const store = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } } };
   UT.def('ai-assistant', {
     mount(root, h) {
-      let hist = store.get('ur-chat', []).filter((m) => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string').slice(-40);
+      // Each visit starts a clean chat. The previous chat is archived into compact "past" memory that is sent to the AI (not shown here).
+      const old = store.get('ur-chat', []).filter((m) => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string');
+      let past = store.get('ur-past', []);
+      if (old.length) { const sess = []; for (let i = 0; i < old.length; i++) if (old[i].role === 'user') sess.push({ q: old[i].content.slice(0, 220), a: ((old[i + 1] && old[i + 1].role === 'assistant' ? old[i + 1].content : '') || '').slice(0, 260) }); past = past.concat(sess).slice(-24); store.set('ur-past', past); store.set('ur-chat', []); }
+      let hist = [];
+      const pastText = () => past.length ? 'EARLIER CONVERSATIONS (oldest first):\n' + past.map((x) => '- User: ' + x.q + (x.a ? ' | You: ' + x.a : '')).join('\n').slice(-2000) : '';
       root.innerHTML = `<div class="chat">
         <div class="chat-log" aria-live="polite"></div>
         <div class="chips">${[['لخّص لي فكرة التضخم ببساطة', 'Explain inflation simply'], ['اكتب دالة JavaScript تحذف التكرار من مصفوفة', 'Write a JS function that removes duplicates from an array'], ['ساعدني في خطة مذاكرة لمدة أسبوعين', 'Help me plan a two-week study schedule']].map((x) => `<button type="button" class="chip" data-q="${h.esc(x[0])}" data-qe="${h.esc(x[1])}">${h.L(h.esc(x[0]), h.esc(x[1]))}</button>`).join('')}</div>
@@ -33,7 +38,7 @@
         <button class="btn primary" type="submit">${h.L('إرسال', 'Send')}</button></form>
         <div class="btnrow" style="align-items:center;gap:12px;flex-wrap:wrap"><small class="hint cnt" dir="ltr">0 / 6000</small>
           <label class="ck"><input type="checkbox" class="gr"> ${h.L('تحقق من مصادر (ويكيبيديا) للأسئلة المعلوماتية', 'Check sources (Wikipedia) for factual questions')}</label>
-          <button type="button" class="btn ghost rg">${h.L('إعادة توليد', 'Regenerate')}</button><button type="button" class="btn ghost nw">${h.L('محادثة جديدة', 'New chat')}</button></div>
+          <button type="button" class="btn ghost rg">${h.L('إعادة توليد', 'Regenerate')}</button><button type="button" class="btn ghost nw">${h.L('محادثة جديدة', 'New chat')}</button><button type="button" class="btn ghost fg">${h.L('مسح ذاكرة المساعد', 'Clear assistant memory')}</button><small class="hint pmsg"></small></div>
         <details class="memo"><summary>${h.L('ذاكرتي (ملاحظات يتذكرها المساعد دائمًا)', 'My memory (notes the assistant always keeps in mind)')}</summary><textarea class="mem" rows="3" maxlength="1500" dir="auto" data-ph-ar="مثال: أنا طالب هندسة، أفضّل الشرح المختصر، أعمل بـ JavaScript" data-ph-en="e.g. I'm an engineering student, I prefer short answers, I use JavaScript" placeholder="${h.t('مثال: أنا طالب هندسة، أفضّل الشرح المختصر', "e.g. I'm an engineering student, I prefer short answers")}"></textarea><small class="hint">${h.L('تُحفظ في متصفحك فقط وتُرسل مع كل سؤال. لا تكتب فيها أسرارًا.', 'Stored only in your browser and sent with each question. Do not put secrets here.')}</small></details>
         <p class="hint">${h.L('لا ترسل كلمات مرور أو بيانات حساسة. قد تحتوي الإجابات على أخطاء؛ للمعلومات المهمة راجع المصادر المعروضة.', 'Never send passwords or sensitive data. Answers can contain mistakes; for important facts check the sources shown.')}</p></div>`;
       const log = h.$('.chat-log', root), box = h.$('.chat-form textarea', root), form = h.$('form', root), mem = h.$('.mem', root), gr = h.$('.gr', root), cnt = h.$('.cnt', root);
@@ -43,7 +48,7 @@
       const decorate = (el) => { h.$$('pre', el).forEach((pre) => { if (pre.querySelector('.cpy')) return; pre.style.position = 'relative'; const b = document.createElement('button'); b.type = 'button'; b.className = 'mini cpy'; b.textContent = h.t('نسخ', 'Copy'); b.style.cssText = 'position:absolute;top:6px;inset-inline-end:6px'; b.addEventListener('click', () => { h.copy(pre.innerText.replace(new RegExp(b.textContent + '$'), '').trim()); b.textContent = '✓'; setTimeout(() => { b.textContent = h.t('نسخ', 'Copy'); }, 1200); }); pre.appendChild(b); }); };
       const srcHtml = (src) => (src && src.length ? `<div class="srcs"><b>${h.t('المصادر:', 'Sources:')}</b> ${src.map((x, i) => `[${i + 1}] <a href="${h.esc(x.url)}" target="_blank" rel="noopener noreferrer">${h.esc(x.title)}</a>`).join(' · ')}</div>` : '');
       const add = (who, html) => { const m = document.createElement('div'); m.className = 'msg ' + who; m.innerHTML = '<div class="bubble">' + html + '</div>'; log.appendChild(m); log.scrollTop = log.scrollHeight; return m; };
-      const render = () => { log.innerHTML = ''; add('bot', h.L('أهلًا! اسألني عن الدراسة أو الشغل أو البرمجة. أستخدم ذاكرتك ومصادر موثّقة عند الإمكان، وأقول بصراحة عندما لا أعرف.', "Hi! Ask me about study, work or coding. I use your saved memory and cited sources when possible, and I say so when I don't know.")); hist.forEach((m) => { const e = add(m.role === 'user' ? 'user' : 'bot', m.role === 'user' ? h.esc(m.content).replace(/\n/g, '<br>') : h.md(m.content) + srcHtml(m.sources)); decorate(e); }); };
+      const render = () => { log.innerHTML = ''; add('bot', h.L('أهلًا! اسألني عن أي شيء، داخل الموقع أو خارجه. أتذكّر محادثاتنا السابقة دون عرضها هنا، وأستخدم مصادر موثّقة عند الإمكان، وأقول بصراحة عندما لا أعرف.', "Hi! Ask me anything, on this site or beyond. I remember our earlier chats without listing them here, use cited sources when possible, and say so when I don't know.")); hist.forEach((m) => { const e = add(m.role === 'user' ? 'user' : 'bot', m.role === 'user' ? h.esc(m.content).replace(/\n/g, '<br>') : h.md(m.content) + srcHtml(m.sources)); decorate(e); }); };
       render();
       h.$$('.chip', root).forEach((c) => c.addEventListener('click', () => { box.value = h.lang() === 'en' ? c.dataset.qe : c.dataset.q; form.requestSubmit(); }));
       box.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); form.requestSubmit(); } });
@@ -51,14 +56,15 @@
       async function ask(q) {
         busy = true; const wait = add('bot', '<span class="dots"><i></i><i></i><i></i></span>'); const bub = wait.querySelector('.bubble'); let src = [];
         try {
-          const a = await h.aiStream({ tool: 'ai-assistant', message: q, history: hist.slice(0, -1).slice(-16).map((m) => ({ role: m.role, content: m.content })), memory: mem.value, ground: gr.checked }, (txt) => { bub.innerHTML = h.md(txt); log.scrollTop = log.scrollHeight; }, (s) => { src = s; });
+          const a = await h.aiStream({ tool: 'ai-assistant', message: q, history: hist.slice(0, -1).slice(-16).map((m) => ({ role: m.role, content: m.content })), memory: [mem.value.trim(), pastText()].filter(Boolean).join('\n\n'), ground: gr.checked, tz: (Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC') }, (txt) => { bub.innerHTML = h.md(txt); log.scrollTop = log.scrollHeight; }, (s) => { src = s; });
           bub.innerHTML = h.md(a) + srcHtml(src); decorate(bub); hist.push({ role: 'assistant', content: a, sources: src.length ? src : undefined });
         } catch (err) { bub.innerHTML = '<span class="err">' + h.esc(err.message) + '</span>'; hist.pop(); }
         store.set('ur-chat', hist.slice(-40)); busy = false; log.scrollTop = log.scrollHeight;
       }
       form.addEventListener('submit', (e) => { e.preventDefault(); const q = box.value.trim(); if (!q || busy) return; box.value = ''; cnt.textContent = '0 / 6000'; hist.push({ role: 'user', content: q }); add('user', h.esc(q).replace(/\n/g, '<br>')); ask(q); });
       h.$('.rg', root).addEventListener('click', () => { if (busy) return; while (hist.length && hist[hist.length - 1].role === 'assistant') hist.pop(); const last = hist[hist.length - 1]; if (!last) return; render(); ask(last.content); });
-      h.$('.nw', root).addEventListener('click', () => { if (busy) return; hist = []; store.set('ur-chat', []); render(); });
+      h.$('.nw', root).addEventListener('click', () => { if (busy) return; if (hist.length) { hist.forEach((m, i) => { if (m.role === 'user') past.push({ q: m.content.slice(0, 220), a: ((hist[i + 1] && hist[i + 1].content) || '').slice(0, 260) }); }); past = past.slice(-24); store.set('ur-past', past); } hist = []; store.set('ur-chat', []); render(); });
+      h.$('.fg', root).addEventListener('click', () => { past = []; store.set('ur-past', []); store.set('ur-mem', ''); mem.value = ''; h.$('.pmsg', root).textContent = h.t('تم مسح الذاكرة.', 'Memory cleared.'); });
     }
   });
 
