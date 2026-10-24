@@ -125,8 +125,8 @@ function home() {
   const cards = [
     car('c1', '237,190,241', '/category/ai/', L('أدوات الذكاء<br>الاصطناعي', 'Smart AI<br>tools'), L('تلخيص · ترجمة · برمجة', 'Summarize · Translate · Code'), `<div class="cc"><span class="num" style="color:rgba(232,240,200,.95)">${byCat('ai').length}<sup>AI</sup></span></div>`, `<svg class="dial" viewBox="0 0 200 200" aria-hidden="true"><defs><linearGradient id="dialFade" x1="0" y1="0" x2="1" y2="1"><stop offset=".15" stop-color="#fff" stop-opacity=".15"/><stop offset=".5" stop-color="#fff" stop-opacity="1"/><stop offset=".85" stop-color="#fff" stop-opacity=".1"/></linearGradient><mask id="dialMask" maskUnits="userSpaceOnUse" x="0" y="0" width="200" height="200"><path d="M100 100 L-80 170 L-80 -100 L280 -100 L280 120 Z" fill="url(#dialFade)"/></mask></defs><circle cx="100" cy="100" r="93" fill="none" stroke="rgba(240,245,190,.22)" stroke-width="9" stroke-dasharray="1.1 2.7"/><circle cx="100" cy="100" r="93" fill="none" stroke="rgba(246,248,190,.78)" stroke-width="9" stroke-dasharray="1.1 2.7" mask="url(#dialMask)"/><circle cx="100" cy="100" r="84" fill="none" stroke="rgba(240,245,190,.16)" stroke-width="1"/></svg>`),
     car('c2', '70,190,240', '/category/files/', L('ملفات PDF<br>والصور', 'PDF &amp;<br>Image tools'), L('كل شيء داخل متصفحك', 'Everything in your browser'), `<div class="cc" style="justify-content:flex-start;padding:0 calc(var(--u)*27)"><span class="num" style="font-size:calc(var(--u)*77);background:linear-gradient(90deg,#ffe9ee 0%,#ffb3a6 34%,#f0604e 62%,#9c1a36 100%);-webkit-background-clip:text;background-clip:text;color:transparent;padding-inline-end:calc(var(--u)*4)">${n('files', 'images')}</span></div>`, `<svg class="ruler" id="ruler" viewBox="0 0 256 20" preserveAspectRatio="none" aria-hidden="true"></svg>`),
-    car('c3', '38,196,238', '/category/dev/', L('أدوات المطورين<br>والسيو', 'Developer &amp;<br>SEO tools'), L('JSON · SQL · Regex · Meta', 'JSON · SQL · Regex · Meta'), `<div class="cc" style="padding-inline-end:calc(var(--u)*8)"><span class="num" style="background:linear-gradient(180deg,#2f9dff 0%,#36d6f5 55%,#46f0ee 100%);-webkit-background-clip:text;background-clip:text;color:transparent">${n('dev', 'seo', 'security')}<sup style="-webkit-text-fill-color:#3fd3f7;color:#3fd3f7">+</sup></span></div>`, `<div class="slider"></div>`),
-    car('c4', '150,170,250', '/category/calc/', L('الحاسبات<br>والدراسة', 'Calculators<br>&amp; study'), L('GPA · قروض · وحدات · هجري', 'GPA · Loans · Units · Hijri'), `<div class="cc" style="padding-inline-start:calc(var(--u)*4)"><span class="num" style="background:linear-gradient(180deg,#fbe4ff 0%,#e79cff 45%,#c45cf5 100%);-webkit-background-clip:text;background-clip:text;color:transparent">${n('calc', 'study', 'convert', 'text', 'design')}<sup style="-webkit-text-fill-color:#d6a0ff;color:#d6a0ff">+</sup></span></div>`, `<span class="cbadge">${L('مجاني', 'Free')}</span><div class="cross-h"></div><div class="cross-v"></div>`)
+    car('c3', '38,196,238', '/category/dev/', L('أدوات المطورين<br>والسيو', 'Developer &amp;<br>SEO tools'), L('JSON · SQL · Regex · Meta', 'JSON · SQL · Regex · Meta'), `<div class="cc" style="padding-inline-end:calc(var(--u)*8)"><span class="num" style="background:linear-gradient(180deg,#2f9dff 0%,#36d6f5 55%,#46f0ee 100%);-webkit-background-clip:text;background-clip:text;color:transparent">${n('dev', 'seo', 'security')}</span></div>`, `<div class="slider"></div>`),
+    car('c4', '150,170,250', '/category/calc/', L('الحاسبات<br>والدراسة', 'Calculators<br>&amp; study'), L('GPA · قروض · وحدات · هجري', 'GPA · Loans · Units · Hijri'), `<div class="cc" style="padding-inline-start:calc(var(--u)*4)"><span class="num" style="background:linear-gradient(180deg,#fbe4ff 0%,#e79cff 45%,#c45cf5 100%);-webkit-background-clip:text;background-clip:text;color:transparent">${n('calc', 'study', 'convert', 'text', 'design')}</span></div>`, `<span class="cbadge">${L('مجاني', 'Free')}</span><div class="cross-h"></div><div class="cross-v"></div>`)
   ].join('');
   const featured = ['ai-assistant', 'ai-summarizer', 'ai-translator', 'pdf-merge', 'image-compressor', 'json-formatter', 'word-counter', 'qr-code-generator', 'password-generator', 'gpa-calculator', 'hijri-converter', 'unit-converter'].map((id) => tools.find((t) => t.id === id)).filter(Boolean);
   const pills = (arr) => arr.map((t) => `<a class="pill" href="/tools/${t.id}/"><i>${svg(iconFor(t.id, t.cat))}</i>${Le(t.ar, t.en)}</a>`).join('');
@@ -137,7 +137,7 @@ function home() {
   <div class="sky" aria-hidden="true"></div><div class="grain" aria-hidden="true"></div>
   <div class="hero-copy">
     <span class="eyebrow">${Le('أدوات رقمية للجميع', 'DIGITAL TOOLS FOR EVERYONE')}</span>
-    <h1>${L('أدوات ذكية لكل مهمة.<br>سريعة، مجانية، وخاصة بك.', 'Smart tools for every task.<br>Fast, free, and private.')}</h1>
+    <h1>${L('أنجز مهامك بأدوات أبسط.<br>بسرعة ووضوح وخصوصية.', 'Get more done with simpler tools.<br>Fast, clear, and private.')}</h1>
     <p class="sub">${Le(`${tools.length} أداة تعمل داخل متصفحك: ذكاء اصطناعي، PDF، صور، كود، حاسبات ودراسة، بدون تسجيل.`, `${tools.length} tools that run in your browser: AI, PDF, images, code, calculators and study. No sign-up.`)}</p>
     <div class="hero-search"><input data-search type="search" autocomplete="off" aria-label="Search tools" data-ph-ar="ابحث عن أداة… (مثال: دمج PDF، ضغط صور، JSON)" data-ph-en="Search tools… (e.g. merge PDF, compress image, JSON)" placeholder="ابحث عن أداة…">${searchIcon}<kbd>/</kbd><div class="sugg" role="listbox"></div></div>
     <div class="cta-row"><a class="btn glass" href="/category/ai/">${Le('جرّب أدوات الذكاء الاصطناعي', 'Try the AI tools')}</a><a class="btn solid" href="/tools/">${Le('تصفّح كل الأدوات', 'Browse all tools')}</a></div>
@@ -154,7 +154,7 @@ function home() {
 </section>
 
 <section class="sec after-hero"><div class="wrap">
-  <div class="sec-h reveal"><span class="label">${Le('الأقسام', 'CATEGORIES')}</span><h2>${L('كل ما تحتاجه في مكان واحد', 'Everything you need in one place')}</h2><p>${Le('اسحب البطاقات أو اضغط على الأطراف للتنقل، واضغط على البطاقة الأمامية لفتح القسم.', 'Drag the cards or click the edges to navigate; click the front card to open it.')}</p></div>
+  <div class="sec-h reveal"><span class="label">${Le('الأقسام', 'CATEGORIES')}</span><h2>${L('أدواتك الأساسية في مساحة واحدة', 'Your essential tools in one workspace')}</h2><p>${Le('اسحب البطاقات أو اضغط على الأطراف للتنقل، واضغط على البطاقة الأمامية لفتح القسم.', 'Drag the cards or click the edges to navigate; click the front card to open it.')}</p></div>
 </div></section>
 <section class="carousel" id="carousel" aria-roledescription="carousel" aria-label="Tool categories">
   <div class="glow glow--top"></div><div class="glow glow--bottom"></div>
@@ -164,7 +164,7 @@ function home() {
 </section>
 
 <section class="sec" style="padding-bottom:30px"><div class="wrap">
-  <div class="sec-h reveal" style="margin-bottom:22px"><span class="label">${Le('الأكثر استخدامًا', 'POPULAR')}</span><h2>${L('ابدأ بأدوات شائعة', 'Start with popular tools')}</h2></div>
+  <div class="sec-h reveal" style="margin-bottom:22px"><span class="label">${Le('الأكثر استخدامًا', 'POPULAR')}</span><h2>${L('أدوات تساعدك على البدء', 'Tools to help you get started')}</h2></div>
   <div class="tgrid">${featured.map(toolCard).join('')}</div>
 </div></section>
 
