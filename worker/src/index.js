@@ -104,7 +104,8 @@ export function buildMessages(body) {
     }
   }
   const ui = body.lang === "en" ? "English" : "Arabic";
-  const today = new Date().toISOString().slice(0, 10);\n  const system = `${BASE}\n\nRuntime date (UTC): ${today}. If the user asks for the current date, answer using this runtime date. This date does not itself verify current events.\n\nTask: ${PROMPTS[tool]}\nThe site interface language is ${ui}.`;
+  const today = new Date().toISOString().slice(0, 10);
+  const system = `${BASE}\n\nRuntime date (UTC): ${today}. If the user asks for the current date, answer using this runtime date. This date does not itself verify current events.\n\nTask: ${PROMPTS[tool]}\nThe site interface language is ${ui}.`;
   const history = [];
   if (tool === "ai-assistant" && Array.isArray(body.history)) {
     for (const h of body.history.slice(-16)) {
