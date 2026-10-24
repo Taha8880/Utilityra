@@ -280,7 +280,7 @@ function misc() {
 
 function adminPage() {
   const h = head({ titleAr: 'لوحة الإدارة', titleEn: 'Admin', descAr: 'لوحة إدارة Utilityra', path: '/admin/', noindex: true });
-  write('/admin/', page(h, `<main id="main"><div class="wrap"><div class="phead"><span class="label">ADMIN</span><h1>${Le('لوحة الإدارة', 'Admin dashboard')}</h1></div><div id="admin-root"></div></div></main><script src="/assets/js/admin.js?v=${V.admin}" defer></script>`));
+  write('/admin/', page(h, `<main id="main" class="admin-main"><div class="wrap"><div class="phead admin-heading"><span class="label">UTILITYRA / CONTROL CENTER</span><h1>${Le('مركز إدارة Utilityra', 'Utilityra Control Center')}</h1><p>${Le('إدارة الموقع والأدوات والذكاء الاصطناعي والبلاغات من مكان واحد.', 'Manage the site, tools, AI, and visitor reports in one place.')}</p></div><div id="admin-root"></div></div></main><script src="/assets/js/admin.js?v=${V.admin}" defer></script>`, false, 'admin-page'));
 }
 
 home();
