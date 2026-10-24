@@ -163,6 +163,29 @@ export async function handleAdmin(request, env, url, json, origin, readJson, ask
       await audit(env, "report_status", `#${b.id} -> ${b.status}`);
       return json({ ok: true, changed: r.meta?.changes || 0 }, 200, origin);
     }
+    if (p === "/api/admin/knowledge" && m === "GET") {
+      const entries = (await env.DB.prepare("SELECT id,title,content,source_url,approved,created_at,updated_at FROM ai_knowledge ORDER BY approved DESC, updated_at DESC LIMIT 200").all()).results || [];
+      return json({ entries }, 200, origin);
+    }
+    if (p === "/api/admin/knowledge" && m === "POST") {
+      const b = await readJson(request, 6000);
+      const title = typeof b.title === "string" ? b.title.trim() : "";
+      const content = typeof b.content === "string" ? b.content.trim() : "";
+      const source = typeof b.source_url === "string" ? b.source_url.trim() : "";
+      if (title.length < 3 || title.length > 180 || content.length < 20 || content.length > 5000) return json({ error: "INVALID_REQUEST" }, 400, origin);
+      if (source) { try { const u = new URL(source); if (u.protocol !== "https:" && u.protocol !== "http:") throw new Error(); } catch { return json({ error: "INVALID_SOURCE_URL" }, 400, origin); } }
+      const approved = b.approved === true ? 1 : 0;
+      const r = await env.DB.prepare("INSERT INTO ai_knowledge(title,content,source_url,approved) VALUES(?,?,?,?)").bind(title, content, source, approved).run();
+      await audit(env, "knowledge_create", `#${r.meta?.last_row_id || "?"} approved=${approved} ${title.slice(0, 100)}`);
+      return json({ ok: true, id: r.meta?.last_row_id || null }, 201, origin);
+    }
+    if (p === "/api/admin/knowledge/status" && m === "POST") {
+      const b = await readJson(request, 1000);
+      if (!Number.isInteger(b.id) || typeof b.approved !== "boolean") return json({ error: "INVALID_REQUEST" }, 400, origin);
+      await env.DB.prepare("UPDATE ai_knowledge SET approved=?, updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(b.approved ? 1 : 0, b.id).run();
+      await audit(env, "knowledge_approval", `#${b.id} approved=${b.approved}`);
+      return json({ ok: true }, 200, origin);
+    }
     if (p === "/api/admin/stats" && m === "GET") return json(await stats(env), 200, origin);
     if (p === "/api/admin/incidents" && m === "GET") return json({ incidents: await listIncidents(env) }, 200, origin);
     if (p === "/api/admin/engineer/run" && m === "POST") { await audit(env, "health_check", "manual run"); return json(await engineerRun(env, url.origin, ask), 200, origin); }
