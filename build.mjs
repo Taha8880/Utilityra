@@ -4,6 +4,7 @@
 import { readFileSync, writeFileSync, mkdirSync, rmSync, cpSync, readdirSync, existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join, dirname } from 'node:path';
+import { ICONS, iconFor, CAT_ICON, svg } from './src/icons.mjs';
 import { fileURLToPath } from 'node:url';
 import { CATEGORIES, TOOLS, toolObj } from './src/meta.mjs';
 
@@ -34,7 +35,7 @@ const css = readFileSync(join(ROOT, 'src/assets/css/app.css'), 'utf8');
 const appJs = readFileSync(join(ROOT, 'src/assets/js/app.js'), 'utf8');
 const toolFiles = readdirSync(join(ROOT, 'src/assets/js/tools')).filter((f) => f.endsWith('.js')).sort();
 const toolsJs = toolFiles.map((f) => readFileSync(join(ROOT, 'src/assets/js/tools', f), 'utf8')).join('\n;\n');
-const indexJs = 'window.UT_INDEX=' + JSON.stringify(tools.map((t) => [t.id, t.cat, t.glyph, t.ar, t.en, t.dAr, t.dEn])) + ';';
+const indexJs = 'window.UT_INDEX=' + JSON.stringify(tools.map((t) => [t.id, t.cat, iconFor(t.id, t.cat), t.ar, t.en, t.dAr, t.dEn])) + ';window.UT_ICONS=' + JSON.stringify(ICONS) + ';';
 writeFileSync(join(OUT, 'assets/css/app.css'), css);
 writeFileSync(join(OUT, 'assets/js/app.js'), appJs);
 writeFileSync(join(OUT, 'assets/js/tools.js'), toolsJs);
@@ -88,9 +89,9 @@ const header = () => `<a class="skip" href="#main">${Le('تخطّي إلى ال�
     <a href="/about/">${Le('عن الموقع', 'About')}</a>
   </nav>
   <span class="hsp"></span>
-  <button class="hbtn" id="theme-btn" type="button" aria-label="Theme">◐</button>
+  <button class="hbtn" id="theme-btn" type="button" aria-label="Theme">${svg('contrast', 'ic sm')}</button>
   <button class="hbtn" id="lang-btn" type="button" aria-label="Language">EN</button>
-  <button class="hbtn burger" id="burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="nav">☰</button>
+  <button class="hbtn burger" id="burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="nav">${svg('menu', 'ic sm')}</button>
 </div></header>`;
 
 const footer = () => `<footer class="ftr"><div class="wrap">
@@ -100,7 +101,7 @@ const footer = () => `<footer class="ftr"><div class="wrap">
     <div><h4>${Le('المزيد', 'More')}</h4><ul>${['security', 'seo', 'calc', 'study', 'convert', 'design'].map((c) => `<li><a href="/category/${c}/">${Le(catOf(c).ar, catOf(c).en)}</a></li>`).join('')}</ul></div>
     <div><h4>${Le('الموقع', 'Site')}</h4><ul><li><a href="/about/">${Le('عن Utilityra', 'About')}</a></li><li><a href="/privacy/">${Le('سياسة الخصوصية', 'Privacy Policy')}</a></li><li><a href="/terms/">${Le('الشروط وإخلاء المسؤولية', 'Terms & Disclaimer')}</a></li><li><a href="/contact/">${Le('اتصل بنا', 'Contact')}</a></li></ul></div>
   </div>
-  <div class="copy"><span>© ${YEAR} Created by Taha</span><span>Utilityra</span></div>
+  <div class="copy"><span>© ${YEAR} Created by Taha</span><span><a href="/admin/" rel="nofollow">${Le('الإدارة', 'Admin')}</a></span></div>
 </div></footer>`;
 
 const scripts = (withTools) => `<script src="/assets/js/index.js?v=${V.idx}" defer></script>${withTools ? `<script src="/assets/js/tools.js?v=${V.tools}" defer></script>` : ''}<script src="/assets/js/app.js?v=${V.app}" defer></script>`;
@@ -108,8 +109,8 @@ const adSlot = () => (ADSENSE ? `<div class="adslot" aria-label="advertisement">
 const page = (h, body, withTools = false, bodyClass = '') => `${h}\n<body${bodyClass ? ` class="${bodyClass}"` : ''}>\n${header()}\n${body}\n${footer()}\n${scripts(withTools)}\n</body>\n</html>\n`;
 const write = (path, html) => { const f = join(OUT, path.replace(/^\//, ''), path.endsWith('.html') ? '' : 'index.html'); mkdirSync(dirname(f), { recursive: true }); writeFileSync(path.endsWith('.html') ? join(OUT, path) : f, html); };
 
-const toolCard = (t) => `<a class="tcard" href="/tools/${t.id}/" data-id="${t.id}" data-cat="${t.cat}"><span class="g">${esc(t.glyph)}</span><span><h3>${Le(t.ar, t.en)}${t.cat === 'ai' ? '<span class="ai">AI</span>' : ''}</h3><p>${Le(t.dAr, t.dEn)}</p></span></a>`;
-const catCard = (c) => `<a class="ccat reveal" href="/category/${c.id}/"><span class="g">${esc(c.glyph)}</span><h3>${Le(c.ar, c.en)}</h3><p>${Le(c.dAr, c.dEn)}</p><span class="n">${byCat(c.id).length} ${Le('أداة', 'tools')} →</span></a>`;
+const toolCard = (t) => `<a class="tcard" href="/tools/${t.id}/" data-id="${t.id}" data-cat="${t.cat}"><span class="g">${svg(iconFor(t.id, t.cat))}</span><span><h3>${Le(t.ar, t.en)}${t.cat === 'ai' ? '<span class="ai">AI</span>' : ''}</h3><p>${Le(t.dAr, t.dEn)}</p></span></a>`;
+const catCard = (c) => `<a class="ccat reveal" href="/category/${c.id}/"><span class="g">${svg(CAT_ICON[c.id])}</span><h3>${Le(c.ar, c.en)}</h3><p>${Le(c.dAr, c.dEn)}</p><span class="n">${byCat(c.id).length} ${Le('أداة', 'tools')} →</span></a>`;
 const chips = (active, isStatic) => `<div class="chips"><a class="chip${active ? '' : ' on'}" data-cat="" href="/tools/">${Le('الكل', 'All')} (${tools.length})</a>${cats.map((c) => `<a class="chip${active === c.id ? ' on' : ''}" data-cat="${c.id}" href="/category/${c.id}/">${Le(c.ar, c.en)}</a>`).join('')}</div>`;
 const searchIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>';
 
@@ -124,7 +125,7 @@ function home() {
     car('c4', '150,170,250', '/category/calc/', L('الحاسبات<br>والدراسة', 'Calculators<br>&amp; study'), L('GPA · قروض · وحدات · هجري', 'GPA · Loans · Units · Hijri'), `<div class="cc" style="padding-inline-start:calc(var(--u)*4)"><span class="num" style="background:linear-gradient(180deg,#fbe4ff 0%,#e79cff 45%,#c45cf5 100%);-webkit-background-clip:text;background-clip:text;color:transparent">${n('calc', 'study', 'convert', 'text', 'design')}<sup style="-webkit-text-fill-color:#d6a0ff;color:#d6a0ff">+</sup></span></div>`, `<span class="cbadge">${L('مجاني', 'Free')}</span><div class="cross-h"></div><div class="cross-v"></div>`)
   ].join('');
   const featured = ['ai-assistant', 'ai-summarizer', 'ai-translator', 'pdf-merge', 'image-compressor', 'json-formatter', 'word-counter', 'qr-code-generator', 'password-generator', 'gpa-calculator', 'hijri-converter', 'unit-converter'].map((id) => tools.find((t) => t.id === id)).filter(Boolean);
-  const pills = (arr) => arr.map((t) => `<a class="pill" href="/tools/${t.id}/"><i>${esc(t.glyph)}</i>${Le(t.ar, t.en)}</a>`).join('');
+  const pills = (arr) => arr.map((t) => `<a class="pill" href="/tools/${t.id}/"><i>${svg(iconFor(t.id, t.cat))}</i>${Le(t.ar, t.en)}</a>`).join('');
   const half = Math.ceil(tools.length / 2); const r1 = tools.slice(0, half), r2 = tools.slice(half);
   const h = head({ titleAr: 'أدوات مجانية أونلاين: ذكاء اصطناعي، PDF، صور، مطورين', titleEn: 'Free online tools: AI, PDF, images, developer utilities', descAr: `أكثر من ${tools.length} أداة مجانية تعمل داخل متصفحك: تلخيص وترجمة بالذكاء الاصطناعي، دمج PDF، ضغط الصور، منسق JSON، حاسبات وأدوات الطلاب. بدون تسجيل وبخصوصية.`, path: '/', extra: `<script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@type': 'WebSite', name: 'Utilityra', url: SITE + '/', inLanguage: ['ar', 'en'], potentialAction: { '@type': 'SearchAction', target: SITE + '/tools/?q={q}', 'query-input': 'required name=q' } })}</script>` });
   const body = `<main id="main">
@@ -218,9 +219,9 @@ function toolPage(t) {
   const h = head({ titleAr: `${t.ar} - أداة مجانية أونلاين`, titleEn: `${t.en} - Free Online Tool`, descAr: `${t.ar}: ${t.dAr} مجانًا وبدون تسجيل.`, path: `/tools/${t.id}/`, extra: `<script type="application/ld+json">${JSON.stringify(ld)}</script><script type="application/ld+json">${JSON.stringify(bc)}</script>` });
   const body = `<main id="main"><div class="wrap">
   <div class="phead"><nav class="crumbs" aria-label="breadcrumb"><a href="/">${Le('الرئيسية', 'Home')}</a><span>/</span><a href="/tools/">${Le('الأدوات', 'Tools')}</a><span>/</span><a href="/category/${c.id}/">${Le(c.ar, c.en)}</a></nav>
-  <h1>${Le(t.ar, t.en)}</h1><p>${Le(t.dAr, t.dEn)}</p></div>
+  <div class="ttl"><span class="g big">${svg(iconFor(t.id, t.cat), 'ic')}</span><h1>${Le(t.ar, t.en)}${t.cat === 'ai' ? '<span class="ai">AI</span>' : ''}</h1></div><p>${Le(t.dAr, t.dEn)}</p></div>
   <section class="panel" aria-label="tool"><div id="tool-root" data-tool="${t.id}"><noscript><p class="tool-status err">${Le('تحتاج هذه الأداة إلى تفعيل JavaScript.', 'This tool needs JavaScript enabled.')}</p></noscript></div></section>
-  <div class="note" style="margin-bottom:26px"><span>${t.cat === 'ai' ? '✦' : '🔒'}</span><span>${Le(pv[0], pv[1])}</span></div>
+  <div class="note" style="margin-bottom:26px"><span class="ni">${svg(t.cat === 'ai' ? 'sparkles' : 'lock', 'ic sm')}</span><span>${Le(pv[0], pv[1])}</span></div>
   ${adSlot()}
   <section style="margin:36px 0"><h2 style="font-size:26px;margin-bottom:16px">${Le('طريقة الاستخدام', 'How to use')}</h2><div class="how">${how.map((s) => `<div><b>${Le(s[0], s[1])}</b></div>`).join('')}</div></section>
   <section style="margin:36px 0"><h2 style="font-size:26px;margin-bottom:16px">${Le('أدوات ذات صلة', 'Related tools')}</h2><div class="tgrid">${related.map(toolCard).join('')}</div><p style="margin-top:16px"><a class="btn" href="/category/${c.id}/">${Le('كل أدوات ' + c.ar, 'All ' + c.en)} →</a></p></section>

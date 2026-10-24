@@ -34,3 +34,12 @@ Workers → Settings → Domains & Routes → Add Custom Domain. ثم غيّر `
 
 ## ما لا أستطيع ضمانه من الكود
 قبول AdSense، وفهرسة Google، وتحقق Search Console تتم في حساباتك بعد النشر. ملف التحقق `google1dc3867d61891f77.html` و`ads.txt` مضمّنان.
+
+## جودة الذكاء الاصطناعي (مهم)
+الافتراضي Workers AI (نموذج Llama) مجاني لكنه أضعف من نماذج Claude/GPT/Gemini. لرفع الجودة ضع مفتاحًا واحدًا على الأقل في الـ Worker:
+```
+npx wrangler secret put ANTHROPIC_API_KEY     # الأفضل: يُستخدم تلقائيًا أولًا
+npx wrangler secret put OPENAI_API_KEY        # أو
+npx wrangler secret put GEMINI_API_KEY
+```
+(هذا غير سر GitHub بنفس الاسم الذي يستخدمه المهندس الآلي.) ترتيب الاختيار: `AI_PROVIDER` ثم Anthropic ثم Workers AI ثم OpenAI ثم Gemini، مع انتقال تلقائي عند الفشل. تبويب "مساعد المطوّر" في `/admin/` يستخدم نفس المزود.

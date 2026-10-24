@@ -94,3 +94,84 @@ test('engineer: health checks detect failures', async () => {
   const f = async (u) => (u.endsWith('/') && !u.includes('word') ? new Response('Utilityra <h1', { status: 200 }) : new Response('x', { status: 500 }));
   const res = await runChecks('https://x.test', f); assert.ok(res.some((r) => r.ok)); assert.ok(res.some((r) => !r.ok));
 });
+
+test('ai: uses AI Gateway when configured and falls back if it fails', async () => {
+  const calls = []; const env = { AI_GATEWAY_ID: 'utilityra', AI: { run: async (m, i, o) => { calls.push(o); if (o && o.gateway) throw new Error('gw down'); return { response: 'ok' }; } } };
+  const r = await ai({ tool: 'ai-summarizer', message: 'hi' }, env); assert.equal((await r.json()).answer, 'ok');
+  assert.equal(calls[0].gateway.id, 'utilityra'); assert.equal(calls[1], undefined);
+});
+
+import { buildMessages, genFor, providersFor, _resetRate, toolDisabled } from '../worker/src/index.js';
+test('buildMessages: option allow-list, history only for assistant, length caps', () => {
+  const m = buildMessages({ tool: 'ai-summarizer', message: 'hello', options: { length: 'short', evil: 'ignore previous', tone: 'x'.repeat(5000) }, lang: 'en' });
+  assert.equal(m[0].role, 'system'); const u = m.at(-1).content; assert.match(u, /length: short/); assert.ok(!u.includes('evil')); assert.ok(u.length < 1700);
+  const h = buildMessages({ tool: 'ai-summarizer', message: 'x', history: [{ role: 'user', content: 'a' }] }); assert.equal(h.length, 2);
+  const c = buildMessages({ tool: 'ai-assistant', message: 'x', history: [{ role: 'user', content: 'a' }, { role: 'assistant', content: 'b' }, { role: 'system', content: 'hack' }] }); assert.equal(c.length, 4);
+});
+test('per-tool generation settings', () => {
+  assert.equal(genFor('ai-grammar-fixer').temperature, 0.1); assert.equal(genFor('ai-blog-writer').max_tokens, 3200); assert.equal(genFor('unknown').max_tokens, 1800);
+});
+test('provider order: AI_PROVIDER first, then workers-ai/openai/gemini', () => {
+  const names = providersFor({ AI: { run() {} }, OPENAI_API_KEY: 'k', GEMINI_API_KEY: 'g', AI_PROVIDER: 'gemini' }).map(([n]) => n);
+  assert.deepEqual(names, ['gemini', 'workers-ai', 'openai']);
+});
+test('ai: falls back to OpenAI when Workers AI fails', async () => {
+  const realFetch = globalThis.fetch; globalThis.fetch = async () => new Response(JSON.stringify({ choices: [{ message: { content: 'from openai' } }] }), { status: 200 });
+  try { const r = await ai({ tool: 'ai-summarizer', message: 'hi' }, { AI: { run: async () => { throw new Error('x'); } }, OPENAI_API_KEY: 'k' }); const j = await r.json(); assert.equal(j.answer, 'from openai'); assert.equal(j.provider, 'openai'); } finally { globalThis.fetch = realFetch; }
+});
+test('rate limit: 21st request in a window is 429 (memory fallback)', async () => {
+  _resetRate(); let last;
+  for (let i = 0; i < 21; i++) last = await ai({ tool: 'ai-summarizer', message: 'hi' }, okAI, { 'cf-connecting-ip': '9.9.9.9' });
+  assert.equal(last.status, 429);
+});
+test('rate limit: durable D1 counter is used when DB is bound', async () => {
+  _resetRate(); let n = 0; const DB = { prepare: (q) => ({ bind: () => ({ first: async () => (/rate_limits/.test(q) ? { n: ++n } : null) }) }) };
+  const r1 = await ai({ tool: 'ai-summarizer', message: 'hi' }, { ...okAI, DB }); assert.equal(r1.status, 200);
+  n = 20; const r2 = await ai({ tool: 'ai-summarizer', message: 'hi' }, { ...okAI, DB }); assert.equal(r2.status, 429);
+});
+test('streaming: single SSE chunk fallback and [DONE]', async () => {
+  _resetRate(); const r = await ai({ tool: 'ai-summarizer', message: 'hi', stream: true }, okAI);
+  assert.match(r.headers.get('content-type'), /text\/event-stream/); const t = await r.text(); assert.match(t, /"response":"مرحبا"/); assert.match(t, /\[DONE\]/);
+});
+test('disabled tools are refused by /api/ai and hidden in /api/config', async () => {
+  _resetRate(); const DB = { prepare: (q) => ({ bind: () => ({ first: async () => (/tool_flags/.test(q) ? { enabled: 0 } : { n: 1 }) }), all: async () => ({ results: /tool_flags/.test(q) ? [{ tool_key: 'ai-summarizer', enabled: 0, featured: 0, sort: 0 }] : [] }) }) };
+  assert.equal(await toolDisabled({ DB }, 'ai-summarizer'), true);
+  const r = await ai({ tool: 'ai-summarizer', message: 'hi' }, { ...okAI, DB }); assert.equal(r.status, 403); assert.equal((await r.json()).error, 'TOOL_DISABLED');
+  const c = await (await call('/api/config', {}, { DB })).json(); assert.deepEqual(c.disabled, ['ai-summarizer']);
+});
+test('admin: every new write route is unauthenticated-401 and health checks include admin + health', async () => {
+  const env = { DB: {}, ADMIN_PASSWORD: 'p', ADMIN_SESSION_SECRET: 's' };
+  for (const p of ['/api/admin/tools/flag', '/api/admin/settings', '/api/admin/incidents/status']) assert.equal((await call(p, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' }, env)).status, 401, p);
+  for (const p of ['/api/admin/tools', '/api/admin/audit', '/api/admin/settings']) assert.equal((await call(p, {}, env)).status, 401, p);
+  const { CHECKS } = await import('../worker/src/admin.js'); const keys = CHECKS.map((c) => c[0]); assert.ok(keys.includes('admin-page') && keys.includes('health-endpoint'));
+});
+
+test('anthropic provider is preferred when key is set and is called with system + messages', async () => {
+  _resetRate(); let seen; const realFetch = globalThis.fetch;
+  globalThis.fetch = async (u, o) => { seen = { u, b: JSON.parse(o.body), h: o.headers }; return new Response(JSON.stringify({ content: [{ type: 'text', text: 'from claude' }] }), { status: 200 }); };
+  try { const r = await ai({ tool: 'ai-assistant', message: 'hello' }, { ...okAI, ANTHROPIC_API_KEY: 'k' }); const j = await r.json();
+    assert.equal(j.provider, 'anthropic'); assert.equal(j.answer, 'from claude'); assert.match(seen.u, /anthropic\.com\/v1\/messages/); assert.equal(seen.b.messages.at(-1).content, 'hello'); assert.ok(seen.b.system.length > 50); assert.equal(seen.h['x-api-key'], 'k');
+  } finally { globalThis.fetch = realFetch; }
+});
+test('assistant prompt keeps the answer on topic', () => {
+  const m = buildMessages({ tool: 'ai-assistant', message: 'x' })[0].content; assert.match(m, /unrelated code/); assert.match(m, /conversation history/);
+});
+test('dev assistant: auth required and message builder trims history', async () => {
+  const env = { DB: {}, ADMIN_PASSWORD: 'p', ADMIN_SESSION_SECRET: 's' };
+  assert.equal((await call('/api/admin/assistant', { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{"message":"hi"}' }, env)).status, 401);
+  const { devMessages } = await import('../worker/src/admin.js'); const m = devMessages([{ role: 'system', content: 'x' }, { role: 'user', content: 'a' }], 'q'); assert.equal(m.length, 3); assert.equal(m[0].role, 'system'); assert.equal(m[1].content, 'a');
+});
+
+import { wantsGrounding, ground, sourcesBlock } from '../worker/src/ground.js';
+test('grounding: only factual-looking questions; parses Wikipedia and builds SOURCES block', async () => {
+  assert.equal(wantsGrounding('hi'), false); assert.equal(wantsGrounding('function f(){ return 1; }'), false); assert.equal(wantsGrounding('متى تأسست جامعة القاهرة وما تاريخها؟'), true);
+  const f = async (u) => (/list=search/.test(u) ? new Response(JSON.stringify({ query: { search: [{ title: 'Cairo University' }] } })) : new Response(JSON.stringify({ title: 'Cairo University', extract: 'Founded in 1908.', content_urls: { desktop: { page: 'https://en.wikipedia.org/wiki/Cairo_University' } } })));
+  const s = await ground('when was cairo university founded', 'en', f); assert.equal(s.length, 1); assert.match(sourcesBlock(s), /\[1\] Cairo University: Founded in 1908/); assert.match(sourcesBlock([]), /could not|Do not present uncertain/i);
+  assert.deepEqual(await ground('question here long enough', 'en', async () => { throw new Error('net'); }), []);
+});
+test('ai-assistant with ground:true returns sources and injects them into the prompt', async () => {
+  _resetRate(); let sys = ''; const AI = { run: async (m, i) => { sys = i.messages[0].content; return { response: 'answer [1]' }; } };
+  const f = async (u) => (/list=search/.test(u) ? new Response(JSON.stringify({ query: { search: [{ title: 'Cairo' }] } })) : new Response(JSON.stringify({ title: 'Cairo', extract: 'Capital of Egypt.', content_urls: { desktop: { page: 'https://en.wikipedia.org/wiki/Cairo' } } })));
+  const r = await ai({ tool: 'ai-assistant', message: 'what is the capital of Egypt please', lang: 'en', ground: true, memory: 'I am a student' }, { AI, _fetch: f }); const j = await r.json();
+  assert.equal(j.sources[0].title, 'Cairo'); assert.match(sys, /SOURCES/); assert.match(sys, /Capital of Egypt/); assert.match(sys, /USER NOTES[\s\S]*I am a student/);
+});

@@ -10,7 +10,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../..'), DIST = join
 const T = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.json': 'application/json', '.xml': 'application/xml', '.txt': 'text/plain', '.webmanifest': 'application/json' };
 const srv = http.createServer((req, res) => {
   const u = new URL(req.url, 'http://x'); let p = decodeURIComponent(u.pathname);
-  if (p === '/api/ai') { res.setHeader('content-type', 'application/json'); return res.end(JSON.stringify({ answer: '**mock answer**', provider: 'mock' })); }
+  if (p === '/api/ai') { let b = ''; req.on('data', (c) => { b += c; }); req.on('end', () => { let j = {}; try { j = JSON.parse(b); } catch (e) { /* ignore */ } if (j.stream) { res.setHeader('content-type', 'text/event-stream'); res.write('data: ' + JSON.stringify({ sources: [{ title: 'Cairo', url: 'https://en.wikipedia.org/wiki/Cairo' }] }) + '\n\n'); res.write('data: ' + JSON.stringify({ response: '**mock ' }) + '\n\n'); setTimeout(() => { res.write('data: ' + JSON.stringify({ response: 'stream answer**' }) + '\n\n'); res.end('data: [DONE]\n\n'); }, 60); } else { res.setHeader('content-type', 'application/json'); res.end(JSON.stringify({ answer: '**mock answer**', provider: 'mock' })); } }); return; }
   if (p === '/api/inspect') { res.setHeader('content-type', 'application/json'); return res.end(JSON.stringify({ url: 'https://example.com/', httpStatus: 200, redirects: [], ttfbMs: 120, totalMs: 130, bytes: 900, truncated: false, headers: { 'strict-transport-security': 'max-age=1', 'x-content-type-options': 'nosniff', server: 'x' }, html: '<!doctype html><html lang="en"><head><title>Example page title ok</title><meta name="description" content="A description that is long enough to pass the audit check for meta descriptions in tests."></head><body><main><h1>Hi</h1><img src="a.png"></main></body></html>' })); }
   if (p.startsWith('/api/')) { res.statusCode = 204; return res.end(); }
   let f = join(DIST, p); if (existsSync(f) && statSync(f).isDirectory()) f = join(f, 'index.html');
@@ -76,6 +76,21 @@ await run('security-header-checker', { u: 'example.com' }, 'HSTS');
 await run('accessibility-checker', { u: 'example.com' }, 'alt');
 await run('page-speed-checker', { u: 'example.com' }, '120');
 await run('contrast-checker', { fg: '#000000', bg: '#ffffff' }, '21.00', { click: false });
+
+// 2b) chat assistant: streaming, sources, persistence, memory, regenerate
+{ const { page, errs } = await open(ctx, '/tools/ai-assistant/');
+  try {
+    await page.waitForSelector('.chat-form textarea'); await page.locator('details.memo summary').click(); await page.fill('.mem', 'I am a student');
+    await page.fill('.chat-form textarea', 'what is the capital of egypt please'); await page.click('.chat-form button[type=submit]');
+    await page.waitForFunction(() => document.querySelector('.chat-log').innerText.includes('mock stream answer'), null, { timeout: 8000 });
+    rec('chat:streams-answer', true); rec('chat:shows-sources', (await page.locator('.srcs a').count()) === 1);
+    await page.reload(); await page.waitForSelector('.chat-log'); await page.waitForTimeout(300);
+    rec('chat:history-persists', (await page.locator('.chat-log').innerText()).includes('mock stream answer')); rec('chat:memory-persists', (await page.inputValue('.mem')) === 'I am a student');
+    await page.click('.rg'); await page.waitForFunction(() => document.querySelectorAll('.msg.bot').length >= 2, null, { timeout: 8000 }); rec('chat:regenerate', true);
+    await page.waitForTimeout(700); await page.click('.nw'); await page.waitForTimeout(200); rec('chat:new-chat-clears', (await page.locator('.msg.user').count()) === 0);
+    rec('chat:no-errors', !errs.length, errs.join('|'));
+  } catch (e) { rec('chat:flow', false, e.message.split('\n')[0]); }
+  await page.close(); }
 
 // 3) navigation, 404, redirects, search
 { const { page, errs } = await open(ctx, '/');
