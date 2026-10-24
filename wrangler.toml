@@ -22,13 +22,10 @@ AI_GATEWAY_ID = "utilityra"
 [ai]
 binding = "AI"
 
-# OPTIONAL — analytics, admin dashboard and the technical-engineer incident log need D1:
-#   npx wrangler d1 create utilityra-data     (copy the id below, then uncomment)
-#   npx wrangler d1 execute utilityra-data --remote --file=worker/schema.sql
-#   npx wrangler secret put ADMIN_PASSWORD ; npx wrangler secret put ADMIN_SESSION_SECRET
-# [[d1_databases]]
-# binding = "DB"
-# database_name = "utilityra-data"
-# database_id = "PUT_REAL_ID_HERE"
+# D1 — analytics, admin dashboard and technical-engineer incident log
+[[d1_databases]]
+binding = "DB"
+database_name = "utilityra-data"
+database_id = "3fc2bb1b-260c-46b8-88b5-3fdc862be186"
 
 # OPTIONAL secrets for other AI providers: OPENAI_API_KEY, GEMINI_API_KEY (never commit them).
