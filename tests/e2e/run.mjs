@@ -4,6 +4,8 @@ import http from 'node:http'; import { readFileSync, existsSync, statSync, write
 import { join, extname, dirname } from 'node:path'; import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 import { TOOLS } from '../../src/meta.mjs';
+const die = (e) => { console.log('::error title=e2e crashed::' + String((e && e.stack) || e).replace(/[\r\n]+/g, ' | ').slice(0, 500)); process.exit(1); };
+process.on('uncaughtException', die); process.on('unhandledRejection', die);
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../..'), DIST = join(ROOT, 'dist'), LOG = join(ROOT, 'docs/test-logs'); mkdirSync(LOG, { recursive: true });
 const T = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.json': 'application/json', '.xml': 'application/xml', '.txt': 'text/plain', '.webmanifest': 'application/json' };
 const srv = http.createServer((req, res) => {
