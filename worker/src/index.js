@@ -267,6 +267,25 @@ export default {
       const r = await inspectUrl(url.searchParams.get("url"));
       return json(r.body, r.status, origin || "");
     }
+    if (url.pathname === "/api/report") {
+      if (request.method !== "POST") return json({ error: "METHOD_NOT_ALLOWED" }, 405, origin || "");
+      if (origin === null) return json({ error: "ORIGIN_NOT_ALLOWED" }, 403);
+      if (!env.DB) return json({ error: "REPORTS_NOT_CONFIGURED" }, 503, origin || "");
+      if (await rateLimited(request, env)) return json({ error: "RATE_LIMITED" }, 429, origin || "");
+      let b;
+      try { b = await readJson(request, 5000); } catch (e) { return json({ error: "INVALID_REQUEST" }, e.status || 400, origin || ""); }
+      if (typeof b.company === "string" && b.company.trim()) return json({ ok: true }, 202, origin || "");
+      const type = ["bug", "suggestion", "other"].includes(b.type) ? b.type : null;
+      const message = typeof b.message === "string" ? b.message.trim() : "";
+      const email = typeof b.email === "string" ? b.email.trim() : "";
+      let page = typeof b.page === "string" ? b.page.trim() : "";
+      if (!type || message.length < 10 || message.length > 3000 || email.length > 254 || (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) || page.length > 500) return json({ error: "INVALID_REPORT" }, 400, origin || "");
+      if (page) { try { const parsed = new URL(page, url.origin); if (parsed.origin !== url.origin) return json({ error: "INVALID_PAGE" }, 400, origin || ""); page = parsed.pathname + parsed.search; } catch { return json({ error: "INVALID_PAGE" }, 400, origin || ""); } }
+      try {
+        const result = await env.DB.prepare("INSERT INTO contact_reports(type,page,email,message) VALUES(?,?,?,?)").bind(type, page, email, message).run();
+        return json({ ok: true, id: result.meta?.last_row_id || null }, 201, origin || "");
+      } catch { return json({ error: "REPORT_SAVE_FAILED" }, 502, origin || ""); }
+    }
     if (url.pathname.startsWith("/api/")) return json({ error: "NOT_FOUND" }, 404, origin || "");
     if (env.ASSETS) return env.ASSETS.fetch(request);
     return new Response("Utilityra API is running. Static assets are not bound.", { status: 200, headers: { "content-type": "text/plain; charset=utf-8" } });
