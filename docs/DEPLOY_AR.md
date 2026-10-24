@@ -43,3 +43,9 @@ npx wrangler secret put OPENAI_API_KEY        # أو
 npx wrangler secret put GEMINI_API_KEY
 ```
 (هذا غير سر GitHub بنفس الاسم الذي يستخدمه المهندس الآلي.) ترتيب الاختيار: `AI_PROVIDER` ثم Anthropic ثم Workers AI ثم OpenAI ثم Gemini، مع انتقال تلقائي عند الفشل. تبويب "مساعد المطوّر" في `/admin/` يستخدم نفس المزود.
+
+## النماذج (Anthropic)
+- الأدوات الثقيلة (المساعد، شرح/إصلاح الكود، SQL، Regex، Excel، المقالات…) تجرّب بالترتيب: `claude-fable-5-1` ثم `claude-opus-5-5` ثم `claude-sonnet-5-5` وتنتقل للتالي تلقائيًا إن لم يكن النموذج متاحًا لحسابك.
+- باقي الأدوات تستخدم `claude-sonnet-5-5` (أرخص وأسرع).
+- لتغيير النموذج: `ANTHROPIC_MODEL_STRONG` (للثقيلة) و`ANTHROPIC_MODEL` (للباقي) كمتغيرات في wrangler.toml أو Dashboard. التكلفة تُحسب على حسابك في Anthropic، وكلما قوي النموذج زادت التكلفة.
+- افحص المزوّد الفعّال: افتح `/health` وستجد قائمة `ai` فيها `anthropic` إن كان المفتاح مفعّلًا.

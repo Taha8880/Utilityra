@@ -193,3 +193,17 @@ test('grounding skips meta questions about the assistant and uses Tavily web sea
   let called = ''; const f = async (u) => { called = u; return new Response(JSON.stringify({ results: [{ title: 'News', url: 'https://example.com/n', content: 'Latest facts.' }] })); };
   const s = await ground('latest news about the space station today', 'en', f, 'tvly-key'); assert.match(called, /tavily\.com/); assert.equal(s[0].url, 'https://example.com/n');
 });
+
+import { anthropicChain, STRONG_TOOLS } from '../worker/src/index.js';
+test('model tiers: strong tools get the strongest chain, others the default model', () => {
+  assert.deepEqual(anthropicChain({}, true), ['claude-fable-5-1', 'claude-opus-5-5', 'claude-sonnet-5-5']); assert.deepEqual(anthropicChain({}, false), ['claude-sonnet-5-5']);
+  assert.deepEqual(anthropicChain({ ANTHROPIC_MODEL_STRONG: 'x-model' }, true)[0], 'x-model'); assert.ok(STRONG_TOOLS.has('ai-assistant') && !STRONG_TOOLS.has('ai-summarizer'));
+});
+test('anthropic steps down the chain when the strongest model is unavailable, but not on quota errors', async () => {
+  _resetRate(); const realFetch = globalThis.fetch; const tried = [];
+  globalThis.fetch = async (u, o) => { const m = JSON.parse(o.body).model; tried.push(m); return m === 'claude-sonnet-5-5' ? new Response(JSON.stringify({ content: [{ type: 'text', text: 'ok' }] })) : new Response('{}', { status: 404 }); };
+  try { const r = await ai({ tool: 'ai-assistant', message: 'hi' }, { ANTHROPIC_API_KEY: 'k' }); assert.equal((await r.json()).answer, 'ok'); assert.deepEqual(tried, ['claude-fable-5-1', 'claude-opus-5-5', 'claude-sonnet-5-5']);
+    _resetRate(); tried.length = 0; globalThis.fetch = async (u, o) => { tried.push(JSON.parse(o.body).model); return new Response('{}', { status: 429 }); };
+    const r2 = await ai({ tool: 'ai-assistant', message: 'hi' }, { ANTHROPIC_API_KEY: 'k' }); assert.equal(r2.status, 429); assert.equal(tried.length, 1);
+  } finally { globalThis.fetch = realFetch; }
+});
