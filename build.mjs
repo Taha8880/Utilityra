@@ -112,7 +112,7 @@ const page = (h, body, withTools = false, bodyClass = '') => `${h}\n<body${bodyC
 const write = (path, html) => { const f = join(OUT, path.replace(/^\//, ''), path.endsWith('.html') ? '' : 'index.html'); mkdirSync(dirname(f), { recursive: true }); writeFileSync(path.endsWith('.html') ? join(OUT, path) : f, html); };
 
 const toolCard = (t) => `<a class="tcard" href="/tools/${t.id}/" data-id="${t.id}" data-cat="${t.cat}"><span class="g">${svg(iconFor(t.id, t.cat))}</span><span><h3>${Le(t.ar, t.en)}${t.cat === 'ai' ? '<span class="ai">AI</span>' : ''}</h3><p>${Le(t.dAr, t.dEn)}</p></span></a>`;
-const catCard = (c) => `<a class="ccat reveal" href="/category/${c.id}/"><span class="g">${svg(CAT_ICON[c.id])}</span><h3>${Le(c.ar, c.en)}</h3><p>${Le(c.dAr, c.dEn)}</p><span class="n">${byCat(c.id).length} ${Le('أداة', 'tools')} →</span></a>`;
+const catCard = (c) => `<a class="ccat reveal" data-cat="${c.id}" href="/category/${c.id}/"><span class="g">${svg(CAT_ICON[c.id])}</span><h3>${Le(c.ar, c.en)}</h3><p>${Le(c.dAr, c.dEn)}</p><span class="n">${byCat(c.id).length} ${Le('أداة', 'tools')} →</span></a>`;
 const chips = (active, isStatic) => `<div class="chips"><a class="chip${active ? '' : ' on'}" data-cat="" href="/tools/">${Le('الكل', 'All')} (${tools.length})</a>${cats.map((c) => `<a class="chip${active === c.id ? ' on' : ''}" data-cat="${c.id}" href="/category/${c.id}/">${Le(c.ar, c.en)}</a>`).join('')}</div>`;
 const searchIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>';
 
@@ -221,7 +221,7 @@ function toolPage(t) {
   const h = head({ titleAr: `${t.ar} - أداة مجانية أونلاين`, titleEn: `${t.en} - Free Online Tool`, descAr: `${t.ar}: ${t.dAr} مجانًا وبدون تسجيل.`, path: `/tools/${t.id}/`, extra: `<script type="application/ld+json">${JSON.stringify(ld)}</script><script type="application/ld+json">${JSON.stringify(bc)}</script>` });
   const body = `<main id="main"><div class="wrap">
   <div class="phead"><nav class="crumbs" aria-label="breadcrumb"><a href="/">${Le('الرئيسية', 'Home')}</a><span>/</span><a href="/tools/">${Le('الأدوات', 'Tools')}</a><span>/</span><a href="/category/${c.id}/">${Le(c.ar, c.en)}</a></nav>
-  <div class="ttl"><span class="g big">${svg(iconFor(t.id, t.cat), 'ic')}</span><h1>${Le(t.ar, t.en)}${t.cat === 'ai' ? '<span class="ai">AI</span>' : ''}</h1></div><p>${Le(t.dAr, t.dEn)}</p></div>
+  <div class="ttl" data-cat="${t.cat}"><span class="g big">${svg(iconFor(t.id, t.cat), 'ic')}</span><h1>${Le(t.ar, t.en)}${t.cat === 'ai' ? '<span class="ai">AI</span>' : ''}</h1></div><p>${Le(t.dAr, t.dEn)}</p></div>
   <section class="panel" aria-label="tool"><div id="tool-root" data-tool="${t.id}"><noscript><p class="tool-status err">${Le('تحتاج هذه الأداة إلى تفعيل JavaScript.', 'This tool needs JavaScript enabled.')}</p></noscript></div></section>
   <div class="note" style="margin-bottom:26px"><span class="ni">${svg(t.cat === 'ai' ? 'sparkles' : 'lock', 'ic sm')}</span><span>${Le(pv[0], pv[1])}</span></div>
   ${adSlot()}
