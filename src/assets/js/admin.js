@@ -17,12 +17,12 @@
     });
   }
   const tbl = (head, rows) => `<div class="tblwrap"><table class="tbl"><thead><tr>${head.map((h) => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.map((r) => `<tr>${r.map((c) => `<td>${esc(c)}</td>`).join('')}</tr>`).join('') || `<tr><td colspan="${head.length}">—</td></tr>`}</tbody></table></div>`;
-  const TABS = [['dash', 'لوحة المعلومات', 'Dashboard'], ['tools', 'إدارة الأدوات', 'Tools'], ['inc', 'المهندس التقني', 'Engineer'], ['reports', 'بلاغات الزوار', 'Reports'], ['set', 'إعدادات الموقع', 'Settings'], ['dev', 'مساعد المطوّر', 'Dev assistant'], ['log', 'سجل النشاط', 'Activity log']];
+  const TABS = [['dash', 'لوحة المعلومات', 'Dashboard'], ['tools', 'إدارة الأدوات', 'Tools'], ['inc', 'المهندس التقني', 'Engineer'], ['reports', 'بلاغات الزوار', 'Reports'], ['knowledge', 'ذاكرة المعرفة', 'AI Knowledge'], ['set, 'إعدادات الموقع', 'Settings'], ['dev', 'مساعد المطوّر', 'Dev assistant'], ['log', 'سجل النشاط', 'Activity log']];
   function shell() {
     root.innerHTML = `<div class="chips" role="tablist">${TABS.map((x) => `<button class="chip${x[0] === tab ? ' on' : ''}" role="tab" aria-selected="${x[0] === tab}" data-tab="${x[0]}">${t(x[1], x[2])}</button>`).join('')}<button class="chip" id="out" style="margin-inline-start:auto">${t('تسجيل الخروج', 'Sign out')}</button></div><div id="view" aria-live="polite"></div>`;
     root.querySelectorAll('[data-tab]').forEach((b) => b.addEventListener('click', () => { tab = b.dataset.tab; shell(); }));
     $('#out').onclick = async () => { await post('/api/admin/logout'); login(); };
-    ({ dash, tools, inc, reports, set, dev, log })[tab]();
+    ({ dash, tools, inc, reports, knowledge, set, dev, log })[tab]();
   }
   const guard = (r) => { if (r.status === 401) { login(); return false; } if (!r.ok) { $('#view').innerHTML = `<p class="tool-status err">${t('تعذّر جلب البيانات.', 'Could not load data.')}</p>`; return false; } return true; };
 
@@ -60,6 +60,34 @@
       const saved = await post('/api/admin/reports/status', { id: Number(button.dataset.report), status: button.dataset.st });
       if (!saved.ok) { button.disabled = false; alert(t('تعذّر تحديث حالة البلاغ.', 'Could not update report status.')); return; }
       reports();
+    };
+  }
+  async function knowledge() {
+    const r = await api('/api/admin/knowledge'); if (!guard(r)) return;
+    const entries = r.j.entries || [];
+    $('#view').innerHTML = `<p>${t('هذه ذاكرة معرفة موثقة يراجعها المسؤول ويعتمدها قبل أن يستخدمها المساعد. لا يتعلم النظام تلقائيًا من محادثات الزوار ولا يحوّل إجابات غير مؤكدة إلى حقائق.', 'This is a curated knowledge memory. An administrator reviews and approves entries before the assistant can use them. The system does not automatically learn facts from visitor chats or turn unverified answers into truth.')}</p>
+      <form id="kf" class="panel" style="max-width:760px"><h3>${t('إضافة معرفة للمراجعة', 'Add knowledge for review')}</h3>
+      <div class="fld"><label for="kt">${t('العنوان', 'Title')}</label><input id="kt" required minlength="3" maxlength="180"></div>
+      <div class="fld"><label for="kc">${t('المعلومة أو الملخص', 'Fact or summary')}</label><textarea id="kc" required minlength="20" maxlength="5000" rows="4"></textarea></div>
+      <div class="fld"><label for="ku">${t('رابط المصدر (مستحسن)', 'Source URL (recommended)')}</label><input id="ku" type="url" maxlength="1000" placeholder="https://..."></div>
+      <label class="ck"><input id="ka" type="checkbox"> ${t('اعتمادها فورًا بعد المراجعة', 'Approve after review')}</label>
+      <button class="btn primary" type="submit">${t('حفظ المعرفة', 'Save knowledge')}</button><span id="km" role="status"></span></form>
+      <h3>${t('المعرفة المحفوظة', 'Saved knowledge')}</h3>
+      ${entries.length ? entries.map(x => `<details class="panel" style="margin-block:10px"><summary><b>#${x.id}</b> ${esc(x.title)} — <span class="label">${Number(x.approved) ? t('معتمدة', 'Approved') : t('بانتظار المراجعة', 'Pending review')}</span></summary><p style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(x.content)}</p>${x.source_url ? `<p><a href="${esc(x.source_url)}" target="_blank" rel="noopener noreferrer">${esc(x.source_url)}</a></p>` : ''}<button class="btn ghost" data-kid="${x.id}" data-approved="${Number(x.approved) ? '0' : '1'}">${Number(x.approved) ? t('إلغاء الاعتماد', 'Unapprove') : t('اعتماد المعرفة', 'Approve knowledge')}</button></details>`).join('') : `<p>${t('لا توجد معرفة محفوظة بعد.', 'No saved knowledge yet.')}</p>`}`;
+    $('#kf').onsubmit = async (e) => {
+      e.preventDefault();
+      const button = $('#kf button[type="submit"]'); button.disabled = true;
+      const saved = await post('/api/admin/knowledge', { title: $('#kt').value.trim(), content: $('#kc').value.trim(), source_url: $('#ku').value.trim(), approved: $('#ka').checked });
+      button.disabled = false;
+      $('#km').textContent = saved.ok ? t('تم الحفظ ✓', 'Saved ✓') : t('تعذّر الحفظ. تحقق من البيانات وقاعدة البيانات.', 'Could not save. Check the fields and database.');
+      if (saved.ok) knowledge();
+    };
+    $('#view').onclick = async (e) => {
+      const b = e.target.closest('[data-kid]'); if (!b) return;
+      b.disabled = true;
+      const saved = await post('/api/admin/knowledge/status', { id: Number(b.dataset.kid), approved: b.dataset.approved === '1' });
+      if (!saved.ok) { b.disabled = false; alert(t('فشل تحديث حالة المعرفة.', 'Could not update knowledge status.')); return; }
+      knowledge();
     };
   }
   async function set() {
