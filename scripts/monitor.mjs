@@ -1,0 +1,30 @@
+// Live-site monitor used by CI and the monitor workflow. Exit code 1 on any failure.
+// Usage: SITE_URL=https://example.com node scripts/monitor.mjs [--strict] [--report file.md]
+import { writeFileSync } from 'node:fs';
+const site = (process.env.SITE_URL || 'https://utilityra.tavengers16.workers.dev').replace(/\/$/, '');
+const args = process.argv.slice(2);
+const checks = [
+  ['home', '/', 200, /Utilityra/],
+  ['tools index', '/tools/', 200, /<h1/],
+  ['tool page', '/tools/word-counter/', 200, /data-tool="word-counter"/],
+  ['ai tool page', '/tools/ai-summarizer/', 200, /data-tool="ai-summarizer"/],
+  ['sitemap', '/sitemap.xml', 200, /<urlset/],
+  ['robots', '/robots.txt', 200, /Sitemap:/i],
+  ['ads.txt', '/ads.txt', 200, /google\.com/],
+  ['health', '/health', 200, /"ok":true/],
+  ['404', '/definitely-missing-page-xyz/', 404, null],
+  ['legacy alias', '/tools/sort-lines', 200, /data-tool="line-sorter"/]
+];
+const rows = []; let bad = 0;
+for (const [name, path, status, re] of checks) {
+  const t0 = Date.now();
+  try {
+    const r = await fetch(site + path, { redirect: 'follow', headers: { 'user-agent': 'UtilityraMonitor/1.0' } });
+    const body = await r.text(); const ok = r.status === status && (!re || re.test(body));
+    rows.push({ name, path, status: r.status, ms: Date.now() - t0, ok }); if (!ok) bad++;
+  } catch (e) { rows.push({ name, path, status: 0, ms: Date.now() - t0, ok: false, err: String(e.message) }); bad++; }
+}
+const md = `# Utilityra live check — ${new Date().toISOString()}\n\nSite: ${site}\n\n| check | path | status | ms | result |\n|---|---|---|---|---|\n` + rows.map((r) => `| ${r.name} | \`${r.path}\` | ${r.status} | ${r.ms} | ${r.ok ? 'PASS' : 'FAIL' + (r.err ? ' ' + r.err : '')} |`).join('\n') + '\n';
+console.log(md);
+const i = args.indexOf('--report'); if (i >= 0) writeFileSync(args[i + 1], md);
+process.exit(bad ? 1 : 0);

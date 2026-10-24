@@ -1,272 +1,96 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import worker from '../worker/src/index.js';
+import { parseTarget, isBlockedHost, inspectUrl } from '../worker/src/inspect.js';
+import { makeToken, validToken, sameSecret, runChecks } from '../worker/src/admin.js';
 
-const source = await readFile(new URL("../worker/src/index.js", import.meta.url), "utf8");
-const workerModule = await import("data:text/javascript;base64," + Buffer.from(source).toString("base64"));
-const worker = workerModule.default;
-const origin = "https://utilityra.tavengers16.workers.dev";
+const ASSETS = { fetch: async (req) => new Response('<html>asset ' + new URL(req.url).pathname + '</html>', { headers: { 'content-type': 'text/html' } }) };
+const call = (path, init = {}, env = {}) => worker.fetch(new Request('https://utilityra.test' + path, init), { ASSETS, ...env });
+const ai = (body, env, headers = {}) => call('/api/ai', { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(body) }, env);
+const okAI = { AI: { run: async () => ({ response: 'مرحبا' }) } };
 
-function req(path, options = {}) {
-  return new Request("https://api.example.test" + path, {
-    ...options,
-    headers: { Origin: origin, ...(options.headers || {}) }
-  });
-}
+test('health reports providers', async () => {
+  const r = await call('/health', {}, okAI); const j = await r.json();
+  assert.equal(r.status, 200); assert.equal(j.ok, true); assert.deepEqual(j.ai, ['workers-ai']);
+});
+test('non-API paths fall through to assets', async () => {
+  const r = await call('/tools/word-counter/'); assert.match(await r.text(), /asset \/tools\/word-counter/);
+});
+test('ai: success via Workers AI', async () => {
+  const r = await ai({ tool: 'ai-summarizer', message: 'نص طويل للتلخيص' }, okAI); const j = await r.json();
+  assert.equal(r.status, 200); assert.equal(j.answer, 'مرحبا'); assert.equal(j.provider, 'workers-ai');
+});
+test('ai: rejects unknown tool, empty and oversize messages', async () => {
+  assert.equal((await ai({ tool: 'nope', message: 'x' }, okAI)).status, 400);
+  assert.equal((await ai({ tool: 'ai-summarizer', message: '   ' }, okAI)).status, 400);
+  assert.equal((await ai({ tool: 'ai-summarizer', message: 'x'.repeat(8001) }, okAI)).status, 413);
+});
+test('ai: requires JSON content-type', async () => {
+  const r = await call('/api/ai', { method: 'POST', headers: { 'content-type': 'text/plain' }, body: '{}' }, okAI);
+  assert.equal(r.status, 415);
+});
+test('ai: 503 when no provider configured', async () => {
+  const r = await ai({ tool: 'ai-summarizer', message: 'hi' }, {}); assert.equal(r.status, 503); assert.equal((await r.json()).error, 'PROVIDER_NOT_CONFIGURED');
+});
+test('ai: GET not allowed; foreign origin blocked', async () => {
+  assert.equal((await call('/api/ai', {}, okAI)).status, 405);
+  assert.equal((await ai({ tool: 'ai-summarizer', message: 'hi' }, okAI, { origin: 'https://evil.example' })).status, 403);
+});
+test('ai: allow-listed origin gets CORS header', async () => {
+  const r = await ai({ tool: 'ai-summarizer', message: 'hi' }, { ...okAI, ALLOWED_ORIGINS: 'https://utilityra.com' }, { origin: 'https://utilityra.com' });
+  assert.equal(r.headers.get('access-control-allow-origin'), 'https://utilityra.com');
+});
+test('ai: falls back to next provider and hides upstream errors', async () => {
+  const bad = { AI: { run: async () => { throw new Error('secret upstream detail'); } } };
+  const r = await ai({ tool: 'ai-summarizer', message: 'hi' }, bad); const t = await r.text();
+  assert.equal(r.status, 502); assert.ok(!t.includes('secret upstream'));
+});
+test('unknown /api path is 404 JSON', async () => { const r = await call('/api/zzz'); assert.equal(r.status, 404); });
 
-test("tool routes fall back to the root SPA asset", async () => {
-  const requested = [];
-  const ASSETS = {
-    fetch: async request => {
-      const path = new URL(request.url).pathname;
-      requested.push(path);
-      if (path === "/") return new Response("<!doctype html><title>Utilityra</title>", {
-        status: 200, headers: { "content-type": "text/html; charset=utf-8" }
-      });
-      return new Response("Not found", { status: 404 });
-    }
-  };
-  const response = await worker.fetch(req("/tools/image-resizer"), { ASSETS });
-  assert.equal(response.status, 200);
-  assert.match(await response.text(), /Utilityra/);
-  assert.ok(requested.includes("/"), "SPA fallback must request the root asset");
+test('inspect: SSRF guard blocks private/loopback targets', () => {
+  for (const h of ['localhost', '127.0.0.1', '10.0.0.5', '192.168.1.1', '172.16.0.1', '169.254.169.254', '[::1]', 'intranet', '2130706433', '0x7f000001', 'foo.local'])
+    assert.equal(isBlockedHost(h.replace(/^\[|\]$/g, '')), true, h);
+  assert.equal(isBlockedHost('example.com'), false);
+  assert.equal(parseTarget('http://user:pw@example.com'), null);
+  assert.equal(parseTarget('ftp://example.com'), null);
+  assert.equal(parseTarget('https://example.com:8080'), null);
+  assert.ok(parseTarget('example.com'));
+});
+test('inspect: returns headers/html and blocks redirect to private host', async () => {
+  const f = async () => new Response('<title>x</title>', { headers: { 'content-type': 'text/html', 'x-test': '1' } });
+  const r = await inspectUrl('example.com', f); assert.equal(r.status, 200); assert.equal(r.body.headers['x-test'], '1'); assert.match(r.body.html, /title/);
+  const g = async () => new Response(null, { status: 302, headers: { location: 'http://127.0.0.1/admin' } });
+  assert.equal((await inspectUrl('example.com', g)).body.error, 'REDIRECT_BLOCKED');
+  assert.equal((await inspectUrl('http://localhost')).status, 400);
+});
+test('inspect endpoint validates url', async () => {
+  const r = await call('/api/inspect?url=http://127.0.0.1'); assert.equal(r.status, 400);
 });
 
-test("health endpoint reports safe capability flags without exposing secrets", async () => {
-  const response = await worker.fetch(req("/health"), {});
-  const body = await response.json();
-  assert.equal(response.status, 200);
-  assert.equal(body.ok, true);
-  assert.equal(body.capabilities.dataStoreConfigured, false);
-  assert.equal(body.capabilities.workersAIConfigured, false);
-  assert.equal(response.headers.get("access-control-allow-origin"), origin);
-  assert.equal(JSON.stringify(body).includes("API_KEY"), false);
+test('admin: token sign/verify, expiry and tamper detection', async () => {
+  const exp = Math.floor(Date.now() / 1000) + 60; const tok = await makeToken('s3cret', exp);
+  assert.equal(await validToken(tok, 's3cret'), true);
+  assert.equal(await validToken(tok, 'other'), false);
+  assert.equal(await validToken(tok.replace(/^\d+/, String(exp + 999)), 's3cret'), false);
+  assert.equal(await validToken(await makeToken('s3cret', 1), 's3cret'), false);
+  assert.equal(await sameSecret('a', 'a'), true); assert.equal(await sameSecret('a', 'b'), false);
 });
-
-test("unapproved browser origin is rejected", async () => {
-  const response = await worker.fetch(new Request("https://api.example.test/health", {
-    headers: { Origin: "https://attacker.example" }
-  }), {});
-  assert.equal(response.status, 403);
+test('admin: routes are 503 unconfigured and 401 unauthenticated', async () => {
+  assert.equal((await call('/api/admin/stats')).status, 503);
+  const env = { DB: {}, ADMIN_PASSWORD: 'p', ADMIN_SESSION_SECRET: 's' };
+  assert.equal((await call('/api/admin/stats', {}, env)).status, 401);
+  assert.equal((await call('/api/admin/engineer/run', { method: 'POST' }, env)).status, 401);
 });
-
-test("D1 endpoints fail closed when no database binding exists", async () => {
-  const collections = await worker.fetch(req("/api/data/collections"), {});
-  const search = await worker.fetch(req("/api/data/search?q=json"), {});
-  assert.equal(collections.status, 503);
-  assert.equal((await collections.json()).error, "DATA_STORE_NOT_CONFIGURED");
-  assert.equal(search.status, 503);
-  assert.equal((await search.json()).error, "DATA_STORE_NOT_CONFIGURED");
+test('analytics: ignores when DB missing, rejects bad payloads', async () => {
+  const post = (b, env) => call('/api/analytics/event', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(b) }, env);
+  assert.equal((await post({ visitorKey: 'a'.repeat(20), eventType: 'page_view' }, {})).status, 202);
+  const rows = []; const DB = { prepare: () => ({ bind: (...a) => ({ run: async () => rows.push(a) }) }) };
+  assert.equal((await post({ visitorKey: 'short', eventType: 'page_view' }, { DB })).status, 400);
+  assert.equal((await post({ visitorKey: 'a'.repeat(20), eventType: 'hack' }, { DB })).status, 400);
+  const ok = await post({ visitorKey: 'a'.repeat(20), eventType: 'search_miss', path: '/x', searchTerm: 'mail me a@b.com 01012345678' }, { DB });
+  assert.equal(ok.status, 202); assert.equal(rows.length, 1); assert.ok(!/a@b\.com|01012345678/.test(rows[0].join('|')));
 });
-
-test("data search rejects short queries and invalid collection keys", async () => {
-  const db = { prepare() { return { bind() { return this; }, all: async () => ({ results: [] }) }; } };
-  const short = await worker.fetch(req("/api/data/search?q=a"), { DB: db });
-  const invalid = await worker.fetch(req("/api/data/search?q=json&collection=bad%20key"), { DB: db });
-  assert.equal(short.status, 400);
-  assert.equal(invalid.status, 400);
-});
-
-test("data search uses a parameterized query and returns only normalized public fields", async () => {
-  let sql = "";
-  let params = [];
-  const row = {
-    id: 7, collection_key: "mime-types", record_key: "json", title: "JSON data",
-    summary: "MIME type", payload_json: '{"mime":"application/json"}',
-    source_name: "IANA", source_url: "https://www.iana.org/assignments/media-types/media-types.xhtml",
-    license_notes: "Check source", fetched_at: null, verified_at: "2026-10-22T00:00:00Z", updated_at: "2026-10-22T00:00:00Z"
-  };
-  const db = { prepare(query) { sql = query; return { bind(...values) { params = values; return this; }, all: async () => ({ results: [row] }) }; } };
-  const response = await worker.fetch(req("/api/data/search?q=json"), { DB: db });
-  const body = await response.json();
-  assert.equal(response.status, 200);
-  assert.equal(body.count, 1);
-  assert.equal(body.results[0].data.mime, "application/json");
-  assert.equal(body.results[0].sourceUrl, row.source_url);
-  assert.match(sql, /r\.status = 'verified'/);
-  assert.ok(params.length >= 5);
-});
-
-test("malformed JSON is rejected before provider calls", async () => {
-  const response = await worker.fetch(req("/api/ai", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: "{"
-  }), {});
-  assert.equal(response.status, 400);
-  assert.equal((await response.json()).error, "INVALID_JSON");
-});
-
-test("invalid AI provider is rejected", async () => {
-  const response = await worker.fetch(req("/api/ai", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ provider: "unknown", message: "hello" })
-  }), {});
-  assert.equal(response.status, 400);
-  assert.equal((await response.json()).error, "INVALID_PROVIDER");
-});
-
-test("AI endpoint reports missing provider configuration without leaking details", async () => {
-  const response = await worker.fetch(req("/api/ai", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ provider: "openai", message: "Explain JSON" })
-  }), {});
-  assert.equal(response.status, 503);
-  const body = await response.json();
-  assert.equal(body.error, "PROVIDER_NOT_CONFIGURED");
-  assert.equal(body.message, "This AI provider is not configured yet.");
-});
-
-
-test("Workers AI can run through the gateway when explicitly bound", async () => {
-  let model = "";
-  const AI = { run: async (requestedModel, options) => {
-    model = requestedModel;
-    assert.equal(options.messages[1].role, "user");
-    return { response: "Safe test response" };
-  }};
-  const response = await worker.fetch(req("/api/ai", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ provider: "workers-ai", message: "Explain JSON" })
-  }), { AI });
-  const body = await response.json();
-  assert.equal(response.status, 200);
-  assert.equal(body.provider, "workers-ai");
-  assert.equal(body.reply, "Safe test response");
-  assert.equal(model, "@cf/meta/llama-3.1-8b-instruct");
-});
-
-test("Workers AI fails safely when the optional binding is absent", async () => {
-  const response = await worker.fetch(req("/api/ai", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ provider: "workers-ai", message: "Explain JSON" })
-  }), {});
-  assert.equal(response.status, 503);
-  assert.equal((await response.json()).error, "PROVIDER_NOT_CONFIGURED");
-});
-
-
-test("admin statistics are not public without a signed session", async () => {
-  const response = await worker.fetch(req("/api/admin/stats"), {});
-  assert.equal(response.status, 401);
-  assert.equal((await response.json()).error, "UNAUTHORIZED");
-});
-
-test("admin login issues an HttpOnly Secure session and session check accepts it", async () => {
-  const statements = [];
-  const DB = {
-    prepare(sql) {
-      const statement = { sql, args: [],
-        bind(...args) { this.args = args; return this; },
-        first: async () => null,
-        run: async function() { statements.push({ sql: this.sql, args: this.args }); return { success: true }; },
-        all: async () => ({ results: [] })
-      };
-      return statement;
-    }
-  };
-  const env = { DB, ADMIN_PASSWORD: "test-only-admin-password", ADMIN_SESSION_SECRET: "test-only-session-secret-which-is-long" };
-  const login = await worker.fetch(req("/api/admin/login", {
-    method: "POST", headers: { "content-type": "application/json" },
-    body: JSON.stringify({ password: env.ADMIN_PASSWORD })
-  }), env);
-  assert.equal(login.status, 200);
-  const cookie = login.headers.get("set-cookie");
-  assert.match(cookie, /HttpOnly/);
-  assert.match(cookie, /Secure/);
-  assert.match(cookie, /SameSite=Strict/);
-  const token = cookie.split(";")[0];
-  const session = await worker.fetch(req("/api/admin/session", { headers: { Cookie: token } }), env);
-  assert.equal(session.status, 200);
-  assert.equal((await session.json()).authenticated, true);
-  assert.ok(statements.some(s => s.sql.includes("DELETE FROM admin_login_attempts")));
-});
-
-test("analytics drops flagged review traffic and stores only minimized event fields", async () => {
-  const writes = [];
-  const DB = { prepare(sql) { return { sql, args: [], bind(...args) { this.args = args; return this; }, run: async function(){ writes.push({sql:this.sql,args:this.args}); return {success:true}; } }; } };
-  const review = await worker.fetch(req("/api/analytics/event", {
-    method: "POST", headers: { "content-type": "application/json" },
-    body: JSON.stringify({ visitorKey: "visitor-session-123456", eventType: "page_view", path: "/", reviewMode: true })
-  }), { DB });
-  assert.equal(review.status, 202);
-  assert.equal((await review.json()).ignored, true);
-  assert.equal(writes.length, 0);
-  const response = await worker.fetch(req("/api/analytics/event", {
-    method: "POST", headers: { "content-type": "application/json" },
-    body: JSON.stringify({ visitorKey: "visitor-session-123456", eventType: "search_miss", path: "/?q=x", searchTerm: "Need help at user@example.com 123-456-7890", referrer: "https://search.example/path" })
-  }), { DB });
-  assert.equal(response.status, 202);
-  assert.equal(writes.length, 1);
-  assert.equal(writes[0].args[0], "visitor-session-123456");
-  assert.equal(writes[0].args[1], "search_miss");
-  assert.match(writes[0].args[4], /email/);
-  assert.match(writes[0].args[4], /number/);
-  assert.doesNotMatch(writes[0].args[4], /user@example\\.com|123-456-7890/);
-  assert.equal(writes[0].args[2], "/");
-});
-
-
-test("GDELT trends endpoint validates queries and returns normalized source links", async () => {
-  const originalFetch = globalThis.fetch;
-  let requested = "";
-  globalThis.fetch = async input => {
-    requested = String(input);
-    return new Response(JSON.stringify({ articles: [
-      { title: "Example public report", url: "https://news.example/story", domain: "news.example", seendate: "20261022T010000Z", language: "English", sourceCountry: "United States" },
-      { title: "Unsafe link", url: "javascript:alert(1)", domain: "bad.example" }
-    ] }), { status: 200, headers: { "content-type": "application/json" } });
-  };
-  try {
-    const invalid = await worker.fetch(req("/api/trends?q=x"), {});
-    assert.equal(invalid.status, 400);
-    const response = await worker.fetch(req("/api/trends?q=climate%20policy"), {});
-    const body = await response.json();
-    assert.equal(response.status, 200);
-    assert.equal(body.source, "GDELT DOC 2.0");
-    assert.equal(body.count, 1);
-    assert.equal(body.articles[0].url, "https://news.example/story");
-    assert.match(requested, /api\.gdeltproject\.org\/api\/v2\/doc\/doc/);
-    assert.match(requested, /timespan=7d/);
-    assert.equal(response.headers.get("cache-control"), "public, max-age=300, stale-while-revalidate=300");
-  } finally {
-    globalThis.fetch = originalFetch;
-  }
-});
-
-
-test("current AI questions receive recent GDELT sources and return citations metadata", async () => {
-  const originalFetch = globalThis.fetch;
-  let prompt = "";
-  globalThis.fetch = async input => {
-    assert.match(String(input), /api\.gdeltproject\.org/);
-    return new Response(JSON.stringify({ articles: [
-      { title: "Recent public report", url: "https://news.example/current", domain: "news.example", seendate: "20261022T010000Z", language: "English", sourceCountry: "United States" }
-    ] }), { status: 200, headers: { "content-type": "application/json" } });
-  };
-  const AI = { run: async (_model, options) => { prompt = options.messages[1].content; return { response: "Here is a source-grounded summary: https://news.example/current" }; } };
-  try {
-    const response = await worker.fetch(req("/api/ai", {
-      method: "POST", headers: { "content-type": "application/json" },
-      body: JSON.stringify({ provider: "workers-ai", message: "What is the latest news about climate policy?" })
-    }), { AI });
-    const body = await response.json();
-    assert.equal(response.status, 200);
-    assert.equal(body.sources.length, 1);
-    assert.equal(body.sources[0].url, "https://news.example/current");
-    assert.match(prompt, /GDELT/);
-    assert.match(prompt, /https:\/\/news\.example\/current/);
-  } finally {
-    globalThis.fetch = originalFetch;
-  }
-});
-
-test("unknown routes return JSON 404", async () => {
-  const response = await worker.fetch(req("/not-a-route"), {});
-  assert.equal(response.status, 404);
-  assert.equal((await response.json()).error, "NOT_FOUND");
+test('engineer: health checks detect failures', async () => {
+  const f = async (u) => (u.endsWith('/') && !u.includes('word') ? new Response('Utilityra <h1', { status: 200 }) : new Response('x', { status: 500 }));
+  const res = await runChecks('https://x.test', f); assert.ok(res.some((r) => r.ok)); assert.ok(res.some((r) => !r.ok));
 });

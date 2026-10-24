@@ -1,0 +1,31 @@
+# Utilityra — Cloudflare Worker + static assets (built into ./dist by `npm run build`).
+name = "utilityra"
+main = "worker/src/index.js"
+compatibility_date = "2026-10-01"
+workers_dev = true
+
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+not_found_handling = "404-page"
+# Only the API and health endpoints run the Worker first; pages are served straight from assets.
+run_worker_first = ["/api/*", "/health"]
+
+[vars]
+# Extra origins allowed to call /api/* (comma separated). The site's own origin is always allowed.
+ALLOWED_ORIGINS = ""
+
+# Workers AI powers the AI tools by default (no API key needed). Check account limits/pricing.
+[ai]
+binding = "AI"
+
+# OPTIONAL — analytics, admin dashboard and the technical-engineer incident log need D1:
+#   npx wrangler d1 create utilityra-data     (copy the id below, then uncomment)
+#   npx wrangler d1 execute utilityra-data --remote --file=worker/schema.sql
+#   npx wrangler secret put ADMIN_PASSWORD ; npx wrangler secret put ADMIN_SESSION_SECRET
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "utilityra-data"
+# database_id = "PUT_REAL_ID_HERE"
+
+# OPTIONAL secrets for other AI providers: OPENAI_API_KEY, GEMINI_API_KEY (never commit them).
