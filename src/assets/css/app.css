@@ -266,3 +266,22 @@ input[type="file"]::file-selector-button:hover { filter: brightness(1.08); }
 .ck { display: inline-flex; gap: 6px; align-items: center; font-size: 13.5px; }
 .bubble pre { overflow: auto; padding: 12px; padding-top: 30px; border-radius: 10px; background: var(--paper); direction: ltr; text-align: left; }
 @media (max-width: 380px) { .hdr .in { gap: 8px; } .hbtn { min-width: 36px; height: 36px; padding: 6px 8px; } }
+
+/* ---- Type scale v3: one consistent hierarchy; Arabic never uses mono/uppercase ---- */
+:root { --t-xs: 12.5px; --t-sm: 14px; --t-md: 16px; --t-lg: 18px; --t-h3: 19px; --t-h2: clamp(24px, 3vw, 32px); --t-h1: clamp(30px, 4.4vw, 46px); --gap: 16px; }
+html[lang="ar"] body { font-size: var(--t-md); line-height: 1.7; }
+html[lang="ar"] h1, html[lang="ar"] h2, html[lang="ar"] h3, html[lang="ar"] h4 { font-family: var(--sans); font-weight: 700; letter-spacing: 0; line-height: 1.35; }
+html[lang="ar"] .logo { font-family: var(--serif); }
+html[lang="ar"] .ftr-b, html[lang="ar"] .ftr-b *, html[lang="ar"] .ftr .mono, html[lang="ar"] .fb, html[lang="ar"] .fbot, html[lang="ar"] .fbot a, html[lang="ar"] .eyebrow, html[lang="ar"] .tcard .tag, html[lang="ar"] .rc-l, html[lang="ar"] .step i, html[lang="ar"] .how .n { font-family: var(--sans); text-transform: none; letter-spacing: 0; }
+h1 { font-size: var(--t-h1); } h2 { font-size: var(--t-h2); } h3 { font-size: var(--t-h3); }
+.hero h1 { font-size: clamp(34px, 5.4vw, 60px); }
+.tool-page h1, .ttl h1 { font-size: var(--t-h1); }
+.tcard h3, .ccat h3 { font-size: var(--t-md); } .tcard p, .ccat p { font-size: var(--t-sm); color: var(--muted); }
+.panel h2 { font-size: var(--t-h3); margin: 0 0 var(--gap); }
+.panel .fld + .fld, .panel form > .btn, .panel form > button, .panel .fld + .btn { margin-top: var(--gap); }
+#lf { display: flex; flex-direction: column; gap: var(--gap); } #lf .btn { align-self: flex-start; min-width: 120px; justify-content: center; } #lf h2 { margin: 0; }
+.tool-status { font-size: var(--t-sm); line-height: 1.6; margin: 0; }
+.stat .v, .kpi .v { font-size: 28px; font-weight: 700; } .stat .l, .kpi .l { font-size: var(--t-xs); color: var(--muted); }
+.copy, .copy span, .copy a { font-family: var(--sans); text-transform: none; letter-spacing: 0; font-size: var(--t-xs); }
+html[lang="ar"] .copy, html[lang="ar"] .copy * { font-family: var(--sans); }
+#lf { margin-inline: auto; max-width: 440px; width: 100%; }
