@@ -17,12 +17,12 @@
     });
   }
   const tbl = (head, rows) => `<div class="tblwrap"><table class="tbl"><thead><tr>${head.map((h) => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.map((r) => `<tr>${r.map((c) => `<td>${esc(c)}</td>`).join('')}</tr>`).join('') || `<tr><td colspan="${head.length}">—</td></tr>`}</tbody></table></div>`;
-  const TABS = [['dash', 'لوحة المعلومات', 'Dashboard'], ['tools', 'إدارة الأدوات', 'Tools'], ['inc', 'المهندس التقني', 'Engineer'], ['set', 'إعدادات الموقع', 'Settings'], ['dev', 'مساعد المطوّر', 'Dev assistant'], ['log', 'سجل النشاط', 'Activity log']];
+  const TABS = [['dash', 'لوحة المعلومات', 'Dashboard'], ['tools', 'إدارة الأدوات', 'Tools'], ['inc', 'المهندس التقني', 'Engineer'], ['reports', 'بلاغات الزوار', 'Reports'], ['set', 'إعدادات الموقع', 'Settings'], ['dev', 'مساعد المطوّر', 'Dev assistant'], ['log', 'سجل النشاط', 'Activity log']];
   function shell() {
     root.innerHTML = `<div class="chips" role="tablist">${TABS.map((x) => `<button class="chip${x[0] === tab ? ' on' : ''}" role="tab" aria-selected="${x[0] === tab}" data-tab="${x[0]}">${t(x[1], x[2])}</button>`).join('')}<button class="chip" id="out" style="margin-inline-start:auto">${t('تسجيل الخروج', 'Sign out')}</button></div><div id="view" aria-live="polite"></div>`;
     root.querySelectorAll('[data-tab]').forEach((b) => b.addEventListener('click', () => { tab = b.dataset.tab; shell(); }));
     $('#out').onclick = async () => { await post('/api/admin/logout'); login(); };
-    ({ dash, tools, inc, set, dev, log })[tab]();
+    ({ dash, tools, inc, reports, set, dev, log })[tab]();
   }
   const guard = (r) => { if (r.status === 401) { login(); return false; } if (!r.ok) { $('#view').innerHTML = `<p class="tool-status err">${t('تعذّر جلب البيانات.', 'Could not load data.')}</p>`; return false; } return true; };
 
@@ -47,6 +47,20 @@
     $('#view').innerHTML = `<p>${t('يفحص الموقع ويسجّل أي عطل مع تشخيص مقترح. لا يُنفَّذ أي تعديل تلقائيًا.', 'Checks the site and logs any failure with a proposed diagnosis. Nothing is changed automatically.')}</p><button class="btn primary" id="run">${t('شغّل الفحص الآن', 'Run health check now')}</button><div id="chk" aria-live="polite"></div><div id="incs">${incTable(r.j.incidents || [])}</div>`;
     $('#run').onclick = async (e) => { e.target.disabled = true; $('#chk').innerHTML = `<p>${t('جارٍ الفحص…', 'Checking…')}</p>`; const x = await post('/api/admin/engineer/run'); e.target.disabled = false; if (!x.ok) { $('#chk').innerHTML = `<p class="tool-status err">${t('فشل الفحص.', 'Check failed.')}</p>`; return; } $('#chk').innerHTML = `<p class="tool-status ${x.j.ok ? '' : 'err'}">${x.j.ok ? t('كل الفحوص ناجحة ✓', 'All checks passed ✓') : t('توجد فحوص فاشلة', 'Some checks failed')}</p>` + tbl(['check', 'path', 'status', 'ms', 'ok'], x.j.results.map((y) => [y.key, y.path, y.status, y.ms, y.ok ? '✓' : '✗'])); const i = await api('/api/admin/incidents'); $('#incs').innerHTML = incTable((i.j || {}).incidents || []); };
     $('#view').onclick = async (e) => { const b = e.target.closest('[data-inc]'); if (!b) return; await post('/api/admin/incidents/status', { id: +b.dataset.inc, status: b.dataset.st }); inc(); };
+  }
+  async function reports() {
+    const r = await api('/api/admin/reports'); if (!guard(r)) return;
+    const items = r.j.reports || [];
+    const labels = { new: t('جديد', 'New'), reviewing: t('قيد المراجعة', 'Reviewing'), resolved: t('تم الحل', 'Resolved'), closed: t('مغلق', 'Closed') };
+    const kinds = { bug: t('مشكلة', 'Bug'), suggestion: t('اقتراح', 'Suggestion'), other: t('أخرى', 'Other') };
+    $('#view').innerHTML = `<p>${t('بلاغات ومقترحات الزوار المرسلة من صفحة اتصل بنا. تغيير الحالة يحفظ مباشرة في قاعدة البيانات.', 'Visitor reports and suggestions submitted through Contact. Status changes are saved to the database.')}</p><div class="cards">${[['new', items.filter(x => x.status === 'new').length], ['reviewing', items.filter(x => x.status === 'reviewing').length], ['resolved', items.filter(x => x.status === 'resolved').length]].map(x => `<div class="rc"><span class="rc-l">${labels[x[0]]}</span><b class="rc-v">${x[1]}</b></div>`).join('')}</div>${items.length ? items.map(x => `<details class="panel" style="margin-block:12px" ${x.status === 'new' ? 'open' : ''}><summary><b>#${x.id}</b> ${esc(kinds[x.type] || x.type)} — <span class="label">${esc(labels[x.status] || x.status)}</span> <small>${esc(x.created_at)}</small></summary><p style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(x.message)}</p>${x.page ? `<p>${t('الصفحة:', 'Page:')} <a href="${esc(x.page)}">${esc(x.page)}</a></p>` : ''}${x.email ? `<p>${t('بريد التواصل:', 'Contact email:')} <a href="mailto:${esc(x.email)}">${esc(x.email)}</a></p>` : `<p>${t('لم يترك الزائر بريدًا للتواصل.', 'No contact email provided.')}</p>`}<div class="chips">${['new', 'reviewing', 'resolved', 'closed'].map(s => `<button class="btn ghost" data-report="${x.id}" data-st="${s}" ${x.status === s ? 'disabled' : ''}>${labels[s]}</button>`).join('')}</div></details>`).join('') : `<p>${t('لا توجد بلاغات حتى الآن.', 'No reports yet.')}</p>`}`;
+    $('#view').onclick = async (e) => {
+      const button = e.target.closest('[data-report]'); if (!button) return;
+      button.disabled = true;
+      const saved = await post('/api/admin/reports/status', { id: Number(button.dataset.report), status: button.dataset.st });
+      if (!saved.ok) { button.disabled = false; alert(t('تعذّر تحديث حالة البلاغ.', 'Could not update report status.')); return; }
+      reports();
+    };
   }
   async function set() {
     const r = await api('/api/admin/settings'); if (!guard(r)) return; const s = r.j.settings || {};
