@@ -46,7 +46,9 @@ export const TOOL_GEN = {
   "excel-formula-helper": { max_tokens: 900, temperature: 0.1 }, "ai-quiz-generator": { max_tokens: 2600, temperature: 0.5 }, "ai-blog-writer": { max_tokens: 3200, temperature: 0.7 },
   "ai-social-posts": { max_tokens: 1200, temperature: 0.8 }, "ai-name-ideas": { max_tokens: 900, temperature: 0.9 }, "ai-seo-titles": { max_tokens: 900, temperature: 0.7 }
 };
-export const genFor = (tool) => ({ ...DEFAULT_GEN, ...(TOOL_GEN[tool] || {}) });
+// Tools that benefit most from the strongest model (reasoning, code, long-form). Others use the cheaper default model.
+export const STRONG_TOOLS = new Set(["ai-assistant", "ai-code-debugger", "ai-code-explainer", "ai-sql-generator", "ai-regex-generator", "excel-formula-helper", "ai-blog-writer", "ai-study-explainer", "ai-resume-writer"]);
+export const genFor = (tool) => ({ ...DEFAULT_GEN, ...(TOOL_GEN[tool] || {}), strong: STRONG_TOOLS.has(tool) });
 const MODELS = { primary: "@cf/meta/llama-3.3-70b-instruct-fp8-fast", fallback: "@cf/meta/llama-3.1-8b-instruct" };
 const buckets = new Map();
 export const _resetRate = () => buckets.clear();
@@ -144,30 +146,42 @@ async function viaWorkersAI(messages, env, gen = DEFAULT_GEN) {
 }
 async function viaOpenAI(messages, env, gen = DEFAULT_GEN) {
   if (!env.OPENAI_API_KEY) throw Object.assign(new Error("PROVIDER_NOT_CONFIGURED"), { status: 503 });
-  const res = await fetch(gw(env, "openai", "https://api.openai.com/v1") + "/chat/completions", { method: "POST", headers: { authorization: `Bearer ${env.OPENAI_API_KEY}`, "content-type": "application/json", ...gwAuth(env) }, body: JSON.stringify({ model: env.OPENAI_MODEL || "gpt-4.1-mini", messages, max_tokens: gen.max_tokens, temperature: gen.temperature }) });
+  const res = await fetch(gw(env, "openai", "https://api.openai.com/v1") + "/chat/completions", { method: "POST", headers: { authorization: `Bearer ${env.OPENAI_API_KEY}`, "content-type": "application/json", ...gwAuth(env) }, body: JSON.stringify({ model: env.OPENAI_MODEL || (gen.strong ? "gpt-4.1" : "gpt-4.1-mini"), messages, max_tokens: gen.max_tokens, temperature: gen.temperature }) });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw Object.assign(new Error("UPSTREAM_ERROR"), { status: res.status === 429 ? 429 : 502 });
   const text = data?.choices?.[0]?.message?.content?.trim();
   if (!text) throw Object.assign(new Error("EMPTY_PROVIDER_RESPONSE"), { status: 502 });
   return text;
 }
+// Model chain for Anthropic: strong tools try the strongest available model first and step down if the account/model is unavailable.
+export const anthropicChain = (env, strong) => (strong
+  ? [...new Set([env.ANTHROPIC_MODEL_STRONG || "claude-fable-5-1", "claude-opus-5-5", env.ANTHROPIC_MODEL || "claude-sonnet-5-5"])]
+  : [env.ANTHROPIC_MODEL || "claude-sonnet-5-5"]);
 async function viaAnthropic(messages, env, gen = DEFAULT_GEN) {
   if (!env.ANTHROPIC_API_KEY) throw Object.assign(new Error("PROVIDER_NOT_CONFIGURED"), { status: 503 });
   const system = messages.find((m) => m.role === "system")?.content || "";
   const msgs = messages.filter((m) => m.role !== "system").map((m) => ({ role: m.role, content: m.content }));
   const base = env.AI_GATEWAY_URL ? `${String(env.AI_GATEWAY_URL).replace(/\/$/, "")}/anthropic` : "https://api.anthropic.com";
-  const res = await fetch(base + "/v1/messages", { method: "POST", headers: { "x-api-key": env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "content-type": "application/json", ...gwAuth(env) }, body: JSON.stringify({ model: env.ANTHROPIC_MODEL || "claude-sonnet-5-5", max_tokens: gen.max_tokens, temperature: gen.temperature, system, messages: msgs }) });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw Object.assign(new Error("UPSTREAM_ERROR"), { status: res.status === 429 ? 429 : 502 });
-  const text = (data?.content || []).map((c) => c.text || "").join("").trim();
-  if (!text) throw Object.assign(new Error("EMPTY_PROVIDER_RESPONSE"), { status: 502 });
-  return text;
+  let last;
+  for (const model of anthropicChain(env, gen.strong)) {
+    const res = await fetch(base + "/v1/messages", { method: "POST", headers: { "x-api-key": env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "content-type": "application/json", ...gwAuth(env) }, body: JSON.stringify({ model, max_tokens: gen.max_tokens, temperature: gen.temperature, system, messages: msgs }) });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      const text = (data?.content || []).map((c) => c.text || "").join("").trim();
+      if (text) return text;
+      last = Object.assign(new Error("EMPTY_PROVIDER_RESPONSE"), { status: 502 }); continue;
+    }
+    last = Object.assign(new Error("UPSTREAM_ERROR"), { status: res.status === 429 ? 429 : 502 });
+    if (res.status === 429 || res.status === 401 || res.status === 403) break; // quota / key problems: stepping down will not help
+    // 400/404 (model not available for this account) and 5xx: try the next model in the chain
+  }
+  throw last || Object.assign(new Error("UPSTREAM_ERROR"), { status: 502 });
 }
 async function viaGemini(messages, env, gen = DEFAULT_GEN) {
   if (!env.GEMINI_API_KEY) throw Object.assign(new Error("PROVIDER_NOT_CONFIGURED"), { status: 503 });
   const system = messages.find((m) => m.role === "system")?.content || "";
   const contents = messages.filter((m) => m.role !== "system").map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] }));
-  const model = env.GEMINI_MODEL || "gemini-2.5-flash";
+  const model = env.GEMINI_MODEL || (gen.strong ? "gemini-2.5-pro" : "gemini-2.5-flash");
   const res = await fetch(`${gw(env, "google-ai-studio", "https://generativelanguage.googleapis.com")}/v1beta/models/${encodeURIComponent(model)}:generateContent`, { method: "POST", headers: { "x-goog-api-key": env.GEMINI_API_KEY, "content-type": "application/json", ...gwAuth(env) }, body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents, generationConfig: { maxOutputTokens: gen.max_tokens, temperature: gen.temperature } }) });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw Object.assign(new Error("UPSTREAM_ERROR"), { status: res.status === 429 ? 429 : 502 });
@@ -278,6 +292,6 @@ export default {
 
 export async function askProviders(env, messages) {
   let last;
-  for (const [, fn] of providersFor(env)) { try { return await fn(messages, env); } catch (e) { last = e; if (e.status === 429) break; } }
+  for (const [, fn] of providersFor(env)) { try { return await fn(messages, env, { ...DEFAULT_GEN, max_tokens: 3000, temperature: 0.2, strong: true }); } catch (e) { last = e; if (e.status === 429) break; } }
   throw last || new Error("PROVIDER_NOT_CONFIGURED");
 }
