@@ -313,3 +313,49 @@ input[type="file"]::file-selector-button:hover { filter: brightness(1.08); }
  #admin-root .tbl th, #admin-root .tbl td { padding: 10px; }
 }
 @media (prefers-reduced-motion: reduce) { #admin-root #view { animation: none; } #admin-root .chip, #admin-root .btn { transition: none; } }
+
+
+/* ---------- Responsive consistency pass ---------- */
+:root {
+  --type-xs: .75rem;
+  --type-sm: .875rem;
+  --type-body: 1rem;
+  --type-lead: clamp(1.05rem, 1.6vw, 1.2rem);
+  --type-h3: clamp(1.08rem, 1.7vw, 1.3rem);
+  --type-h2: clamp(1.55rem, 3.2vw, 2.35rem);
+  --type-h1: clamp(2.15rem, 5.2vw, 4.25rem);
+  --section-space: clamp(2.75rem, 6vw, 5.25rem);
+}
+body { font-size: var(--type-body); line-height: 1.65; }
+p { line-height: 1.75; }
+h1 { font-size: var(--type-h1); line-height: 1.14; text-wrap: balance; }
+h2 { font-size: var(--type-h2); line-height: 1.22; text-wrap: balance; }
+h3 { font-size: var(--type-h3); line-height: 1.4; text-wrap: balance; }
+.wrap { width: min(var(--max), calc(100% - clamp(24px, 5vw, 56px))); }
+.sec { padding-block: var(--section-space); }
+.sec-h { max-width: 760px; margin-inline: auto; text-align: center; }
+.sec-h > p { max-width: 62ch; margin: 12px auto 0; color: var(--muted); font-size: var(--type-sm); }
+.tgrid, .cgrid, .f3 { align-items: stretch; }
+.tcard, .ccat, .fcard { min-width: 0; height: 100%; }
+.tcard h3, .ccat h3, .fcard h3 { overflow-wrap: anywhere; }
+.tcard p, .ccat p, .fcard p { font-size: var(--type-sm); line-height: 1.7; }
+.phead { max-width: 860px; }
+.phead h1 { margin-block: 12px; }
+.phead > p { max-width: 68ch; color: var(--muted); }
+.panel, .rc { min-width: 0; }
+.rc-v { overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.stats-note { margin: 0 0 18px; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--r); color: var(--muted); background: var(--paper); font-size: var(--type-sm); }
+.admin-page #admin-root { width: min(100%, 1120px); margin-inline: auto; }
+.admin-page #admin-root h2 { margin-block: 20px 12px; }
+.admin-page #admin-root .cards { align-items: stretch; }
+.admin-page #admin-root .rc { display: flex; flex-direction: column; justify-content: space-between; gap: 12px; }
+@media (max-width: 640px) {
+  .wrap { width: calc(100% - 28px); }
+  .sec { padding-block: 42px; }
+  .hero { padding-top: 100px; min-height: auto; padding-bottom: 120px; }
+  .hero h1 { font-size: clamp(2.1rem, 9vw, 3.25rem); line-height: 1.25; }
+  .hero p.sub { font-size: 15px; line-height: 1.8; }
+  .sec-h { text-align: start; }
+  .sec-h > p { margin-inline: 0; }
+  .admin-page #admin-root .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
