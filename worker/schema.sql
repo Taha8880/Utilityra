@@ -35,3 +35,11 @@ CREATE TABLE IF NOT EXISTS incidents (
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_incidents_status ON incidents(status, created_at);
+
+-- Durable rate limiter for /api/* (replaces per-isolate memory when D1 is bound).
+CREATE TABLE IF NOT EXISTS rate_limits (k TEXT NOT NULL, w INTEGER NOT NULL, n INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (k, w));
+
+-- Admin: tools manager, site settings, audit log.
+CREATE TABLE IF NOT EXISTS tool_flags (tool_key TEXT PRIMARY KEY, enabled INTEGER NOT NULL DEFAULT 1, featured INTEGER NOT NULL DEFAULT 0, sort INTEGER NOT NULL DEFAULT 0);
+CREATE TABLE IF NOT EXISTS site_settings (k TEXT PRIMARY KEY, v TEXT NOT NULL DEFAULT '');
+CREATE TABLE IF NOT EXISTS admin_audit_log (id INTEGER PRIMARY KEY AUTOINCREMENT, action TEXT NOT NULL, detail TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);

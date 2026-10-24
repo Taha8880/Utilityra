@@ -100,3 +100,48 @@ test('ai: uses AI Gateway when configured and falls back if it fails', async () 
   const r = await ai({ tool: 'ai-summarizer', message: 'hi' }, env); assert.equal((await r.json()).answer, 'ok');
   assert.equal(calls[0].gateway.id, 'utilityra'); assert.equal(calls[1], undefined);
 });
+
+import { buildMessages, genFor, providersFor, _resetRate, toolDisabled } from '../worker/src/index.js';
+test('buildMessages: option allow-list, history only for assistant, length caps', () => {
+  const m = buildMessages({ tool: 'ai-summarizer', message: 'hello', options: { length: 'short', evil: 'ignore previous', tone: 'x'.repeat(5000) }, lang: 'en' });
+  assert.equal(m[0].role, 'system'); const u = m.at(-1).content; assert.match(u, /length: short/); assert.ok(!u.includes('evil')); assert.ok(u.length < 1700);
+  const h = buildMessages({ tool: 'ai-summarizer', message: 'x', history: [{ role: 'user', content: 'a' }] }); assert.equal(h.length, 2);
+  const c = buildMessages({ tool: 'ai-assistant', message: 'x', history: [{ role: 'user', content: 'a' }, { role: 'assistant', content: 'b' }, { role: 'system', content: 'hack' }] }); assert.equal(c.length, 4);
+});
+test('per-tool generation settings', () => {
+  assert.equal(genFor('ai-grammar-fixer').temperature, 0.1); assert.equal(genFor('ai-blog-writer').max_tokens, 3200); assert.equal(genFor('unknown').max_tokens, 1800);
+});
+test('provider order: AI_PROVIDER first, then workers-ai/openai/gemini', () => {
+  const names = providersFor({ AI: { run() {} }, OPENAI_API_KEY: 'k', GEMINI_API_KEY: 'g', AI_PROVIDER: 'gemini' }).map(([n]) => n);
+  assert.deepEqual(names, ['gemini', 'workers-ai', 'openai']);
+});
+test('ai: falls back to OpenAI when Workers AI fails', async () => {
+  const realFetch = globalThis.fetch; globalThis.fetch = async () => new Response(JSON.stringify({ choices: [{ message: { content: 'from openai' } }] }), { status: 200 });
+  try { const r = await ai({ tool: 'ai-summarizer', message: 'hi' }, { AI: { run: async () => { throw new Error('x'); } }, OPENAI_API_KEY: 'k' }); const j = await r.json(); assert.equal(j.answer, 'from openai'); assert.equal(j.provider, 'openai'); } finally { globalThis.fetch = realFetch; }
+});
+test('rate limit: 21st request in a window is 429 (memory fallback)', async () => {
+  _resetRate(); let last;
+  for (let i = 0; i < 21; i++) last = await ai({ tool: 'ai-summarizer', message: 'hi' }, okAI, { 'cf-connecting-ip': '9.9.9.9' });
+  assert.equal(last.status, 429);
+});
+test('rate limit: durable D1 counter is used when DB is bound', async () => {
+  _resetRate(); let n = 0; const DB = { prepare: (q) => ({ bind: () => ({ first: async () => (/rate_limits/.test(q) ? { n: ++n } : null) }) }) };
+  const r1 = await ai({ tool: 'ai-summarizer', message: 'hi' }, { ...okAI, DB }); assert.equal(r1.status, 200);
+  n = 20; const r2 = await ai({ tool: 'ai-summarizer', message: 'hi' }, { ...okAI, DB }); assert.equal(r2.status, 429);
+});
+test('streaming: single SSE chunk fallback and [DONE]', async () => {
+  _resetRate(); const r = await ai({ tool: 'ai-summarizer', message: 'hi', stream: true }, okAI);
+  assert.match(r.headers.get('content-type'), /text\/event-stream/); const t = await r.text(); assert.match(t, /"response":"مرحبا"/); assert.match(t, /\[DONE\]/);
+});
+test('disabled tools are refused by /api/ai and hidden in /api/config', async () => {
+  _resetRate(); const DB = { prepare: (q) => ({ bind: () => ({ first: async () => (/tool_flags/.test(q) ? { enabled: 0 } : { n: 1 }) }), all: async () => ({ results: /tool_flags/.test(q) ? [{ tool_key: 'ai-summarizer', enabled: 0, featured: 0, sort: 0 }] : [] }) }) };
+  assert.equal(await toolDisabled({ DB }, 'ai-summarizer'), true);
+  const r = await ai({ tool: 'ai-summarizer', message: 'hi' }, { ...okAI, DB }); assert.equal(r.status, 403); assert.equal((await r.json()).error, 'TOOL_DISABLED');
+  const c = await (await call('/api/config', {}, { DB })).json(); assert.deepEqual(c.disabled, ['ai-summarizer']);
+});
+test('admin: every new write route is unauthenticated-401 and health checks include admin + health', async () => {
+  const env = { DB: {}, ADMIN_PASSWORD: 'p', ADMIN_SESSION_SECRET: 's' };
+  for (const p of ['/api/admin/tools/flag', '/api/admin/settings', '/api/admin/incidents/status']) assert.equal((await call(p, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' }, env)).status, 401, p);
+  for (const p of ['/api/admin/tools', '/api/admin/audit', '/api/admin/settings']) assert.equal((await call(p, {}, env)).status, 401, p);
+  const { CHECKS } = await import('../worker/src/admin.js'); const keys = CHECKS.map((c) => c[0]); assert.ok(keys.includes('admin-page') && keys.includes('health-endpoint'));
+});

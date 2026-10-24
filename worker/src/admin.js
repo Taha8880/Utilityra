@@ -78,7 +78,9 @@ export const CHECKS = [
   ["robots", "/robots.txt", (r, t) => r.status === 200 && /Sitemap:/i.test(t)],
   ["ads-txt", "/ads.txt", (r) => r.status === 200],
   ["not-found", "/this-page-does-not-exist-xyz/", (r) => r.status === 404],
-  ["legacy-redirect", "/tools/sort-lines", (r) => r.status === 200]
+  ["legacy-redirect", "/tools/sort-lines", (r) => r.status === 200],
+  ["admin-page", "/admin/", (r, t) => r.status === 200 && /admin-root/.test(t)],
+  ["health-endpoint", "/health", (r, t) => r.status === 200 && /"ok":true/.test(t)]
 ];
 export async function runChecks(origin, fetchImpl = fetch) {
   const out = [];
@@ -111,6 +113,18 @@ export async function engineerRun(env, origin, ask) {
 }
 export async function listIncidents(env) { return (await env.DB.prepare("SELECT id,check_key,title,severity,status,detail,diagnosis,created_at,updated_at FROM incidents ORDER BY id DESC LIMIT 50").all()).results || []; }
 
+/* ---------- tools manager, settings, audit log ---------- */
+const SETTING_KEYS = ["maintenance_banner_ar", "maintenance_banner_en", "ai_enabled", "announcement_ar", "announcement_en"];
+export async function audit(env, action, detail) { try { await env.DB.prepare("INSERT INTO admin_audit_log(action,detail) VALUES(?,?)").bind(action, String(detail || "").slice(0, 500)).run(); } catch { /* never break the action */ } }
+export async function publicConfig(env) {
+  if (!env.DB) return { disabled: [], featured: [], settings: {} };
+  try {
+    const flags = (await env.DB.prepare("SELECT tool_key, enabled, featured, sort FROM tool_flags").all()).results || [];
+    const st = (await env.DB.prepare("SELECT k, v FROM site_settings").all()).results || [];
+    return { disabled: flags.filter((f) => Number(f.enabled) === 0).map((f) => f.tool_key), featured: flags.filter((f) => Number(f.featured) === 1).map((f) => f.tool_key), sort: Object.fromEntries(flags.filter((f) => f.sort).map((f) => [f.tool_key, f.sort])), settings: Object.fromEntries(st.filter((x) => SETTING_KEYS.includes(x.k) && !/^(ai_enabled)$/.test(x.k)).map((x) => [x.k, x.v])) };
+  } catch { return { disabled: [], featured: [], settings: {} }; }
+}
+
 /* ---------- router ---------- */
 export async function handleAdmin(request, env, url, json, origin, readJson, ask) {
   const p = url.pathname, m = request.method;
@@ -127,6 +141,7 @@ export async function handleAdmin(request, env, url, json, origin, readJson, ask
     const pw = typeof body.password === "string" ? body.password : "";
     if (!pw || pw.length > 1024 || !(await sameSecret(pw, env.ADMIN_PASSWORD))) { await failLogin(env, t.key); return json({ error: "INVALID_CREDENTIALS" }, 401, origin); }
     await env.DB.prepare("DELETE FROM admin_login_attempts WHERE ip_hash=?").bind(t.key).run();
+    await audit(env, "login", "success");
     const exp = Math.floor(Date.now() / 1000) + SESSION_SECONDS;
     return json({ ok: true, expiresAt: exp }, 200, origin, { "set-cookie": `${COOKIE}=${encodeURIComponent(await makeToken(env.ADMIN_SESSION_SECRET, exp))}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=${SESSION_SECONDS}` });
   }
@@ -137,11 +152,29 @@ export async function handleAdmin(request, env, url, json, origin, readJson, ask
   try {
     if (p === "/api/admin/stats" && m === "GET") return json(await stats(env), 200, origin);
     if (p === "/api/admin/incidents" && m === "GET") return json({ incidents: await listIncidents(env) }, 200, origin);
-    if (p === "/api/admin/engineer/run" && m === "POST") return json(await engineerRun(env, url.origin, ask), 200, origin);
+    if (p === "/api/admin/engineer/run" && m === "POST") { await audit(env, "health_check", "manual run"); return json(await engineerRun(env, url.origin, ask), 200, origin); }
+    if (p === "/api/admin/tools" && m === "GET") return json({ flags: (await env.DB.prepare("SELECT tool_key, enabled, featured, sort FROM tool_flags").all()).results || [] }, 200, origin);
+    if (p === "/api/admin/tools/flag" && m === "POST") {
+      const b = await readJson(request, 1000);
+      if (typeof b.tool_key !== "string" || !/^[a-z0-9][a-z0-9-]{0,79}$/.test(b.tool_key)) return json({ error: "INVALID_REQUEST" }, 400, origin);
+      const en = b.enabled === false || b.enabled === 0 ? 0 : 1, ft = b.featured ? 1 : 0, so = Number.isInteger(b.sort) ? Math.max(0, Math.min(9999, b.sort)) : 0;
+      await env.DB.prepare("INSERT INTO tool_flags(tool_key,enabled,featured,sort) VALUES(?,?,?,?) ON CONFLICT(tool_key) DO UPDATE SET enabled=excluded.enabled, featured=excluded.featured, sort=excluded.sort").bind(b.tool_key, en, ft, so).run();
+      await audit(env, "tool_flag", `${b.tool_key} enabled=${en} featured=${ft} sort=${so}`);
+      return json({ ok: true }, 200, origin);
+    }
+    if (p === "/api/admin/settings" && m === "GET") return json({ settings: Object.fromEntries(((await env.DB.prepare("SELECT k, v FROM site_settings").all()).results || []).map((x) => [x.k, x.v])) }, 200, origin);
+    if (p === "/api/admin/settings" && m === "POST") {
+      const b = await readJson(request, 4000); const entries = Object.entries(b.settings || {}).filter(([k, v]) => SETTING_KEYS.includes(k) && typeof v === "string");
+      for (const [k, v] of entries) await env.DB.prepare("INSERT INTO site_settings(k,v) VALUES(?,?) ON CONFLICT(k) DO UPDATE SET v=excluded.v").bind(k, v.slice(0, 400)).run();
+      await audit(env, "settings", entries.map(([k]) => k).join(","));
+      return json({ ok: true, saved: entries.length }, 200, origin);
+    }
+    if (p === "/api/admin/audit" && m === "GET") return json({ log: (await env.DB.prepare("SELECT id, action, detail, created_at FROM admin_audit_log ORDER BY id DESC LIMIT 100").all()).results || [] }, 200, origin);
     if (p === "/api/admin/incidents/status" && m === "POST") {
       const b = await readJson(request, 1000);
       if (!Number.isInteger(b.id) || !["open", "diagnosed", "fix_proposed", "resolved", "ignored"].includes(b.status)) return json({ error: "INVALID_REQUEST" }, 400, origin);
       await env.DB.prepare("UPDATE incidents SET status=?, updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(b.status, b.id).run();
+      await audit(env, "incident_status", `#${b.id} -> ${b.status}`);
       return json({ ok: true }, 200, origin);
     }
   } catch (e) { return json({ error: "ADMIN_QUERY_FAILED" }, 502, origin); }

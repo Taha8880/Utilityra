@@ -37,8 +37,19 @@ export const PROMPTS = {
 };
 const OPTION_KEYS = new Set(["length", "format", "tone", "to", "style", "mode", "kind", "outLang", "level", "flavor", "examples", "dialect", "schema", "app", "count", "keywords", "keyword", "platform", "job", "error", "language"]);
 
+// Per-tool generation settings (max output tokens / temperature). Unlisted tools use DEFAULT_GEN.
+export const DEFAULT_GEN = { max_tokens: 1800, temperature: 0.4 };
+export const TOOL_GEN = {
+  "ai-assistant": { max_tokens: 1600, temperature: 0.5 }, "ai-summarizer": { max_tokens: 1200, temperature: 0.2 }, "ai-translator": { max_tokens: 2000, temperature: 0.2 },
+  "ai-grammar-fixer": { max_tokens: 2000, temperature: 0.1 }, "ai-paraphraser": { max_tokens: 1800, temperature: 0.6 }, "ai-code-explainer": { max_tokens: 2200, temperature: 0.2 },
+  "ai-code-debugger": { max_tokens: 2400, temperature: 0.2 }, "ai-regex-generator": { max_tokens: 900, temperature: 0.1 }, "ai-sql-generator": { max_tokens: 1200, temperature: 0.1 },
+  "excel-formula-helper": { max_tokens: 900, temperature: 0.1 }, "ai-quiz-generator": { max_tokens: 2600, temperature: 0.5 }, "ai-blog-writer": { max_tokens: 3200, temperature: 0.7 },
+  "ai-social-posts": { max_tokens: 1200, temperature: 0.8 }, "ai-name-ideas": { max_tokens: 900, temperature: 0.9 }, "ai-seo-titles": { max_tokens: 900, temperature: 0.7 }
+};
+export const genFor = (tool) => ({ ...DEFAULT_GEN, ...(TOOL_GEN[tool] || {}) });
 const MODELS = { primary: "@cf/meta/llama-3.3-70b-instruct-fp8-fast", fallback: "@cf/meta/llama-3.1-8b-instruct" };
 const buckets = new Map();
+export const _resetRate = () => buckets.clear();
 
 function corsHeaders(origin) {
   return origin ? { "access-control-allow-origin": origin, "access-control-allow-methods": "GET, POST, OPTIONS", "access-control-allow-headers": "content-type", "access-control-max-age": "86400", vary: "Origin" } : {};
@@ -53,8 +64,19 @@ function allowedOrigin(request, env) {
   const list = String(env.ALLOWED_ORIGINS || "").split(",").map((s) => s.trim().replace(/\/$/, "")).filter(Boolean);
   return list.includes(origin) ? origin : null;
 }
-function rateLimited(request) {
+// Durable limiter: uses D1 (table rate_limits) when bound so the limit holds across isolates; falls back to per-isolate memory.
+async function rateLimited(request, env = {}) {
   const ip = request.headers.get("cf-connecting-ip") || "local";
+  if (env.DB) {
+    try {
+      const w = Math.floor(Date.now() / RATE_WINDOW_MS);
+      const row = await env.DB.prepare("INSERT INTO rate_limits(k,w,n) VALUES(?,?,1) ON CONFLICT(k,w) DO UPDATE SET n=n+1 RETURNING n").bind(ip, w).first();
+      if (row && typeof row.n === "number") return row.n > RATE_LIMIT;
+    } catch { /* fall through to memory */ }
+  }
+  return memRateLimited(ip);
+}
+function memRateLimited(ip) {
   const now = Date.now();
   let b = buckets.get(ip);
   if (!b || now > b.reset) { b = { n: 0, reset: now + RATE_WINDOW_MS }; buckets.set(ip, b); }
@@ -69,7 +91,7 @@ async function readJson(request) {
   if (new TextEncoder().encode(raw).byteLength > MAX_BODY_BYTES) throw Object.assign(new Error("BODY_TOO_LARGE"), { status: 413 });
   try { return JSON.parse(raw); } catch { throw Object.assign(new Error("INVALID_JSON"), { status: 400 }); }
 }
-function buildMessages(body) {
+export function buildMessages(body) {
   const tool = body.tool;
   if (!Object.prototype.hasOwnProperty.call(PROMPTS, tool)) throw Object.assign(new Error("UNKNOWN_TOOL"), { status: 400 });
   const message = typeof body.message === "string" ? body.message.trim() : "";
@@ -96,13 +118,13 @@ function buildMessages(body) {
 // AI Gateway helpers: set AI_GATEWAY_URL (https://gateway.ai.cloudflare.com/v1/<account_id>/<gateway>) to route OpenAI/Gemini calls through the gateway.
 const gw = (env, provider, direct) => (env.AI_GATEWAY_URL ? `${String(env.AI_GATEWAY_URL).replace(/\/$/, "")}/${provider}${provider === "openai" ? "" : ""}` : direct);
 const gwAuth = (env) => (env.AI_GATEWAY_URL && env.AI_GATEWAY_TOKEN ? { "cf-aig-authorization": `Bearer ${env.AI_GATEWAY_TOKEN}` } : {});
-async function viaWorkersAI(messages, env) {
+async function viaWorkersAI(messages, env, gen = DEFAULT_GEN) {
   if (!env.AI || typeof env.AI.run !== "function") throw Object.assign(new Error("PROVIDER_NOT_CONFIGURED"), { status: 503 });
   const models = [env.WORKERS_AI_MODEL || MODELS.primary, MODELS.fallback];
   let last;
   for (const model of [...new Set(models)]) {
     try {
-      const input = { messages, max_tokens: 1800, temperature: 0.4 };
+      const input = { messages, max_tokens: gen.max_tokens, temperature: gen.temperature };
       let r;
       if (env.AI_GATEWAY_ID) {
         // Route through Cloudflare AI Gateway (logging, caching, rate limits, analytics); fall back to a direct call if the gateway is unavailable.
@@ -115,21 +137,21 @@ async function viaWorkersAI(messages, env) {
   }
   throw Object.assign(last || new Error("UPSTREAM_ERROR"), { status: 502 });
 }
-async function viaOpenAI(messages, env) {
+async function viaOpenAI(messages, env, gen = DEFAULT_GEN) {
   if (!env.OPENAI_API_KEY) throw Object.assign(new Error("PROVIDER_NOT_CONFIGURED"), { status: 503 });
-  const res = await fetch(gw(env, "openai", "https://api.openai.com/v1") + "/chat/completions", { method: "POST", headers: { authorization: `Bearer ${env.OPENAI_API_KEY}`, "content-type": "application/json", ...gwAuth(env) }, body: JSON.stringify({ model: env.OPENAI_MODEL || "gpt-4.1-mini", messages, max_tokens: 1800, temperature: 0.4 }) });
+  const res = await fetch(gw(env, "openai", "https://api.openai.com/v1") + "/chat/completions", { method: "POST", headers: { authorization: `Bearer ${env.OPENAI_API_KEY}`, "content-type": "application/json", ...gwAuth(env) }, body: JSON.stringify({ model: env.OPENAI_MODEL || "gpt-4.1-mini", messages, max_tokens: gen.max_tokens, temperature: gen.temperature }) });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw Object.assign(new Error("UPSTREAM_ERROR"), { status: res.status === 429 ? 429 : 502 });
   const text = data?.choices?.[0]?.message?.content?.trim();
   if (!text) throw Object.assign(new Error("EMPTY_PROVIDER_RESPONSE"), { status: 502 });
   return text;
 }
-async function viaGemini(messages, env) {
+async function viaGemini(messages, env, gen = DEFAULT_GEN) {
   if (!env.GEMINI_API_KEY) throw Object.assign(new Error("PROVIDER_NOT_CONFIGURED"), { status: 503 });
   const system = messages.find((m) => m.role === "system")?.content || "";
   const contents = messages.filter((m) => m.role !== "system").map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] }));
   const model = env.GEMINI_MODEL || "gemini-2.5-flash";
-  const res = await fetch(`${gw(env, "google-ai-studio", "https://generativelanguage.googleapis.com")}/v1beta/models/${encodeURIComponent(model)}:generateContent`, { method: "POST", headers: { "x-goog-api-key": env.GEMINI_API_KEY, "content-type": "application/json", ...gwAuth(env) }, body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents, generationConfig: { maxOutputTokens: 1800, temperature: 0.4 } }) });
+  const res = await fetch(`${gw(env, "google-ai-studio", "https://generativelanguage.googleapis.com")}/v1beta/models/${encodeURIComponent(model)}:generateContent`, { method: "POST", headers: { "x-goog-api-key": env.GEMINI_API_KEY, "content-type": "application/json", ...gwAuth(env) }, body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents, generationConfig: { maxOutputTokens: gen.max_tokens, temperature: gen.temperature } }) });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw Object.assign(new Error("UPSTREAM_ERROR"), { status: res.status === 429 ? 429 : 502 });
   const text = (data?.candidates?.[0]?.content?.parts || []).map((p) => p.text || "").join("").trim();
@@ -142,23 +164,52 @@ export function providersFor(env) {
   return order.filter((k) => all[k][0]).map((k) => [k, all[k][1]]);
 }
 
+const sse = (chunks) => new Response(new ReadableStream({ start(c) { const e = new TextEncoder(); for (const t of chunks) c.enqueue(e.encode(`data: ${JSON.stringify({ response: t })}\n\n`)); c.enqueue(e.encode("data: [DONE]\n\n")); c.close(); } }), { headers: { "content-type": "text/event-stream; charset=utf-8", "cache-control": "no-store", "x-content-type-options": "nosniff" } });
+async function cacheKey(body) {
+  const raw = JSON.stringify([body.tool, body.message, body.options || {}, body.lang || "ar"]);
+  const d = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw)));
+  return "https://cache.utilityra.internal/ai/" + Array.from(d, (b) => b.toString(16).padStart(2, "0")).join("");
+}
+export async function toolDisabled(env, tool) {
+  if (!env.DB) return false;
+  try { const r = await env.DB.prepare("SELECT enabled FROM tool_flags WHERE tool_key=?").bind(tool).first(); return !!r && Number(r.enabled) === 0; } catch { return false; }
+}
+
 async function handleAI(request, env, origin) {
-  if (rateLimited(request)) return json({ error: "RATE_LIMITED" }, 429, origin);
+  if (await rateLimited(request, env)) return json({ error: "RATE_LIMITED" }, 429, origin);
   let body;
   try { body = await readJson(request); } catch (e) { return json({ error: e.message }, e.status || 400, origin); }
   let messages;
   try { messages = buildMessages(body || {}); } catch (e) { return json({ error: e.message }, e.status || 400, origin); }
+  if (await toolDisabled(env, body.tool)) return json({ error: "TOOL_DISABLED" }, 403, origin);
   const providers = providersFor(env);
   if (!providers.length) return json({ error: "PROVIDER_NOT_CONFIGURED" }, 503, origin);
+  const gen = genFor(body.tool), wantStream = body.stream === true;
+  // Short-lived cache for identical single-shot requests (never for chat, which depends on history).
+  const cacheable = body.tool !== "ai-assistant" && typeof caches !== "undefined" && caches.default;
+  let ck; if (cacheable) { try { ck = new Request(await cacheKey(body)); const hit = await caches.default.match(ck); if (hit) { const j = await hit.json(); return wantStream ? sse([j.answer]) : json({ ...j, cached: true }, 200, origin); } } catch { ck = null; } }
   let lastErr;
   for (const [name, fn] of providers) {
-    try { const answer = await fn(messages, env); return json({ answer, provider: name }, 200, origin); } catch (e) { lastErr = e; if (e.status === 429) break; }
+    try {
+      // Native Workers AI streaming (SSE passthrough); other providers answer as a single SSE chunk.
+      if (wantStream && name === "workers-ai" && env.AI && typeof env.AI.run === "function") {
+        try { const st = await env.AI.run(env.WORKERS_AI_MODEL || MODELS.primary, { messages, max_tokens: gen.max_tokens, temperature: gen.temperature, stream: true }, env.AI_GATEWAY_ID ? { gateway: { id: env.AI_GATEWAY_ID } } : undefined); if (st && typeof st.getReader === "function") return new Response(st, { headers: { "content-type": "text/event-stream; charset=utf-8", "cache-control": "no-store", "x-content-type-options": "nosniff", ...corsHeaders(origin) } }); } catch { /* fall back to non-streaming */ }
+      }
+      const answer = await fn(messages, env, gen);
+      if (ck) { try { await caches.default.put(ck, new Response(JSON.stringify({ answer, provider: name }), { headers: { "content-type": "application/json", "cache-control": "public, max-age=3600" } })); } catch { /* ignore */ } }
+      return wantStream ? sse([answer]) : json({ answer, provider: name }, 200, origin);
+    } catch (e) { lastErr = e; if (e.status === 429) break; }
   }
   return json({ error: lastErr?.message === "PROVIDER_NOT_CONFIGURED" ? "PROVIDER_NOT_CONFIGURED" : "UPSTREAM_ERROR" }, lastErr?.status === 429 ? 429 : 502, origin);
 }
 
 import { inspectUrl } from "./inspect.js";
-import { handleAdmin } from "./admin.js";
+import { handleAdmin, publicConfig } from "./admin.js";
+async function handleConfig(env, origin) {
+  const r = json(await publicConfig(env), 200, origin);
+  r.headers.set("cache-control", "public, max-age=60");
+  return r;
+}
 
 export default {
   async fetch(request, env) {
@@ -181,10 +232,11 @@ export default {
       const res = await handleAdmin(request, env, url, json, origin || "", readJson, askProviders.bind(null, env));
       if (res) return res;
     }
+    if (url.pathname === "/api/config" && request.method === "GET") return handleConfig(env, origin || "");
     if (url.pathname === "/api/inspect") {
       if (request.method !== "GET") return json({ error: "METHOD_NOT_ALLOWED" }, 405, origin || "");
       if (origin === null) return json({ error: "ORIGIN_NOT_ALLOWED" }, 403);
-      if (rateLimited(request)) return json({ error: "RATE_LIMITED" }, 429, origin || "");
+      if (await rateLimited(request, env)) return json({ error: "RATE_LIMITED" }, 429, origin || "");
       const r = await inspectUrl(url.searchParams.get("url"));
       return json(r.body, r.status, origin || "");
     }

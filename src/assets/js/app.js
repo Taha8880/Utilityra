@@ -142,6 +142,21 @@
     } catch (e) { /* analytics must never break the page */ }
   })();
 
+
+  /* ---------- admin-controlled config: disabled tools + announcement ---------- */
+  (function () {
+    try {
+      if (/^\/admin(\/|$)/.test(location.pathname)) return;
+      fetch(((window.UTILITYRA || {}).apiBase || '') + '/api/config').then((r) => (r.ok ? r.json() : null)).then((c) => {
+        if (!c) return; const off = new Set(c.disabled || []);
+        off.forEach((id) => document.querySelectorAll('[data-id="' + id + '"]').forEach((e) => e.remove()));
+        const root = document.querySelector('#tool-root'); if (root && off.has(root.dataset.tool)) root.innerHTML = '<p class="tool-status err">' + (document.documentElement.lang === 'en' ? 'This tool is temporarily unavailable.' : 'هذه الأداة متوقفة مؤقتًا.') + '</p>';
+        const s = c.settings || {}, msg = document.documentElement.lang === 'en' ? s.announcement_en : s.announcement_ar;
+        if (msg) { const d = document.createElement('div'); d.className = 'note'; d.setAttribute('role', 'status'); d.style.cssText = 'margin:0;border-radius:0;justify-content:center;text-align:center'; d.textContent = msg; document.body.prepend(d); }
+      }).catch(() => {});
+    } catch (e) { /* ignore */ }
+  })();
+
   /* ---------- tool page ---------- */
   const tr = $('#tool-root');
   if (tr && window.UT) { try { window.UT.mount(tr, tr.dataset.tool); } catch (e) { tr.innerHTML = '<p class="tool-status err">Could not start this tool: ' + String(e.message).replace(/</g, '&lt;') + '</p>'; console.error(e); } document.body.dataset.toolReady = '1'; }
