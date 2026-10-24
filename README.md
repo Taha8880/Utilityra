@@ -19,7 +19,7 @@ Latest recorded results: `docs/test-logs/e2e-latest.md`.
 
 ## Deploy (Cloudflare — the supported host)
 See `docs/DEPLOY_AR.md`. Short version: GitHub secrets `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID`, push to `main`, `.github/workflows/deploy.yml` builds, tests and deploys.
-Blogger cannot host this project (no Workers/static assets/API). Old Blogger files are archived in `legacy-blogger/`.
+Blogger cannot host this project (no Workers/static assets/API). The old Blogger files were removed (still available in Git history); legacy Blogger URLs are redirected via `src/legacy-redirects.json`.
 
 ## Environment knobs (build time)
 `SITE_URL`, `API_BASE`, `ADSENSE_ID`, `GA_ID`, `CONTACT_EMAIL`.

@@ -261,7 +261,7 @@ function misc() {
   writeFileSync(join(OUT, 'site.webmanifest'), JSON.stringify({ name: 'Utilityra', short_name: 'Utilityra', start_url: '/', display: 'standalone', background_color: '#FFFDFA', theme_color: '#E45A1F', icons: [{ src: '/favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' }] }));
   // Legacy Blogger URLs -> new tool pages (works on Cloudflare; GitHub Pages ignores this file).
   try {
-    const man = JSON.parse(readFileSync(join(ROOT, 'legacy-blogger/blogger-pages/manifest.json'), 'utf8'));
+    const man = JSON.parse(readFileSync(join(ROOT, 'src/legacy-redirects.json'), 'utf8'));
     const lines = [];
     man.pages.forEach((p) => { const id = p.file.replace(/\.html$/, ''); const path = (p.url || '').replace(/^https?:\/\/[^/]+/, ''); if (path && tools.some((t) => t.id === id)) lines.push(`${path} /tools/${id}/ 301`); else if (path && ['about', 'contact', 'disclaimer', 'privacy-policy'].includes(id)) lines.push(`${path} /${{ 'privacy-policy': 'privacy', disclaimer: 'terms' }[id] || id}/ 301`); });
     const ALIAS = { 'sort-lines': 'line-sorter', 'remove-duplicate-lines': 'duplicate-line-remover', 'json-minifier': 'json-formatter', 'character-frequency': 'word-frequency', 'html-escape': 'html-entities', 'qr-generator': 'qr-code-generator', 'image-to-pdf': 'images-to-pdf', 'password-strength': 'password-strength-checker', 'pdf-metadata': 'pdf-page-info' };

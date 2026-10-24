@@ -15,7 +15,7 @@
 | 10 | SEO: title/description/canonical/JSON-LD/sitemap/robots/ads.txt/تحقق Google | ✅ ملفات / ⏳ التحقق الفعلي | sitemap يحوي كل الأدوات (اختبار). القبول في Search Console/AdSense خارج الكود |
 | 11 | نشر فعلي | ⏳ | لم أستطع النشر من بيئتي (لا اتصال بـ GitHub/Cloudflare). الخطوات في `DEPLOY_AR.md` |
 | 12 | النسخ الاحتياطي والتراجع | 🟡 | الإصدار في Git + `wrangler rollback`؛ لا نسخ احتياطي تلقائي لـ D1 |
-| 13 | تضارب workflows القديمة | ✅ | نُقلت إلى `legacy-blogger/` ولا تعمل |
+| 13 | تضارب workflows القديمة | ✅ | حُذفت من المستودع (موجودة في تاريخ Git) |
 | 14 | اختبار Android Chrome/متصفحات متعددة | ❌ | Chromium فقط |
 | 15 | Lighthouse/أداء/لوحة المفاتيح | ❌ | لم تُجرَ؛ يوجد skip link ومؤشرات تركيز فقط |
 | 16 | اختبار 115 أداة | 🟡 | تحميل + تشغيل بالقيم الافتراضية للـ115 دون استثناءات (smoke-outcomes.json)؛ نتيجة صحيحة مؤكدة لـ13 فقط |
