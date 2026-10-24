@@ -265,3 +265,4 @@ input[type="file"]::file-selector-button:hover { filter: brightness(1.08); }
 .memo { margin: 8px 0; } .memo summary { cursor: pointer; font-weight: 600; } .memo textarea { width: 100%; margin-top: 8px; }
 .ck { display: inline-flex; gap: 6px; align-items: center; font-size: 13.5px; }
 .bubble pre { overflow: auto; padding: 12px; padding-top: 30px; border-radius: 10px; background: var(--paper); direction: ltr; text-align: left; }
+@media (max-width: 380px) { .hdr .in { gap: 8px; } .hbtn { min-width: 36px; height: 36px; padding: 6px 8px; } }
