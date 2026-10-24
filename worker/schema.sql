@@ -57,3 +57,27 @@ CREATE TABLE IF NOT EXISTS contact_reports (
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_contact_reports_status ON contact_reports(status, created_at);
+
+
+-- Curated, administrator-approved knowledge used to ground the assistant.
+-- Entries are never auto-approved from model output or raw user conversations.
+CREATE TABLE IF NOT EXISTS ai_knowledge (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  source_url TEXT NOT NULL DEFAULT '',
+  approved INTEGER NOT NULL DEFAULT 0 CHECK (approved IN (0,1)),
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_ai_knowledge_approved ON ai_knowledge(approved, updated_at);
+
+-- Optional quality feedback; never used to train a model automatically.
+CREATE TABLE IF NOT EXISTS ai_feedback (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  tool_key TEXT NOT NULL,
+  rating INTEGER NOT NULL CHECK (rating IN (-1,1)),
+  reason TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_ai_feedback_created ON ai_feedback(created_at);
