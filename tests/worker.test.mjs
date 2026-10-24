@@ -145,3 +145,19 @@ test('admin: every new write route is unauthenticated-401 and health checks incl
   for (const p of ['/api/admin/tools', '/api/admin/audit', '/api/admin/settings']) assert.equal((await call(p, {}, env)).status, 401, p);
   const { CHECKS } = await import('../worker/src/admin.js'); const keys = CHECKS.map((c) => c[0]); assert.ok(keys.includes('admin-page') && keys.includes('health-endpoint'));
 });
+
+test('anthropic provider is preferred when key is set and is called with system + messages', async () => {
+  _resetRate(); let seen; const realFetch = globalThis.fetch;
+  globalThis.fetch = async (u, o) => { seen = { u, b: JSON.parse(o.body), h: o.headers }; return new Response(JSON.stringify({ content: [{ type: 'text', text: 'from claude' }] }), { status: 200 }); };
+  try { const r = await ai({ tool: 'ai-assistant', message: 'hello' }, { ...okAI, ANTHROPIC_API_KEY: 'k' }); const j = await r.json();
+    assert.equal(j.provider, 'anthropic'); assert.equal(j.answer, 'from claude'); assert.match(seen.u, /anthropic\.com\/v1\/messages/); assert.equal(seen.b.messages.at(-1).content, 'hello'); assert.ok(seen.b.system.length > 50); assert.equal(seen.h['x-api-key'], 'k');
+  } finally { globalThis.fetch = realFetch; }
+});
+test('assistant prompt keeps the answer on topic', () => {
+  const m = buildMessages({ tool: 'ai-assistant', message: 'x' })[0].content; assert.match(m, /unrelated code/); assert.match(m, /conversation history/);
+});
+test('dev assistant: auth required and message builder trims history', async () => {
+  const env = { DB: {}, ADMIN_PASSWORD: 'p', ADMIN_SESSION_SECRET: 's' };
+  assert.equal((await call('/api/admin/assistant', { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{"message":"hi"}' }, env)).status, 401);
+  const { devMessages } = await import('../worker/src/admin.js'); const m = devMessages([{ role: 'system', content: 'x' }, { role: 'user', content: 'a' }], 'q'); assert.equal(m.length, 3); assert.equal(m[0].role, 'system'); assert.equal(m[1].content, 'a');
+});

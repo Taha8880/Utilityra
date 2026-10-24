@@ -15,7 +15,7 @@ const BASE = [
 ].join(" ");
 
 export const PROMPTS = {
-  "ai-assistant": "Act as a helpful assistant for study, work, writing and software development. Solve the problem step by step, prefer a concrete answer, example or useful partial result over refusing. For code, give runnable snippets and mention assumptions.",
+  "ai-assistant": "You are Utilityra Assistant, a focused helper for study, work, writing and software development. Rules: (1) Answer exactly what the user asked, directly, in their language; start with the answer, then brief steps. (2) Use the conversation history provided: if the user refers to an earlier message, use it; if there is no history, say you only see this conversation (never claim a technical 'memory' limitation beyond that). (3) Stay on topic: never add unrelated code, tutorials or boilerplate (for example machine-learning snippets) unless asked. (4) Be honest about limits: you are a text assistant inside a website, you cannot browse, run code, deploy or change this site; for a vague or huge request (like 'build me an AI better than every other AI') say what is realistic and propose 2-3 concrete next steps or ask ONE clarifying question. (5) For code give small runnable snippets with stated assumptions; never invent APIs, links or results.",
   "ai-summarizer": "Summarize the text faithfully without adding facts. Respect the requested length (short ≈ 3 bullets, medium ≈ 5-7, detailed ≈ 10+) and format (bullets, paragraph, or key takeaways + one-line conclusion).",
   "ai-paraphraser": "Rewrite the text in the requested tone, keeping the meaning, facts and names intact. Return only the rewritten text, then one short line listing what you changed.",
   "ai-translator": "Translate the text to the target language in the requested style (natural, formal or literal). Keep formatting, numbers and proper names. Return only the translation, followed by a short note only if something is ambiguous.",
@@ -146,6 +146,18 @@ async function viaOpenAI(messages, env, gen = DEFAULT_GEN) {
   if (!text) throw Object.assign(new Error("EMPTY_PROVIDER_RESPONSE"), { status: 502 });
   return text;
 }
+async function viaAnthropic(messages, env, gen = DEFAULT_GEN) {
+  if (!env.ANTHROPIC_API_KEY) throw Object.assign(new Error("PROVIDER_NOT_CONFIGURED"), { status: 503 });
+  const system = messages.find((m) => m.role === "system")?.content || "";
+  const msgs = messages.filter((m) => m.role !== "system").map((m) => ({ role: m.role, content: m.content }));
+  const base = env.AI_GATEWAY_URL ? `${String(env.AI_GATEWAY_URL).replace(/\/$/, "")}/anthropic` : "https://api.anthropic.com";
+  const res = await fetch(base + "/v1/messages", { method: "POST", headers: { "x-api-key": env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "content-type": "application/json", ...gwAuth(env) }, body: JSON.stringify({ model: env.ANTHROPIC_MODEL || "claude-sonnet-5-5", max_tokens: gen.max_tokens, temperature: gen.temperature, system, messages: msgs }) });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw Object.assign(new Error("UPSTREAM_ERROR"), { status: res.status === 429 ? 429 : 502 });
+  const text = (data?.content || []).map((c) => c.text || "").join("").trim();
+  if (!text) throw Object.assign(new Error("EMPTY_PROVIDER_RESPONSE"), { status: 502 });
+  return text;
+}
 async function viaGemini(messages, env, gen = DEFAULT_GEN) {
   if (!env.GEMINI_API_KEY) throw Object.assign(new Error("PROVIDER_NOT_CONFIGURED"), { status: 503 });
   const system = messages.find((m) => m.role === "system")?.content || "";
@@ -159,8 +171,8 @@ async function viaGemini(messages, env, gen = DEFAULT_GEN) {
   return text;
 }
 export function providersFor(env) {
-  const all = { "workers-ai": [!!env.AI, viaWorkersAI], openai: [!!env.OPENAI_API_KEY, viaOpenAI], gemini: [!!env.GEMINI_API_KEY, viaGemini] };
-  const order = [env.AI_PROVIDER, "workers-ai", "openai", "gemini"].filter((v, i, a) => v && all[v] && a.indexOf(v) === i);
+  const all = { anthropic: [!!env.ANTHROPIC_API_KEY, viaAnthropic], "workers-ai": [!!env.AI, viaWorkersAI], openai: [!!env.OPENAI_API_KEY, viaOpenAI], gemini: [!!env.GEMINI_API_KEY, viaGemini] };
+  const order = [env.AI_PROVIDER, "anthropic", "workers-ai", "openai", "gemini"].filter((v, i, a) => v && all[v] && a.indexOf(v) === i);
   return order.filter((k) => all[k][0]).map((k) => [k, all[k][1]]);
 }
 

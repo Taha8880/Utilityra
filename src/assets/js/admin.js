@@ -17,12 +17,12 @@
     });
   }
   const tbl = (head, rows) => `<div class="tblwrap"><table class="tbl"><thead><tr>${head.map((h) => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.map((r) => `<tr>${r.map((c) => `<td>${esc(c)}</td>`).join('')}</tr>`).join('') || `<tr><td colspan="${head.length}">—</td></tr>`}</tbody></table></div>`;
-  const TABS = [['dash', 'لوحة المعلومات', 'Dashboard'], ['tools', 'إدارة الأدوات', 'Tools'], ['inc', 'المهندس التقني', 'Engineer'], ['set', 'إعدادات الموقع', 'Settings'], ['log', 'سجل النشاط', 'Activity log']];
+  const TABS = [['dash', 'لوحة المعلومات', 'Dashboard'], ['tools', 'إدارة الأدوات', 'Tools'], ['inc', 'المهندس التقني', 'Engineer'], ['set', 'إعدادات الموقع', 'Settings'], ['dev', 'مساعد المطوّر', 'Dev assistant'], ['log', 'سجل النشاط', 'Activity log']];
   function shell() {
     root.innerHTML = `<div class="chips" role="tablist">${TABS.map((x) => `<button class="chip${x[0] === tab ? ' on' : ''}" role="tab" aria-selected="${x[0] === tab}" data-tab="${x[0]}">${t(x[1], x[2])}</button>`).join('')}<button class="chip" id="out" style="margin-inline-start:auto">${t('تسجيل الخروج', 'Sign out')}</button></div><div id="view" aria-live="polite"></div>`;
     root.querySelectorAll('[data-tab]').forEach((b) => b.addEventListener('click', () => { tab = b.dataset.tab; shell(); }));
     $('#out').onclick = async () => { await post('/api/admin/logout'); login(); };
-    ({ dash, tools, inc, set, log })[tab]();
+    ({ dash, tools, inc, set, dev, log })[tab]();
   }
   const guard = (r) => { if (r.status === 401) { login(); return false; } if (!r.ok) { $('#view').innerHTML = `<p class="tool-status err">${t('تعذّر جلب البيانات.', 'Could not load data.')}</p>`; return false; } return true; };
 
@@ -53,6 +53,12 @@
     const f = (k, ar_, en_) => `<div class="fld"><label for="s-${k}">${t(ar_, en_)}</label><input id="s-${k}" data-s="${k}" value="${esc(s[k] || '')}" maxlength="400" dir="auto"></div>`;
     $('#view').innerHTML = `<div class="panel" style="max-width:640px"><p>${t('رسالة تظهر أعلى الموقع (مثلاً صيانة). اتركها فارغة لإخفائها.', 'A message shown at the top of the site (e.g. maintenance). Leave empty to hide it.')}</p>${f('announcement_ar', 'إعلان بالعربية', 'Announcement (Arabic)')}${f('announcement_en', 'إعلان بالإنجليزية', 'Announcement (English)')}<button class="btn primary" id="save">${t('حفظ', 'Save')}</button> <span id="sm" role="status"></span></div>`;
     $('#save').onclick = async () => { const settings = {}; root.querySelectorAll('[data-s]').forEach((i) => { settings[i.dataset.s] = i.value; }); const x = await post('/api/admin/settings', { settings }); $('#sm').textContent = x.ok ? t('تم الحفظ ✓', 'Saved ✓') : t('فشل الحفظ', 'Save failed'); };
+  }
+  const hist = [];
+  function dev() {
+    $('#view').innerHTML = `<p>${t('اسأل عن عطل أو اطلب كودًا. يقدّم تشخيصًا وتعديلًا مقترحًا للمراجعة، ولا ينفّذ أو ينشر شيئًا. الجودة تتحسن كثيرًا عند ضبط مزود قوي (ANTHROPIC_API_KEY).', 'Ask about a problem or request code. It proposes a diagnosis and patch for your review; it never runs or deploys anything. Quality improves a lot with a strong provider (ANTHROPIC_API_KEY).')}</p><div class="chat-log" id="dl" tabindex="0">${hist.map((h) => `<div class="msg ${h.role}"><pre style="white-space:pre-wrap;margin:0" dir="auto">${esc(h.content)}</pre></div>`).join('')}</div><div class="chat-form"><textarea id="dm" rows="3" dir="auto" placeholder="${t('صف المشكلة أو الصق الخطأ…', 'Describe the problem or paste the error…')}"></textarea><button class="btn primary" id="ds">${t('إرسال', 'Send')}</button></div>`;
+    const add = (role, content) => { hist.push({ role, content }); const d = document.createElement('div'); d.className = 'msg ' + role; d.innerHTML = `<pre style="white-space:pre-wrap;margin:0" dir="auto">${esc(content)}</pre>`; $('#dl').appendChild(d); $('#dl').scrollTop = 1e9; };
+    $('#ds').onclick = async () => { const m = $('#dm').value.trim(); if (!m) return; const prev = hist.slice(); $('#dm').value = ''; add('user', m); $('#ds').disabled = true; const r = await post('/api/admin/assistant', { message: m, history: prev }); $('#ds').disabled = false; if (r.status === 401) return login(); add('assistant', r.ok ? r.j.answer : t('تعذّر الحصول على إجابة (تحقق من مزود الذكاء الاصطناعي).', 'Could not get an answer (check the AI provider).')); };
   }
   async function log() {
     const r = await api('/api/admin/audit'); if (!guard(r)) return;
