@@ -93,13 +93,21 @@ function buildMessages(body) {
   return [{ role: "system", content: system }, ...history, { role: "user", content: user }];
 }
 
+// AI Gateway helpers: set AI_GATEWAY_URL (https://gateway.ai.cloudflare.com/v1/<account_id>/<gateway>) to route OpenAI/Gemini calls through the gateway.
+const gw = (env, provider, direct) => (env.AI_GATEWAY_URL ? `${String(env.AI_GATEWAY_URL).replace(/\/$/, "")}/${provider}${provider === "openai" ? "" : ""}` : direct);
+const gwAuth = (env) => (env.AI_GATEWAY_URL && env.AI_GATEWAY_TOKEN ? { "cf-aig-authorization": `Bearer ${env.AI_GATEWAY_TOKEN}` } : {});
 async function viaWorkersAI(messages, env) {
   if (!env.AI || typeof env.AI.run !== "function") throw Object.assign(new Error("PROVIDER_NOT_CONFIGURED"), { status: 503 });
   const models = [env.WORKERS_AI_MODEL || MODELS.primary, MODELS.fallback];
   let last;
   for (const model of [...new Set(models)]) {
     try {
-      const r = await env.AI.run(model, { messages, max_tokens: 1800, temperature: 0.4 });
+      const input = { messages, max_tokens: 1800, temperature: 0.4 };
+      let r;
+      if (env.AI_GATEWAY_ID) {
+        // Route through Cloudflare AI Gateway (logging, caching, rate limits, analytics); fall back to a direct call if the gateway is unavailable.
+        try { r = await env.AI.run(model, input, { gateway: { id: env.AI_GATEWAY_ID, skipCache: false, cacheTtl: 3600 } }); } catch (ge) { r = await env.AI.run(model, input); }
+      } else r = await env.AI.run(model, input);
       const text = typeof r === "string" ? r : r?.response ?? r?.result?.response ?? r?.choices?.[0]?.message?.content ?? "";
       if (String(text).trim()) return String(text).trim();
       last = new Error("EMPTY_PROVIDER_RESPONSE");
@@ -109,7 +117,7 @@ async function viaWorkersAI(messages, env) {
 }
 async function viaOpenAI(messages, env) {
   if (!env.OPENAI_API_KEY) throw Object.assign(new Error("PROVIDER_NOT_CONFIGURED"), { status: 503 });
-  const res = await fetch("https://api.openai.com/v1/chat/completions", { method: "POST", headers: { authorization: `Bearer ${env.OPENAI_API_KEY}`, "content-type": "application/json" }, body: JSON.stringify({ model: env.OPENAI_MODEL || "gpt-4.1-mini", messages, max_tokens: 1800, temperature: 0.4 }) });
+  const res = await fetch(gw(env, "openai", "https://api.openai.com/v1") + "/chat/completions", { method: "POST", headers: { authorization: `Bearer ${env.OPENAI_API_KEY}`, "content-type": "application/json", ...gwAuth(env) }, body: JSON.stringify({ model: env.OPENAI_MODEL || "gpt-4.1-mini", messages, max_tokens: 1800, temperature: 0.4 }) });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw Object.assign(new Error("UPSTREAM_ERROR"), { status: res.status === 429 ? 429 : 502 });
   const text = data?.choices?.[0]?.message?.content?.trim();
@@ -121,7 +129,7 @@ async function viaGemini(messages, env) {
   const system = messages.find((m) => m.role === "system")?.content || "";
   const contents = messages.filter((m) => m.role !== "system").map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] }));
   const model = env.GEMINI_MODEL || "gemini-2.5-flash";
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, { method: "POST", headers: { "x-goog-api-key": env.GEMINI_API_KEY, "content-type": "application/json" }, body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents, generationConfig: { maxOutputTokens: 1800, temperature: 0.4 } }) });
+  const res = await fetch(`${gw(env, "google-ai-studio", "https://generativelanguage.googleapis.com")}/v1beta/models/${encodeURIComponent(model)}:generateContent`, { method: "POST", headers: { "x-goog-api-key": env.GEMINI_API_KEY, "content-type": "application/json", ...gwAuth(env) }, body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents, generationConfig: { maxOutputTokens: 1800, temperature: 0.4 } }) });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw Object.assign(new Error("UPSTREAM_ERROR"), { status: res.status === 429 ? 429 : 502 });
   const text = (data?.candidates?.[0]?.content?.parts || []).map((p) => p.text || "").join("").trim();

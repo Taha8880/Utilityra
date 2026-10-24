@@ -94,3 +94,9 @@ test('engineer: health checks detect failures', async () => {
   const f = async (u) => (u.endsWith('/') && !u.includes('word') ? new Response('Utilityra <h1', { status: 200 }) : new Response('x', { status: 500 }));
   const res = await runChecks('https://x.test', f); assert.ok(res.some((r) => r.ok)); assert.ok(res.some((r) => !r.ok));
 });
+
+test('ai: uses AI Gateway when configured and falls back if it fails', async () => {
+  const calls = []; const env = { AI_GATEWAY_ID: 'utilityra', AI: { run: async (m, i, o) => { calls.push(o); if (o && o.gateway) throw new Error('gw down'); return { response: 'ok' }; } } };
+  const r = await ai({ tool: 'ai-summarizer', message: 'hi' }, env); assert.equal((await r.json()).answer, 'ok');
+  assert.equal(calls[0].gateway.id, 'utilityra'); assert.equal(calls[1], undefined);
+});

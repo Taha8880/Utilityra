@@ -35,12 +35,13 @@
     return rows.map((r) => { let s = 0; for (const k of toks) { if (r.nameKey.startsWith(k)) s += 6; else if (r.nameKey.includes(' ' + k)) s += 4; else if (r.nameKey.includes(k)) s += 3; else if (r.key.includes(k)) s += 1; else return null; } return [s, r.t]; }).filter(Boolean).sort((a, b) => b[0] - a[0]).slice(0, limit || 8).map((x) => x[1]);
   }
   const L = lang;
+  const icon = (n) => '<svg class="ic" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ((window.UT_ICONS || {})[n] || '') + '</svg>';
   const toolUrl = (t) => '/tools/' + t[0] + '/';
   $$('[data-search]').forEach((inp) => {
     const box = $('.sugg', inp.parentElement); if (!box) return; let act = -1;
     const render = () => {
       const res = search(inp.value, 7); if (!inp.value.trim() || !res.length) { box.classList.remove('open'); box.innerHTML = ''; return; }
-      box.innerHTML = res.map((t) => `<a href="${toolUrl(t)}"><span class="g" style="width:36px;height:36px;border-radius:10px;background:var(--paper);display:grid;place-items:center;font:500 11px var(--mono);color:var(--accent);direction:ltr">${t[2]}</span><span><b>${L() === 'en' ? t[4] : t[3]}</b><small>${L() === 'en' ? t[6] : t[5]}</small></span></a>`).join(''); box.classList.add('open'); act = -1;
+      box.innerHTML = res.map((t) => `<a href="${toolUrl(t)}"><span class="g" style="width:36px;height:36px;border-radius:10px;background:var(--paper);display:grid;place-items:center;font:500 11px var(--mono);color:var(--accent);direction:ltr">${icon(t[2])}</span><span><b>${L() === 'en' ? t[4] : t[3]}</b><small>${L() === 'en' ? t[6] : t[5]}</small></span></a>`).join(''); box.classList.add('open'); act = -1;
     };
     inp.addEventListener('input', render); inp.addEventListener('focus', render);
     inp.addEventListener('keydown', (e) => {
