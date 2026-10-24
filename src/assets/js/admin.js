@@ -1,7 +1,7 @@
 (function () {
   const $ = (s, r) => (r || document).querySelector(s);
   const base = (window.UTILITYRA || {}).apiBase || '';
-  const api = (p, o) => fetch(base + p, Object.assign({ credentials: 'same-origin' }, o)).then(async (r) => ({ ok: r.ok, status: r.status, j: await r.json().catch(() => ({})) }));
+  const api = (p, o) => fetch(base + p, Object.assign({ credentials: 'same-origin', headers: { 'accept': 'application/json' } }, o)).then(async (r) => ({ ok: r.ok, status: r.status, j: await r.json().catch(() => ({})) })).catch(() => ({ ok: false, status: 0, j: { error: 'NETWORK_ERROR' } }));
   const post = (p, body) => api(p, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body || {}) });
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const root = $('#admin-root'); const ar = () => document.documentElement.lang !== 'en'; const t = (a, e) => (ar() ? a : e);
@@ -11,13 +11,16 @@
   function login(msg) {
     root.innerHTML = `<form id="lf" class="panel" style="max-width:420px"><h2>${t('تسجيل دخول المسؤول', 'Admin sign-in')}</h2>${msg ? `<p class="tool-status err" role="alert">${esc(msg)}</p>` : ''}<div class="fld"><label for="pw">${t('كلمة المرور', 'Password')}</label><input id="pw" type="password" dir="ltr" autocomplete="current-password" required></div><button class="btn primary" type="submit">${t('دخول', 'Sign in')}</button></form>`;
     $('#lf').addEventListener('submit', async (e) => {
-      e.preventDefault(); const r = await post('/api/admin/login', { password: $('#pw').value });
+      e.preventDefault(); const button = $('#lf button[type="submit"]'); button.disabled = true; button.textContent = t('جارٍ التحقق…', 'Checking…');
+      const r = await post('/api/admin/login', { password: $('#pw').value });
       if (r.ok) return shell();
-      login(r.status === 503 ? t('لوحة الإدارة غير مهيأة بعد: تحتاج قاعدة D1 وأسرار ADMIN_PASSWORD وADMIN_SESSION_SECRET (انظر docs/DEPLOY_AR.md).', 'Admin is not configured yet: it needs D1 and the ADMIN_PASSWORD / ADMIN_SESSION_SECRET secrets (see docs/DEPLOY_AR.md).') : r.status === 429 ? t('محاولات كثيرة. حاول بعد 15 دقيقة.', 'Too many attempts. Try again in 15 minutes.') : t('كلمة المرور غير صحيحة.', 'Wrong password.'));
+      const error = r.j && r.j.error;
+      const message = r.status === 0 ? t('تعذّر الاتصال بالخادم. تحقق من الإنترنت وحاول مجددًا.', 'Could not reach the server. Check your connection and try again.') : r.status === 503 || error === 'ADMIN_NOT_CONFIGURED' ? t('لوحة الإدارة غير مهيأة: تحقق من أسرار الإدارة وربط قاعدة D1.', 'Admin is not configured: check admin secrets and the D1 binding.') : r.status === 429 ? t('محاولات دخول كثيرة. انتظر 15 دقيقة قبل المحاولة مجددًا.', 'Too many login attempts. Wait 15 minutes before trying again.') : r.status === 401 ? t('كلمة المرور غير صحيحة. تأكد من ADMIN_PASSWORD المحفوظ في Cloudflare، ولا ترسلها هنا.', 'Incorrect password. Verify the ADMIN_PASSWORD secret in Cloudflare; do not send it here.') : t('حدث خطأ في الخادم أثناء تسجيل الدخول. راجع إعدادات Cloudflare وسجلات Worker.', 'The server failed during sign-in. Check Cloudflare settings and Worker logs.');
+      login(message);
     });
   }
   const tbl = (head, rows) => `<div class="tblwrap"><table class="tbl"><thead><tr>${head.map((h) => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.map((r) => `<tr>${r.map((c) => `<td>${esc(c)}</td>`).join('')}</tr>`).join('') || `<tr><td colspan="${head.length}">—</td></tr>`}</tbody></table></div>`;
-  const TABS = [['dash', 'لوحة المعلومات', 'Dashboard'], ['tools', 'إدارة الأدوات', 'Tools'], ['inc', 'المهندس التقني', 'Engineer'], ['reports', 'بلاغات الزوار', 'Reports'], ['knowledge', 'ذاكرة المعرفة', 'AI Knowledge'], ['set, 'إعدادات الموقع', 'Settings'], ['dev', 'مساعد المطوّر', 'Dev assistant'], ['log', 'سجل النشاط', 'Activity log']];
+  const TABS = [['dash', 'لوحة المعلومات', 'Dashboard'], ['tools', 'إدارة الأدوات', 'Tools'], ['inc', 'المهندس التقني', 'Engineer'], ['reports', 'بلاغات الزوار', 'Reports'], ['knowledge', 'ذاكرة المعرفة', 'AI Knowledge'], ['set', 'إعدادات الموقع', 'Settings'], ['dev', 'مساعد المطوّر', 'Dev assistant'], ['log', 'سجل النشاط', 'Activity log']];
   function shell() {
     root.innerHTML = `<div class="chips" role="tablist">${TABS.map((x) => `<button class="chip${x[0] === tab ? ' on' : ''}" role="tab" aria-selected="${x[0] === tab}" data-tab="${x[0]}">${t(x[1], x[2])}</button>`).join('')}<button class="chip" id="out" style="margin-inline-start:auto">${t('تسجيل الخروج', 'Sign out')}</button></div><div id="view" aria-live="polite"></div>`;
     root.querySelectorAll('[data-tab]').forEach((b) => b.addEventListener('click', () => { tab = b.dataset.tab; shell(); }));
