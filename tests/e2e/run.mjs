@@ -121,6 +121,12 @@ for (const [vw, vh, tag] of [[360, 740, 'm360'], [1280, 800, 'desk']]) for (cons
   for (const p of ['/', '/tools/', '/tools/qr-code-generator/', '/tools/ai-assistant/']) { const pg = await c.newPage(); await pg.goto(base + p); await pg.waitForTimeout(500); const ov = await pg.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth); rec(`overflow:${tag}:${theme}:${lang}:${p}`, ov <= 1, 'overflow ' + ov + 'px'); if (p === '/' || p.includes('qr')) await pg.screenshot({ path: join(LOG, 'screens', `${tag}-${theme}-${lang}-${p.replace(/\W+/g, '_') || 'home'}.png`) }); await pg.close(); }
   await c.close();
 }
+// 5) every page at 320px: no horizontal overflow; keyboard: Tab reaches the run button
+{ const c = await browser.newContext({ viewport: { width: 320, height: 640 } }); await c.route(/fonts\.(googleapis|gstatic)\.com|googlesyndication|googletagmanager/, (r) => r.abort());
+  const paths = ['/', '/tools/', '/about/', '/privacy/', '/terms/', '/contact/', ...TOOLS.map((t) => `/tools/${t[0]}/`)]; const over = [];
+  for (const p of paths) { const pg = await c.newPage(); await pg.goto(base + p, { waitUntil: 'domcontentloaded' }); await pg.waitForTimeout(150); const ov = await pg.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth); if (ov > 1) over.push(p + ':' + ov); await pg.close(); }
+  rec('overflow-320:all-pages(' + paths.length + ')', !over.length, over.slice(0, 8).join(' '));
+  const kp = await c.newPage(); await kp.goto(base + '/tools/pdf-merge/'); await kp.waitForSelector('#tool-root [data-run]'); let reached = false; for (let i = 0; i < 40 && !reached; i++) { await kp.keyboard.press('Tab'); reached = await kp.evaluate(() => document.activeElement && document.activeElement.hasAttribute('data-run')); } rec('a11y:keyboard-reaches-run-button', reached); await kp.close(); await c.close(); }
 await browser.close(); srv.close();
 const pass = results.filter((r) => r.ok).length;
 const md = `# E2E test log\n\nGenerated: ${new Date().toISOString()}\n\n**${pass}/${results.length} passed**, ${fails} failed.\n\n| test | result | note |\n|---|---|---|\n` + results.map((r) => `| ${r.name} | ${r.ok ? 'PASS' : 'FAIL'} | ${String(r.note).replace(/\|/g, '/').slice(0, 160)} |`).join('\n') + '\n';

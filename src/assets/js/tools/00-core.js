@@ -115,20 +115,20 @@
     return j.answer || '';
   }
 
-  async function aiStream(body, onDelta, onSources) {
+  async function aiStream(body, onDelta, onSources, onMeta) {
     let r;
     try { r = await fetch((CFG.apiBase || '') + '/api/ai', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(Object.assign({ lang: lang(), stream: true }, body)) }); } catch (e) { throw new Error(aiErrorMessage(0)); }
     const ct = r.headers.get('content-type') || '';
     if (!r.ok || ct.includes('application/json')) {
       const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(aiErrorMessage(r.status, j.error));
-      if (j.sources && onSources) onSources(j.sources); onDelta(j.answer || '', true); return j.answer || '';
+      if (j.sources && onSources) onSources(j.sources); if (j.provider && onMeta) onMeta({ provider: j.provider }); onDelta(j.answer || '', true); return j.answer || '';
     }
     const rd = r.body.getReader(), dec = new TextDecoder(); let buf = '', full = '';
     for (;;) {
       const { done, value } = await rd.read(); if (done) break; buf += dec.decode(value, { stream: true });
       let i; while ((i = buf.indexOf('\n\n')) >= 0) {
         const ev = buf.slice(0, i); buf = buf.slice(i + 2);
-        for (const line of ev.split('\n')) { if (!line.startsWith('data:')) continue; const d = line.slice(5).trim(); if (!d || d === '[DONE]') continue; try { const j = JSON.parse(d); if (j.sources && onSources) onSources(j.sources); if (typeof j.response === 'string' && j.response) { full += j.response; onDelta(full, false); } } catch (e) { /* ignore partial */ } }
+        for (const line of ev.split('\n')) { if (!line.startsWith('data:')) continue; const d = line.slice(5).trim(); if (!d || d === '[DONE]') continue; try { const j = JSON.parse(d); if (j.sources && onSources) onSources(j.sources); if (j.provider && onMeta) onMeta({ provider: j.provider }); if (typeof j.response === 'string' && j.response) { full += j.response; onDelta(full, false); } } catch (e) { /* ignore partial */ } }
       }
     }
     if (!full) throw new Error(aiErrorMessage(502));

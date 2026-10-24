@@ -157,6 +157,9 @@
     } catch (e) { /* ignore */ }
   })();
 
+  /* ---------- offline support (service worker) ---------- */
+  try { if ('serviceWorker' in navigator && location.protocol === 'https:' && !/^\/admin/.test(location.pathname)) addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {})); } catch (e) { /* optional */ }
+
   /* ---------- tool page ---------- */
   const tr = $('#tool-root');
   if (tr && window.UT) { try { window.UT.mount(tr, tr.dataset.tool); } catch (e) { tr.innerHTML = '<p class="tool-status err">Could not start this tool: ' + String(e.message).replace(/</g, '&lt;') + '</p>'; console.error(e); } document.body.dataset.toolReady = '1'; }

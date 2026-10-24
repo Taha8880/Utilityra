@@ -207,3 +207,16 @@ test('anthropic steps down the chain when the strongest model is unavailable, bu
     const r2 = await ai({ tool: 'ai-assistant', message: 'hi' }, { ANTHROPIC_API_KEY: 'k' }); assert.equal(r2.status, 429); assert.equal(tried.length, 1);
   } finally { globalThis.fetch = realFetch; }
 });
+
+test('admin: login sets a session cookie that authenticates later requests', async () => {
+  const DB = { prepare: () => { const s = { bind: () => s, run: async () => ({}), first: async () => null, all: async () => ({ results: [] }) }; return s; } };
+  const env = { DB, ADMIN_PASSWORD: 'pw-123456', ADMIN_SESSION_SECRET: 's'.repeat(40) };
+  const bad = await call('/api/admin/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password: 'wrong' }) }, env);
+  assert.equal(bad.status, 401);
+  const r = await call('/api/admin/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password: 'pw-123456' }) }, env);
+  assert.equal(r.status, 200);
+  const sc = r.headers.get('set-cookie'); assert.match(sc, /^ur_admin=.+HttpOnly/);
+  const cookie = sc.split(';')[0];
+  assert.equal((await call('/api/admin/session', { headers: { cookie } }, env)).status, 200);
+  assert.equal((await call('/api/admin/stats', { headers: { cookie } }, env)).status, 200);
+});

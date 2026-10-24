@@ -56,8 +56,8 @@ export const _resetRate = () => buckets.clear();
 function corsHeaders(origin) {
   return origin ? { "access-control-allow-origin": origin, "access-control-allow-methods": "GET, POST, OPTIONS", "access-control-allow-headers": "content-type", "access-control-max-age": "86400", vary: "Origin" } : {};
 }
-function json(data, status = 200, origin = "") {
-  return new Response(JSON.stringify(data), { status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "x-content-type-options": "nosniff", ...corsHeaders(origin) } });
+function json(data, status = 200, origin = "", extra = {}) {
+  return new Response(JSON.stringify(data), { status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "x-content-type-options": "nosniff", ...corsHeaders(origin), ...extra } });
 }
 function allowedOrigin(request, env) {
   const origin = request.headers.get("origin");
@@ -195,11 +195,10 @@ export function providersFor(env) {
   return order.filter((k) => all[k][0]).map((k) => [k, all[k][1]]);
 }
 
-const sse = (chunks, sources = []) => new Response(new ReadableStream({ start(c) { const e = new TextEncoder(); if (sources.length) c.enqueue(e.encode(`data: ${JSON.stringify({ sources })}\n\n`)); for (const t of chunks) c.enqueue(e.encode(`data: ${JSON.stringify({ response: t })}\n\n`)); c.enqueue(e.encode("data: [DONE]\n\n")); c.close(); } }), { headers: { "content-type": "text/event-stream; charset=utf-8", "cache-control": "no-store", "x-content-type-options": "nosniff" } });
-function withSources(st, sources) {
-  if (!sources.length) return st;
+const sse = (chunks, sources = [], provider = "") => new Response(new ReadableStream({ start(c) { const e = new TextEncoder(); if (provider) c.enqueue(e.encode(`data: ${JSON.stringify({ provider })}\n\n`)); if (sources.length) c.enqueue(e.encode(`data: ${JSON.stringify({ sources })}\n\n`)); for (const t of chunks) c.enqueue(e.encode(`data: ${JSON.stringify({ response: t })}\n\n`)); c.enqueue(e.encode("data: [DONE]\n\n")); c.close(); } }), { headers: { "content-type": "text/event-stream; charset=utf-8", "cache-control": "no-store", "x-content-type-options": "nosniff" } });
+function withSources(st, sources, provider = "") {
   const e = new TextEncoder(); const r = st.getReader(); let sent = false;
-  return new ReadableStream({ async pull(c) { if (!sent) { sent = true; c.enqueue(e.encode(`data: ${JSON.stringify({ sources })}\n\n`)); return; } const { done, value } = await r.read(); if (done) c.close(); else c.enqueue(value); }, cancel() { r.cancel(); } });
+  return new ReadableStream({ async pull(c) { if (!sent) { sent = true; c.enqueue(e.encode(`data: ${JSON.stringify({ provider, ...(sources.length ? { sources } : {}) })}\n\n`)); return; } const { done, value } = await r.read(); if (done) c.close(); else c.enqueue(value); }, cancel() { r.cancel(); } });
 }
 async function cacheKey(body) {
   const raw = JSON.stringify([body.tool, body.message, body.options || {}, body.lang || "ar"]);
@@ -229,17 +228,17 @@ async function handleAI(request, env, origin) {
   const gen = genFor(body.tool), wantStream = body.stream === true;
   // Short-lived cache for identical single-shot requests (never for chat, which depends on history).
   const cacheable = body.tool !== "ai-assistant" && typeof caches !== "undefined" && caches.default;
-  let ck; if (cacheable) { try { ck = new Request(await cacheKey(body)); const hit = await caches.default.match(ck); if (hit) { const j = await hit.json(); return wantStream ? sse([j.answer]) : json({ ...j, cached: true }, 200, origin); } } catch { ck = null; } }
+  let ck; if (cacheable) { try { ck = new Request(await cacheKey(body)); const hit = await caches.default.match(ck); if (hit) { const j = await hit.json(); return wantStream ? sse([j.answer], [], j.provider || "") : json({ ...j, cached: true }, 200, origin); } } catch { ck = null; } }
   let lastErr;
   for (const [name, fn] of providers) {
     try {
       // Native Workers AI streaming (SSE passthrough); other providers answer as a single SSE chunk.
       if (wantStream && name === "workers-ai" && env.AI && typeof env.AI.run === "function") {
-        try { const st = await env.AI.run(env.WORKERS_AI_MODEL || MODELS.primary, { messages, max_tokens: gen.max_tokens, temperature: gen.temperature, stream: true }, env.AI_GATEWAY_ID ? { gateway: { id: env.AI_GATEWAY_ID } } : undefined); if (st && typeof st.getReader === "function") return new Response(withSources(st, srcPub), { headers: { "content-type": "text/event-stream; charset=utf-8", "cache-control": "no-store", "x-content-type-options": "nosniff", ...corsHeaders(origin) } }); } catch { /* fall back to non-streaming */ }
+        try { const st = await env.AI.run(env.WORKERS_AI_MODEL || MODELS.primary, { messages, max_tokens: gen.max_tokens, temperature: gen.temperature, stream: true }, env.AI_GATEWAY_ID ? { gateway: { id: env.AI_GATEWAY_ID } } : undefined); if (st && typeof st.getReader === "function") return new Response(withSources(st, srcPub, "workers-ai"), { headers: { "content-type": "text/event-stream; charset=utf-8", "cache-control": "no-store", "x-content-type-options": "nosniff", ...corsHeaders(origin) } }); } catch { /* fall back to non-streaming */ }
       }
       const answer = await fn(messages, env, gen);
       if (ck) { try { await caches.default.put(ck, new Response(JSON.stringify({ answer, provider: name }), { headers: { "content-type": "application/json", "cache-control": "public, max-age=3600" } })); } catch { /* ignore */ } }
-      return wantStream ? sse([answer], srcPub) : json({ answer, provider: name, ...(srcPub.length ? { sources: srcPub } : {}) }, 200, origin);
+      return wantStream ? sse([answer], srcPub, name) : json({ answer, provider: name, ...(srcPub.length ? { sources: srcPub } : {}) }, 200, origin);
     } catch (e) { lastErr = e; if (e.status === 429) break; }
   }
   return json({ error: lastErr?.message === "PROVIDER_NOT_CONFIGURED" ? "PROVIDER_NOT_CONFIGURED" : "UPSTREAM_ERROR" }, lastErr?.status === 429 ? 429 : 502, origin);
