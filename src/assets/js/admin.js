@@ -13,7 +13,14 @@
     $('#lf').addEventListener('submit', async (e) => {
       e.preventDefault(); const button = $('#lf button[type="submit"]'); button.disabled = true; button.textContent = t('جارٍ التحقق…', 'Checking…');
       const r = await post('/api/admin/login', { password: $('#pw').value });
-      if (r.ok) return shell();
+      if (r.ok) {
+        const session = await api('/api/admin/session');
+        if (session.ok && session.j && session.j.authenticated) return shell();
+        login(session.status === 0
+          ? t('تم قبول كلمة المرور، لكن تعذّر تأكيد الجلسة. افحص إعدادات النطاق والكوكيز في Cloudflare.', 'Password accepted, but the session could not be verified. Check Cloudflare domain and cookie settings.')
+          : t('تم قبول كلمة المرور لكن جلسة الإدارة لم تُحفظ. تحقق من نشر آخر إصدار وإعدادات الكوكيز.', 'Password accepted, but the admin session was not retained. Check the deployed version and cookie settings.'));
+        return;
+      }
       const error = r.j && r.j.error;
       const message = r.status === 0 ? t('تعذّر الاتصال بالخادم. تحقق من الإنترنت وحاول مجددًا.', 'Could not reach the server. Check your connection and try again.') : r.status === 503 || error === 'ADMIN_NOT_CONFIGURED' ? t('لوحة الإدارة غير مهيأة: تحقق من أسرار الإدارة وربط قاعدة D1.', 'Admin is not configured: check admin secrets and the D1 binding.') : r.status === 429 ? t('محاولات دخول كثيرة. انتظر 15 دقيقة قبل المحاولة مجددًا.', 'Too many login attempts. Wait 15 minutes before trying again.') : r.status === 401 ? t('كلمة المرور غير صحيحة. تأكد من ADMIN_PASSWORD المحفوظ في Cloudflare، ولا ترسلها هنا.', 'Incorrect password. Verify the ADMIN_PASSWORD secret in Cloudflare; do not send it here.') : t('حدث خطأ في الخادم أثناء تسجيل الدخول. راجع إعدادات Cloudflare وسجلات Worker.', 'The server failed during sign-in. Check Cloudflare settings and Worker logs.');
       login(message);
@@ -31,10 +38,14 @@
 
   async function dash() {
     const r = await api('/api/admin/stats'); if (!guard(r)) return; const j = r.j, m = j.summary || {};
-    const days = j.daily || [], max = Math.max(1, ...days.map((d) => d.page_views || 0));
-    const bars = days.map((d, i) => { const h = Math.round(((d.page_views || 0) / max) * 90); return `<rect x="${i * 14}" y="${100 - h}" width="10" height="${h}" rx="2" fill="currentColor"><title>${esc(d.day)}: ${d.page_views} / ${d.visitors}</title></rect>`; }).join('');
-    $('#view').innerHTML = `<div class="cards">${[['الزوار (30 يومًا)', 'Visitors (30d)', m.visitors], ['مشاهدات الصفحات', 'Page views', m.page_views], ['فتح الأدوات', 'Tool opens', m.tool_opens], ['عمليات البحث', 'Searches', m.searches], ['بحث بلا نتيجة', 'Missed searches', m.search_misses]].map((c) => `<div class="rc"><span class="rc-l">${t(c[0], c[1])}</span><b class="rc-v">${esc(c[2] || 0)}</b></div>`).join('')}</div>
-    <h2>${t('مشاهدات يومية', 'Daily page views')}</h2><svg viewBox="0 0 ${Math.max(days.length * 14, 14)} 100" role="img" aria-label="${t('رسم المشاهدات اليومية', 'Daily page views chart')}" style="width:100%;height:140px;color:var(--accent)" preserveAspectRatio="none">${bars}</svg>
+    const days = Array.isArray(j.daily) ? j.daily : [];
+    const hasData = Number(m.events) > 0;
+    const metric = (value) => value == null ? t('غير متاح', 'Unavailable') : (!hasData ? t('لا توجد بيانات بعد', 'No data yet') : Number(value).toLocaleString(ar() ? 'ar-EG' : 'en-US'));
+    const max = Math.max(1, ...days.map((d) => Number(d.page_views) || 0));
+    const bars = days.map((d, i) => { const h = Math.round(((Number(d.page_views) || 0) / max) * 90); return `<rect x="${i * 14}" y="${100 - h}" width="10" height="${h}" rx="2" fill="currentColor"><title>${esc(d.day)}: ${esc(d.page_views)} / ${esc(d.visitors)}</title></rect>`; }).join('');
+    $('#view').innerHTML = `<p class="stats-note">${hasData ? t('بيانات فعلية مسجلة خلال آخر 30 يومًا.', 'Recorded analytics from the last 30 days.') : t('لم تُسجّل بيانات زيارات بعد. لن نعرض أصفارًا على أنها إحصائيات فعلية.', 'No visit data has been recorded yet. Zeros are not presented as real analytics.')}</p><div class="cards">${[['الزوار (30 يومًا)', 'Visitors (30d)', m.visitors], ['مشاهدات الصفحات', 'Page views', m.page_views], ['فتح الأدوات', 'Tool opens', m.tool_opens], ['عمليات البحث', 'Searches', m.searches], ['بحث بلا نتيجة', 'Missed searches', m.search_misses]].map((c) => `<div class="rc"><span class="rc-l">${t(c[0], c[1])}</span><b class="rc-v">${metric(c[2])}</b></div>`).join('')}
+    <h2>${t('مشاهدات يومية', 'Daily page views')}</h2>${days.length ? `<svg viewBox="0 0 ${Math.max(days.length * 14, 14)} 100" role="img" aria-label="${t('رسم المشاهدات اليومية', 'Daily page views chart')}" style="width:100%;height:140px;color:var(--accent)" preserveAspectRatio="none">${bars}</svg>` : `<p>${t('لا يوجد سجل يومي متاح حتى الآن.', 'No daily records available yet.')}</p>`}
+    `;
     <h2>${t('الأدوات الأكثر استخدامًا', 'Top tools')}</h2>${tbl([t('الأداة', 'Tool'), t('فتح', 'Opens'), t('تشغيل', 'Runs')], (j.topTools || []).map((x) => [x.tool_key, x.opens, x.actions]))}
     <h2>${t('الصفحات الأكثر زيارة', 'Top pages')}</h2>${tbl([t('الصفحة', 'Path'), t('مشاهدات', 'Views')], (j.topPages || []).map((x) => [x.path, x.views]))}
     <h2>${t('عمليات بحث بلا نتيجة (أفكار أدوات جديدة)', 'Searches with no result (new tool ideas)')}</h2>${tbl([t('الكلمة', 'Term'), t('العدد', 'Count')], (j.missedSearches || []).map((x) => [x.search_term, x.searches]))}`;
