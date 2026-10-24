@@ -301,6 +301,7 @@ self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((ks) =
 self.addEventListener('fetch', (e) => {
   const r = e.request, u = new URL(r.url);
   if (r.method !== 'GET' || u.origin !== location.origin || u.pathname.startsWith('/api/') || u.pathname.startsWith('/admin') || u.pathname === '/health' || u.pathname === '/sw.js') return;
+  if (r.mode === 'navigate' || (r.headers.get('accept') || '').includes('text/html')) { e.respondWith(fetch(r).then((res) => { if (res.ok) caches.open(CACHE).then((c) => c.put(r, res.clone())); return res; }).catch(() => caches.open(CACHE).then(async (c) => (await c.match(r)) || (await c.match('/tools/')) || Response.error()))); return; }
   e.respondWith(caches.open(CACHE).then(async (c) => {
     const hit = await c.match(r);
     const net = fetch(r).then((res) => { if (res.ok && (res.type === 'basic')) c.put(r, res.clone()); return res; }).catch(() => hit || (r.mode === 'navigate' ? c.match('/tools/') : undefined));
