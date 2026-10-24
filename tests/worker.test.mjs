@@ -220,3 +220,14 @@ test('admin: login sets a session cookie that authenticates later requests', asy
   assert.equal((await call('/api/admin/session', { headers: { cookie } }, env)).status, 200);
   assert.equal((await call('/api/admin/stats', { headers: { cookie } }, env)).status, 200);
 });
+
+test('ai: failed premium provider is reported in fails and falls back; Gemini key alias works', async () => {
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async (u) => String(u).includes('anthropic') ? new Response(JSON.stringify({ error: { type: 'authentication_error' } }), { status: 401 }) : new Response('{}', { status: 500 });
+  try {
+    const r = await ai({ tool: 'ai-summarizer', message: 'نص طويل للتلخيص' }, { ...okAI, ANTHROPIC_API_KEY: 'bad' }); const j = await r.json();
+    assert.equal(j.provider, 'workers-ai'); assert.match(j.fails.join(' '), /anthropic.*401.*authentication_error/);
+  } finally { globalThis.fetch = realFetch; }
+  const h = await (await call('/health', {}, { Gemini_API_Key: 'k' })).json();
+  assert.ok(h.ai.includes('gemini'));
+});

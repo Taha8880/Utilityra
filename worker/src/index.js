@@ -148,7 +148,7 @@ async function viaOpenAI(messages, env, gen = DEFAULT_GEN) {
   if (!env.OPENAI_API_KEY) throw Object.assign(new Error("PROVIDER_NOT_CONFIGURED"), { status: 503 });
   const res = await fetch(gw(env, "openai", "https://api.openai.com/v1") + "/chat/completions", { method: "POST", headers: { authorization: `Bearer ${env.OPENAI_API_KEY}`, "content-type": "application/json", ...gwAuth(env) }, body: JSON.stringify({ model: env.OPENAI_MODEL || (gen.strong ? "gpt-4.1" : "gpt-4.1-mini"), messages, max_tokens: gen.max_tokens, temperature: gen.temperature }) });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw Object.assign(new Error("UPSTREAM_ERROR"), { status: res.status === 429 ? 429 : 502 });
+  if (!res.ok) throw Object.assign(new Error("UPSTREAM_ERROR"), { status: res.status === 429 ? 429 : 502, detail: `openai ${res.status} ${data?.error?.code || data?.error?.type || ""}`.trim() });
   const text = data?.choices?.[0]?.message?.content?.trim();
   if (!text) throw Object.assign(new Error("EMPTY_PROVIDER_RESPONSE"), { status: 502 });
   return text;
@@ -171,34 +171,35 @@ async function viaAnthropic(messages, env, gen = DEFAULT_GEN) {
       if (text) return text;
       last = Object.assign(new Error("EMPTY_PROVIDER_RESPONSE"), { status: 502 }); continue;
     }
-    last = Object.assign(new Error("UPSTREAM_ERROR"), { status: res.status === 429 ? 429 : 502 });
+    last = Object.assign(new Error("UPSTREAM_ERROR"), { status: res.status === 429 ? 429 : 502, detail: `anthropic ${model} ${res.status} ${data?.error?.type || ""}`.trim() });
     if (res.status === 429 || res.status === 401 || res.status === 403) break; // quota / key problems: stepping down will not help
     // 400/404 (model not available for this account) and 5xx: try the next model in the chain
   }
   throw last || Object.assign(new Error("UPSTREAM_ERROR"), { status: 502 });
 }
 async function viaGemini(messages, env, gen = DEFAULT_GEN) {
-  if (!env.GEMINI_API_KEY) throw Object.assign(new Error("PROVIDER_NOT_CONFIGURED"), { status: 503 });
+  if (!geminiKey(env)) throw Object.assign(new Error("PROVIDER_NOT_CONFIGURED"), { status: 503 });
   const system = messages.find((m) => m.role === "system")?.content || "";
   const contents = messages.filter((m) => m.role !== "system").map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] }));
   const model = env.GEMINI_MODEL || (gen.strong ? "gemini-2.5-pro" : "gemini-2.5-flash");
-  const res = await fetch(`${gw(env, "google-ai-studio", "https://generativelanguage.googleapis.com")}/v1beta/models/${encodeURIComponent(model)}:generateContent`, { method: "POST", headers: { "x-goog-api-key": env.GEMINI_API_KEY, "content-type": "application/json", ...gwAuth(env) }, body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents, generationConfig: { maxOutputTokens: gen.max_tokens, temperature: gen.temperature } }) });
+  const res = await fetch(`${gw(env, "google-ai-studio", "https://generativelanguage.googleapis.com")}/v1beta/models/${encodeURIComponent(model)}:generateContent`, { method: "POST", headers: { "x-goog-api-key": geminiKey(env), "content-type": "application/json", ...gwAuth(env) }, body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents, generationConfig: { maxOutputTokens: gen.max_tokens, temperature: gen.temperature } }) });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw Object.assign(new Error("UPSTREAM_ERROR"), { status: res.status === 429 ? 429 : 502 });
   const text = (data?.candidates?.[0]?.content?.parts || []).map((p) => p.text || "").join("").trim();
   if (!text) throw Object.assign(new Error("EMPTY_PROVIDER_RESPONSE"), { status: 502 });
   return text;
 }
+const geminiKey = (env) => env.GEMINI_API_KEY || env.Gemini_API_Key || env.GOOGLE_API_KEY || "";
 export function providersFor(env) {
-  const all = { anthropic: [!!env.ANTHROPIC_API_KEY, viaAnthropic], "workers-ai": [!!env.AI, viaWorkersAI], openai: [!!env.OPENAI_API_KEY, viaOpenAI], gemini: [!!env.GEMINI_API_KEY, viaGemini] };
+  const all = { anthropic: [!!env.ANTHROPIC_API_KEY, viaAnthropic], "workers-ai": [!!env.AI, viaWorkersAI], openai: [!!env.OPENAI_API_KEY, viaOpenAI], gemini: [!!geminiKey(env), viaGemini] };
   const order = [env.AI_PROVIDER, "anthropic", "workers-ai", "openai", "gemini"].filter((v, i, a) => v && all[v] && a.indexOf(v) === i);
   return order.filter((k) => all[k][0]).map((k) => [k, all[k][1]]);
 }
 
-const sse = (chunks, sources = [], provider = "") => new Response(new ReadableStream({ start(c) { const e = new TextEncoder(); if (provider) c.enqueue(e.encode(`data: ${JSON.stringify({ provider })}\n\n`)); if (sources.length) c.enqueue(e.encode(`data: ${JSON.stringify({ sources })}\n\n`)); for (const t of chunks) c.enqueue(e.encode(`data: ${JSON.stringify({ response: t })}\n\n`)); c.enqueue(e.encode("data: [DONE]\n\n")); c.close(); } }), { headers: { "content-type": "text/event-stream; charset=utf-8", "cache-control": "no-store", "x-content-type-options": "nosniff" } });
-function withSources(st, sources, provider = "") {
+const sse = (chunks, sources = [], provider = "", fails = []) => new Response(new ReadableStream({ start(c) { const e = new TextEncoder(); if (provider) c.enqueue(e.encode(`data: ${JSON.stringify({ provider, ...(fails.length ? { fails } : {}) })}\n\n`)); if (sources.length) c.enqueue(e.encode(`data: ${JSON.stringify({ sources })}\n\n`)); for (const t of chunks) c.enqueue(e.encode(`data: ${JSON.stringify({ response: t })}\n\n`)); c.enqueue(e.encode("data: [DONE]\n\n")); c.close(); } }), { headers: { "content-type": "text/event-stream; charset=utf-8", "cache-control": "no-store", "x-content-type-options": "nosniff" } });
+function withSources(st, sources, provider = "", fails = []) {
   const e = new TextEncoder(); const r = st.getReader(); let sent = false;
-  return new ReadableStream({ async pull(c) { if (!sent) { sent = true; c.enqueue(e.encode(`data: ${JSON.stringify({ provider, ...(sources.length ? { sources } : {}) })}\n\n`)); return; } const { done, value } = await r.read(); if (done) c.close(); else c.enqueue(value); }, cancel() { r.cancel(); } });
+  return new ReadableStream({ async pull(c) { if (!sent) { sent = true; c.enqueue(e.encode(`data: ${JSON.stringify({ provider, ...(fails.length ? { fails } : {}), ...(sources.length ? { sources } : {}) })}\n\n`)); return; } const { done, value } = await r.read(); if (done) c.close(); else c.enqueue(value); }, cancel() { r.cancel(); } });
 }
 async function cacheKey(body) {
   const raw = JSON.stringify([body.tool, body.message, body.options || {}, body.lang || "ar"]);
@@ -229,17 +230,17 @@ async function handleAI(request, env, origin) {
   // Short-lived cache for identical single-shot requests (never for chat, which depends on history).
   const cacheable = body.tool !== "ai-assistant" && typeof caches !== "undefined" && caches.default;
   let ck; if (cacheable) { try { ck = new Request(await cacheKey(body)); const hit = await caches.default.match(ck); if (hit) { const j = await hit.json(); return wantStream ? sse([j.answer], [], j.provider || "") : json({ ...j, cached: true }, 200, origin); } } catch { ck = null; } }
-  let lastErr;
+  let lastErr; const fails = [];
   for (const [name, fn] of providers) {
     try {
       // Native Workers AI streaming (SSE passthrough); other providers answer as a single SSE chunk.
       if (wantStream && name === "workers-ai" && env.AI && typeof env.AI.run === "function") {
-        try { const st = await env.AI.run(env.WORKERS_AI_MODEL || MODELS.primary, { messages, max_tokens: gen.max_tokens, temperature: gen.temperature, stream: true }, env.AI_GATEWAY_ID ? { gateway: { id: env.AI_GATEWAY_ID } } : undefined); if (st && typeof st.getReader === "function") return new Response(withSources(st, srcPub, "workers-ai"), { headers: { "content-type": "text/event-stream; charset=utf-8", "cache-control": "no-store", "x-content-type-options": "nosniff", ...corsHeaders(origin) } }); } catch { /* fall back to non-streaming */ }
+        try { const st = await env.AI.run(env.WORKERS_AI_MODEL || MODELS.primary, { messages, max_tokens: gen.max_tokens, temperature: gen.temperature, stream: true }, env.AI_GATEWAY_ID ? { gateway: { id: env.AI_GATEWAY_ID } } : undefined); if (st && typeof st.getReader === "function") return new Response(withSources(st, srcPub, "workers-ai", fails), { headers: { "content-type": "text/event-stream; charset=utf-8", "cache-control": "no-store", "x-content-type-options": "nosniff", ...corsHeaders(origin) } }); } catch { /* fall back to non-streaming */ }
       }
       const answer = await fn(messages, env, gen);
       if (ck) { try { await caches.default.put(ck, new Response(JSON.stringify({ answer, provider: name }), { headers: { "content-type": "application/json", "cache-control": "public, max-age=3600" } })); } catch { /* ignore */ } }
-      return wantStream ? sse([answer], srcPub, name) : json({ answer, provider: name, ...(srcPub.length ? { sources: srcPub } : {}) }, 200, origin);
-    } catch (e) { lastErr = e; if (e.status === 429) break; }
+      return wantStream ? sse([answer], srcPub, name, fails) : json({ answer, provider: name, ...(fails.length ? { fails } : {}), ...(srcPub.length ? { sources: srcPub } : {}) }, 200, origin);
+    } catch (e) { lastErr = e; fails.push(e.detail || `${name} ${e.message}`); if (e.status === 429) break; }
   }
   return json({ error: lastErr?.message === "PROVIDER_NOT_CONFIGURED" ? "PROVIDER_NOT_CONFIGURED" : "UPSTREAM_ERROR" }, lastErr?.status === 429 ? 429 : 502, origin);
 }

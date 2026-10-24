@@ -3,17 +3,17 @@
 // extra: { lib: 'pdf' }  -> page loads the bundled pdf-lib.
 
 export const CATEGORIES = [
-  ['ai', 'AI', 'أدوات الذكاء الاصطناعي', 'AI Tools', 'تلخيص وكتابة وترجمة وبرمجة بمساعدة الذكاء الاصطناعي.', 'Summarize, write, translate and code with AI.'],
-  ['text', 'Aa', 'النصوص والكتابة', 'Text & Writing', 'عدّ الكلمات وتنظيف النصوص وتحويلها ومقارنتها.', 'Count, clean, convert and compare text.'],
-  ['dev', '{}', 'أدوات المطورين', 'Developer Tools', 'تنسيق JSON وSQL وCSS والتحقق من الكود والتحويل بين الصيغ.', 'Format JSON, SQL, CSS, validate code and convert formats.'],
-  ['security', '#', 'الأمان والتشفير', 'Security & Hashing', 'كلمات مرور قوية وبصمات تشفير وأرقام عشوائية.', 'Strong passwords, hashes and random numbers.'],
-  ['seo', 'SEO', 'السيو والويب', 'SEO & Web', 'وسوم Meta وملفات robots وsitemap وروابط UTM.', 'Meta tags, robots, sitemap and UTM links.'],
-  ['calc', '%', 'الحاسبات والمال', 'Calculators & Finance', 'نسب وضرائب وقروض وفوائد وإحصاء.', 'Percentages, VAT, loans, interest and statistics.'],
-  ['study', 'A+', 'الطلاب والدراسة', 'Students & Study', 'المعدل التراكمي والدرجات وخطط المذاكرة والتوثيق.', 'GPA, grades, study plans and citations.'],
-  ['convert', '⇄', 'التحويلات والوقت', 'Converters & Time', 'وحدات وتواريخ وهجري وميلادي ومناطق زمنية.', 'Units, dates, Hijri/Gregorian and time zones.'],
-  ['files', 'PDF', 'ملفات PDF', 'PDF & Files', 'دمج وتقسيم PDF وتحويل الصور إلى PDF داخل متصفحك.', 'Merge, split PDFs and turn images into PDF in your browser.'],
-  ['images', 'IMG', 'الصور', 'Images', 'ضغط وقص وتدوير وتحويل الصور دون رفعها لأي خادم.', 'Compress, crop, rotate and convert images without uploading.'],
-  ['design', 'Ui', 'التصميم والألوان', 'Design & Color', 'ألوان وتدرجات وظلال ورموز QR.', 'Colors, gradients, shadows and QR codes.']
+  ['ai', 'AI', 'أدوات الذكاء الاصطناعي', 'AI Tools', 'مساعدون أذكياء للتلخيص والكتابة والترجمة والبرمجة.', 'Smart helpers for summarising, writing, translating and coding.'],
+  ['text', 'Aa', 'النصوص والكتابة', 'Text & Writing', 'عدّ الكلمات وتنظيف النصوص وتحويلها ومقارنتها بدقة.', 'Count, clean, convert and compare text with precision.'],
+  ['dev', '{}', 'أدوات المطورين', 'Developer Tools', 'تنسيق JSON وSQL وCSS، والتحقق من الأكواد، والتحويل بين الصيغ.', 'Format JSON, SQL and CSS, validate code and convert between formats.'],
+  ['security', '#', 'الأمان والتشفير', 'Security & Hashing', 'كلمات مرور قوية وبصمات تشفير وأرقام عشوائية آمنة.', 'Strong passwords, cryptographic hashes and secure random numbers.'],
+  ['seo', 'SEO', 'السيو والويب', 'SEO & Web', 'وسوم Meta وملفات robots وsitemap وروابط UTM لتحسين ظهور موقعك.', 'Meta tags, robots, sitemap and UTM links to improve your site’s visibility.'],
+  ['calc', '%', 'الحاسبات والمال', 'Calculators & Finance', 'نسب مئوية وضرائب وقروض وفوائد وإحصاء، بنتائج فورية.', 'Percentages, VAT, loans, interest and statistics, with instant results.'],
+  ['study', 'A+', 'الطلاب والدراسة', 'Students & Study', 'المعدل التراكمي والدرجات وخطط المذاكرة وتوثيق المراجع.', 'GPA, grades, study plans and reference formatting.'],
+  ['convert', '⇄', 'التحويلات والوقت', 'Converters & Time', 'تحويل الوحدات والتواريخ (هجري وميلادي) والمناطق الزمنية.', 'Convert units, dates (Hijri/Gregorian) and time zones.'],
+  ['files', 'PDF', 'ملفات PDF', 'PDF & Files', 'ادمج ملفات PDF وقسّمها وحوّل الصور إليها، كل ذلك داخل متصفحك.', 'Merge and split PDFs and turn images into PDF, all inside your browser.'],
+  ['images', 'IMG', 'الصور', 'Images', 'اضغط الصور وقصّها وحوّلها دون رفعها إلى أي خادم.', 'Compress, crop and convert images without uploading them anywhere.'],
+  ['design', 'Ui', 'التصميم والألوان', 'Design & Color', 'ألوان وتدرجات وظلال ورموز QR لتصاميم أنيقة.', 'Colours, gradients, shadows and QR codes for polished designs.']
 ];
 
 export const TOOLS = [
