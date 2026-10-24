@@ -161,3 +161,17 @@ test('dev assistant: auth required and message builder trims history', async () 
   assert.equal((await call('/api/admin/assistant', { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{"message":"hi"}' }, env)).status, 401);
   const { devMessages } = await import('../worker/src/admin.js'); const m = devMessages([{ role: 'system', content: 'x' }, { role: 'user', content: 'a' }], 'q'); assert.equal(m.length, 3); assert.equal(m[0].role, 'system'); assert.equal(m[1].content, 'a');
 });
+
+import { wantsGrounding, ground, sourcesBlock } from '../worker/src/ground.js';
+test('grounding: only factual-looking questions; parses Wikipedia and builds SOURCES block', async () => {
+  assert.equal(wantsGrounding('hi'), false); assert.equal(wantsGrounding('function f(){ return 1; }'), false); assert.equal(wantsGrounding('متى تأسست جامعة القاهرة وما تاريخها؟'), true);
+  const f = async (u) => (/list=search/.test(u) ? new Response(JSON.stringify({ query: { search: [{ title: 'Cairo University' }] } })) : new Response(JSON.stringify({ title: 'Cairo University', extract: 'Founded in 1908.', content_urls: { desktop: { page: 'https://en.wikipedia.org/wiki/Cairo_University' } } })));
+  const s = await ground('when was cairo university founded', 'en', f); assert.equal(s.length, 1); assert.match(sourcesBlock(s), /\[1\] Cairo University: Founded in 1908/); assert.match(sourcesBlock([]), /could not|Do not present uncertain/i);
+  assert.deepEqual(await ground('question here long enough', 'en', async () => { throw new Error('net'); }), []);
+});
+test('ai-assistant with ground:true returns sources and injects them into the prompt', async () => {
+  _resetRate(); let sys = ''; const AI = { run: async (m, i) => { sys = i.messages[0].content; return { response: 'answer [1]' }; } };
+  const f = async (u) => (/list=search/.test(u) ? new Response(JSON.stringify({ query: { search: [{ title: 'Cairo' }] } })) : new Response(JSON.stringify({ title: 'Cairo', extract: 'Capital of Egypt.', content_urls: { desktop: { page: 'https://en.wikipedia.org/wiki/Cairo' } } })));
+  const r = await ai({ tool: 'ai-assistant', message: 'what is the capital of Egypt please', lang: 'en', ground: true, memory: 'I am a student' }, { AI, _fetch: f }); const j = await r.json();
+  assert.equal(j.sources[0].title, 'Cairo'); assert.match(sys, /SOURCES/); assert.match(sys, /Capital of Egypt/); assert.match(sys, /USER NOTES[\s\S]*I am a student/);
+});
