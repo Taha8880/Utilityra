@@ -265,3 +265,37 @@ input[type="file"]::file-selector-button:hover { filter: brightness(1.08); }
 .memo { margin: 8px 0; } .memo summary { cursor: pointer; font-weight: 600; } .memo textarea { width: 100%; margin-top: 8px; }
 .ck { display: inline-flex; gap: 6px; align-items: center; font-size: 13.5px; }
 .bubble pre { overflow: auto; padding: 12px; padding-top: 30px; border-radius: 10px; background: var(--paper); direction: ltr; text-align: left; }
+
+/* =====================  Motion system v2 (progressive; off for reduced-motion)  ===================== */
+@property --ang { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+:root { --ease: cubic-bezier(.22, 1, .36, 1); --spring: cubic-bezier(.34, 1.56, .64, 1); }
+.favstar { position: absolute; top: 10px; inset-inline-end: 10px; width: 30px; height: 30px; display: grid; place-items: center; border: 0; border-radius: 9px; background: transparent; color: var(--muted); z-index: 2; } .favstar:hover { color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); } .favstar[aria-pressed="true"] { color: var(--accent); } .favstar[aria-pressed="true"] svg { fill: currentColor; } .favstar svg { width: 16px; height: 16px; }
+.tcard, .ccat { position: relative; }
+.favrec { margin: 0 0 28px; } .favrec h2 { font-size: 22px; margin-bottom: 12px; } .favrec .tgrid { margin-bottom: 18px; }
+.scroll-progress { position: fixed; top: 0; inset-inline: 0; height: 3px; z-index: 80; background: linear-gradient(90deg, var(--accent), var(--accent2)); transform-origin: 0 50%; transform: scaleX(0); pointer-events: none; } html[dir="rtl"] .scroll-progress { transform-origin: 100% 50%; }
+.hdr.scrolled { box-shadow: 0 6px 24px -14px rgba(0, 0, 0, .35); }
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition { navigation: auto; }
+  ::view-transition-old(root) { animation: vt-out .22s var(--ease) both; } ::view-transition-new(root) { animation: vt-in .38s var(--ease) both; }
+  @keyframes vt-out { to { opacity: 0; transform: translateY(-6px); } } @keyframes vt-in { from { opacity: 0; transform: translateY(10px); } }
+  /* staggered entrance */
+  .reveal { transition: opacity .8s var(--ease), transform .8s var(--ease); transition-delay: calc(var(--i, 0) * 45ms); }
+  .phead > *, .phead .ttl { animation: rise .7s var(--ease) both; } .phead > :nth-child(2) { animation-delay: .06s; } .phead > :nth-child(3) { animation-delay: .12s; }
+  @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  .panel, .note { animation: rise .8s var(--ease) .1s both; }
+  .out > * { animation: pop .45s var(--ease) both; } @keyframes pop { from { opacity: 0; transform: translateY(8px) scale(.985); } to { opacity: 1; transform: none; } }
+  /* spotlight cards: glow follows the pointer */
+  .tcard::before, .ccat::before, .fcard::before { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity .3s; background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%); }
+  .tcard:hover::before, .ccat:hover::before, .fcard:hover::before { opacity: 1; }
+  .tcard, .ccat { transition: transform .35s var(--spring), border-color .25s, box-shadow .35s; } .tcard:hover, .ccat:hover { transform: translateY(-4px); box-shadow: 0 18px 34px -22px rgba(0, 0, 0, .45); }
+  .tcard .g .ic, .ccat .g .ic, .pill i .ic { transition: transform .45s var(--spring); } .tcard:hover .g .ic, .ccat:hover .g .ic, .pill:hover i .ic { transform: rotate(-8deg) scale(1.14); }
+  .tcard:active, .btn:active, .chip:active { transform: scale(.98); }
+  .btn.primary { background-size: 200% 100%; background-image: linear-gradient(100deg, var(--accent), var(--accent2), var(--accent)); transition: background-position .6s var(--ease), transform .2s, box-shadow .3s; } .btn.primary:hover { background-position: 100% 0; box-shadow: 0 10px 24px -12px var(--accent); }
+  /* rotating gradient border on focus for the main tool panel + hero search */
+  .panel:focus-within, .hero-search:focus-within { border-color: transparent; background: linear-gradient(var(--card), var(--card)) padding-box, conic-gradient(from var(--ang), var(--accent), var(--accent2), #ffd9a8, var(--accent)) border-box; animation: spin 4s linear infinite; } @keyframes spin { to { --ang: 360deg; } }
+  .hero .sky { transform: translate3d(0, calc(var(--py, 0) * 1px), 0) scale(1.04); will-change: transform; }
+  .scroll-progress { animation: prog auto linear; animation-timeline: scroll(root); } @keyframes prog { to { transform: scaleX(1); } }
+  .marquee-track, .marq { animation-play-state: running; } .marquee:hover .marquee-track { animation-play-state: paused; }
+  .skel { background: linear-gradient(90deg, var(--paper) 25%, var(--line) 50%, var(--paper) 75%); background-size: 200% 100%; animation: shimmer 1.2s linear infinite; border-radius: 8px; } @keyframes shimmer { to { background-position: -200% 0; } }
+}
+@media (prefers-reduced-motion: reduce) { .scroll-progress { display: none; } }

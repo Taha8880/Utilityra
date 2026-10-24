@@ -96,7 +96,7 @@ await run('contrast-checker', { fg: '#000000', bg: '#ffffff' }, '21.00', { click
 { const { page, errs } = await open(ctx, '/');
   rec('home:renders', (await page.locator('h1').count()) > 0 && !errs.length, errs.join('|'));
   await page.locator('a[href="/tools/"]').first().click(); await page.waitForURL('**/tools/'); rec('nav:tools-index', true);
-  const cards = await page.locator('a.tcard').count(); rec('tools-index:cards=' + TOOLS.length, cards === TOOLS.length, 'found ' + cards);
+  const cards = await page.locator('main .tgrid:not(#favrec *) a.tcard').count(); rec('tools-index:cards=' + TOOLS.length, cards === TOOLS.length, 'found ' + cards);
   await page.locator('a.tcard[href="/tools/word-counter/"]').first().click(); await page.waitForURL('**/tools/word-counter/'); rec('nav:card->own-page', (await page.locator('#tool-root').getAttribute('data-tool')) === 'word-counter');
   await page.goBack(); rec('nav:back', page.url().endsWith('/tools/'));
   await page.close(); }

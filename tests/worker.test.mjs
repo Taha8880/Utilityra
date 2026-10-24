@@ -175,3 +175,10 @@ test('ai-assistant with ground:true returns sources and injects them into the pr
   const r = await ai({ tool: 'ai-assistant', message: 'what is the capital of Egypt please', lang: 'en', ground: true, memory: 'I am a student' }, { AI, _fetch: f }); const j = await r.json();
   assert.equal(j.sources[0].title, 'Cairo'); assert.match(sys, /SOURCES/); assert.match(sys, /Capital of Egypt/); assert.match(sys, /USER NOTES[\s\S]*I am a student/);
 });
+
+test('assistant is aware of the site: catalog and changelog are in its prompt', async () => {
+  _resetRate(); let sys = ''; const AI = { run: async (m, i) => { sys = i.messages[0].content; return { response: 'ok' }; } };
+  await ai({ tool: 'ai-assistant', message: 'which tool merges pdf files?' }, { AI });
+  assert.match(sys, /pdf-merge \| PDF Merger/); assert.match(sys, /CHANGELOG/); assert.match(sys, /\/tools\/<id>\//);
+  _resetRate(); await ai({ tool: 'ai-summarizer', message: 'text' }, { AI }); assert.ok(!/TOOL CATALOG/.test(sys));
+});

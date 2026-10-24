@@ -148,13 +148,59 @@
     try {
       if (/^\/admin(\/|$)/.test(location.pathname)) return;
       fetch(((window.UTILITYRA || {}).apiBase || '') + '/api/config').then((r) => (r.ok ? r.json() : null)).then((c) => {
-        if (!c) return; const off = new Set(c.disabled || []);
+        if (!c) return; const off = new Set(c.disabled || []); if (window.URApplyConfig) window.URApplyConfig(c);
         off.forEach((id) => document.querySelectorAll('[data-id="' + id + '"]').forEach((e) => e.remove()));
         const root = document.querySelector('#tool-root'); if (root && off.has(root.dataset.tool)) root.innerHTML = '<p class="tool-status err">' + (document.documentElement.lang === 'en' ? 'This tool is temporarily unavailable.' : 'هذه الأداة متوقفة مؤقتًا.') + '</p>';
         const s = c.settings || {}, msg = document.documentElement.lang === 'en' ? s.announcement_en : s.announcement_ar;
         if (msg) { const d = document.createElement('div'); d.className = 'note'; d.setAttribute('role', 'status'); d.style.cssText = 'margin:0;border-radius:0;justify-content:center;text-align:center'; d.textContent = msg; document.body.prepend(d); }
       }).catch(() => {});
     } catch (e) { /* ignore */ }
+  })();
+
+
+  /* ---------- motion v2 + favorites/recent (all progressive, wrapped so nothing can break the page) ---------- */
+  (function () {
+    try {
+      const reduceM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const store = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } } };
+      const hdr = document.querySelector('.hdr');
+      if (!reduceM) {
+        // header shadow, hero parallax, scroll progress
+        const bar = document.createElement('div'); bar.className = 'scroll-progress'; bar.setAttribute('aria-hidden', 'true'); document.body.appendChild(bar);
+        let tick = false;
+        const onScroll = () => { if (tick) return; tick = true; requestAnimationFrame(() => { tick = false; const y = scrollY; if (hdr) hdr.classList.toggle('scrolled', y > 8); document.documentElement.style.setProperty('--py', String(Math.min(y, 800) * 0.12)); if (!CSS.supports || !CSS.supports('animation-timeline: scroll()')) { const h = document.documentElement.scrollHeight - innerHeight; bar.style.transform = 'scaleX(' + (h > 0 ? Math.min(1, y / h) : 0) + ')'; } }); };
+        addEventListener('scroll', onScroll, { passive: true }); onScroll();
+        // pointer spotlight on cards
+        document.addEventListener('pointermove', (e) => { const c = e.target.closest && e.target.closest('.tcard,.ccat,.fcard'); if (!c) return; const r = c.getBoundingClientRect(); c.style.setProperty('--mx', (e.clientX - r.left) + 'px'); c.style.setProperty('--my', (e.clientY - r.top) + 'px'); }, { passive: true });
+        // stagger entrance for grids
+        document.querySelectorAll('.tgrid, .cgrid').forEach((g) => { [...g.children].slice(0, 36).forEach((c, i) => { if (c.classList.contains('reveal')) { c.style.setProperty('--i', String(i % 12)); return; } c.classList.add('reveal'); c.style.setProperty('--i', String(i % 12)); }); });
+        const late = document.querySelectorAll('.tgrid .reveal:not(.in), .cgrid .reveal:not(.in)');
+        if (late.length && 'IntersectionObserver' in window) { const io2 = new IntersectionObserver((es) => es.forEach((en) => { if (en.isIntersecting) { en.target.classList.add('in'); io2.unobserve(en.target); } }), { rootMargin: '0px 0px -6% 0px' }); late.forEach((e) => io2.observe(e)); }
+      }
+      // favorites + recent
+      const IDX = window.UT_INDEX || [], byId = Object.fromEntries(IDX.map((t) => [t[0], t]));
+      const star = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.8-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1L3.2 9.4l6.1-.8z"/></svg>';
+      const lng = () => document.documentElement.lang === 'en';
+      const favs = () => store.get('ur-fav', []).filter((id) => byId[id]);
+      function decorateCards(scope) {
+        (scope || document).querySelectorAll('.tcard[data-id]').forEach((c) => { if (c.querySelector('.favstar')) return; const id = c.dataset.id; const b = document.createElement('button'); b.type = 'button'; b.className = 'favstar'; b.innerHTML = star; const on = favs().includes(id); b.setAttribute('aria-pressed', on); b.setAttribute('aria-label', lng() ? 'Favorite' : 'مفضلة'); b.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); let f = favs(); f = f.includes(id) ? f.filter((x) => x !== id) : [id, ...f].slice(0, 24); store.set('ur-fav', f); document.querySelectorAll('.tcard[data-id="' + id + '"] .favstar').forEach((x) => x.setAttribute('aria-pressed', f.includes(id))); renderFavRec(); }); c.appendChild(b); });
+      }
+      const miniIcon = (n) => '<svg class="ic" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ((window.UT_ICONS || {})[n] || '') + '</svg>';
+      const esc = (x) => String(x).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+      function card(id) { const t = byId[id]; return '<a class="tcard" href="/tools/' + id + '/" data-id="' + id + '"><span class="g">' + miniIcon(t[2]) + '</span><span><h3>' + (lng() ? esc(t[4]) : esc(t[3])) + '</h3><p>' + (lng() ? esc(t[6]) : esc(t[5])) + '</p></span></a>'; }
+      function renderFavRec() {
+        const grid = document.querySelector('main .tgrid'); if (!grid || !/^\/tools\/?$/.test(location.pathname)) return;
+        let box = document.getElementById('favrec'); if (!box) { box = document.createElement('section'); box.id = 'favrec'; box.className = 'favrec'; grid.parentNode.insertBefore(box, grid); }
+        const f = favs(), r = store.get('ur-recent', []).filter((id) => byId[id] && !f.includes(id)).slice(0, 6);
+        box.innerHTML = (f.length ? '<h2>' + (lng() ? 'Favorites' : 'المفضلة') + '</h2><div class="tgrid">' + f.slice(0, 12).map(card).join('') + '</div>' : '') + (r.length ? '<h2>' + (lng() ? 'Recently used' : 'استخدمتها مؤخرًا') + '</h2><div class="tgrid">' + r.map(card).join('') + '</div>' : '');
+        decorateCards(box);
+      }
+      const root = document.querySelector('#tool-root');
+      if (root) { const id = root.dataset.tool; store.set('ur-recent', [id, ...store.get('ur-recent', []).filter((x) => x !== id)].slice(0, 12)); }
+      decorateCards(); renderFavRec();
+      // admin-ordered / featured tools on the index
+      window.URApplyConfig = (c) => { try { const grid = document.querySelector('main .tgrid'); if (!grid || !/^\/tools\/?$/.test(location.pathname) || !c) return; const feat = new Set(c.featured || []), sort = c.sort || {}; const kids = [...grid.children]; const rank = (e) => { const id = e.dataset.id; return (feat.has(id) ? -1e6 : 0) + (sort[id] ? -1e3 + sort[id] : 0); }; kids.map((e, i) => [e, i]).sort((a, b) => rank(a[0]) - rank(b[0]) || a[1] - b[1]).forEach(([e]) => grid.appendChild(e)); } catch (e) { /* ignore */ } };
+    } catch (e) { /* motion/favorites must never break the page */ }
   })();
 
   /* ---------- tool page ---------- */
