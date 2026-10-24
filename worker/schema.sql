@@ -43,3 +43,17 @@ CREATE TABLE IF NOT EXISTS rate_limits (k TEXT NOT NULL, w INTEGER NOT NULL, n I
 CREATE TABLE IF NOT EXISTS tool_flags (tool_key TEXT PRIMARY KEY, enabled INTEGER NOT NULL DEFAULT 1, featured INTEGER NOT NULL DEFAULT 0, sort INTEGER NOT NULL DEFAULT 0);
 CREATE TABLE IF NOT EXISTS site_settings (k TEXT PRIMARY KEY, v TEXT NOT NULL DEFAULT '');
 CREATE TABLE IF NOT EXISTS admin_audit_log (id INTEGER PRIMARY KEY AUTOINCREMENT, action TEXT NOT NULL, detail TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
+
+
+-- Public feedback reports submitted through the on-site contact form.
+CREATE TABLE IF NOT EXISTS contact_reports (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  type TEXT NOT NULL CHECK (type IN ('bug','suggestion','other')),
+  page TEXT NOT NULL DEFAULT '',
+  email TEXT NOT NULL DEFAULT '',
+  message TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'new' CHECK (status IN ('new','reviewing','resolved','closed')),
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_contact_reports_status ON contact_reports(status, created_at);
