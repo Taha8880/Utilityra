@@ -1,8 +1,8 @@
 # E2E test log
 
-Generated: 2026-10-25T00:01:37.715Z
+Generated: 2026-10-25T00:43:35.067Z
 
-**295/295 passed**, 0 failed.
+**343/343 passed**, 0 failed.
 
 | test | result | note |
 |---|---|---|
@@ -24,6 +24,8 @@ Generated: 2026-10-25T00:01:37.715Z
 | page:ai-social-posts | PASS |  |
 | page:ai-resume-writer | PASS |  |
 | page:ai-product-description | PASS |  |
+| page:ai-decision-helper | PASS |  |
+| page:ai-game-master | PASS |  |
 | page:ai-name-ideas | PASS |  |
 | page:word-counter | PASS |  |
 | page:case-converter | PASS |  |
@@ -120,6 +122,17 @@ Generated: 2026-10-25T00:01:37.715Z
 | page:security-header-checker | PASS |  |
 | page:page-speed-checker | PASS |  |
 | page:accessibility-checker | PASS |  |
+| page:pomodoro-timer | PASS |  |
+| page:countdown-timer | PASS |  |
+| page:typing-speed-test | PASS |  |
+| page:random-picker | PASS |  |
+| page:morse-code | PASS |  |
+| page:roman-numerals | PASS |  |
+| page:text-binary | PASS |  |
+| page:invoice-generator | PASS |  |
+| page:spin-wheel | PASS |  |
+| page:team-splitter | PASS |  |
+| page:dice-coin | PASS |  |
 | page:qr-code-generator | PASS |  |
 | smoke:ai-assistant | PASS | no-out-container  |
 | smoke:ai-summarizer | PASS | graceful-error  |
@@ -139,6 +152,8 @@ Generated: 2026-10-25T00:01:37.715Z
 | smoke:ai-social-posts | PASS | graceful-error  |
 | smoke:ai-resume-writer | PASS | graceful-error  |
 | smoke:ai-product-description | PASS | graceful-error  |
+| smoke:ai-decision-helper | PASS | graceful-error  |
+| smoke:ai-game-master | PASS | output  |
 | smoke:ai-name-ideas | PASS | graceful-error  |
 | smoke:word-counter | PASS | output  |
 | smoke:case-converter | PASS | empty  |
@@ -235,8 +250,41 @@ Generated: 2026-10-25T00:01:37.715Z
 | smoke:security-header-checker | PASS | empty  |
 | smoke:page-speed-checker | PASS | empty  |
 | smoke:accessibility-checker | PASS | empty  |
+| smoke:pomodoro-timer | PASS | output  |
+| smoke:countdown-timer | PASS | output  |
+| smoke:typing-speed-test | PASS | empty  |
+| smoke:random-picker | PASS | empty  |
+| smoke:morse-code | PASS | empty  |
+| smoke:roman-numerals | PASS | empty  |
+| smoke:text-binary | PASS | empty  |
+| smoke:invoice-generator | PASS | output  |
+| smoke:spin-wheel | PASS | output  |
+| smoke:team-splitter | PASS | empty  |
+| smoke:dice-coin | PASS | output  |
 | smoke:qr-code-generator | PASS | output  |
 | func:word-counter | PASS |  |
+| func:json-diff | PASS |  |
+| func:json-to-xml | PASS |  |
+| func:json-to-csv | PASS |  |
+| func:csv-json-converter | PASS |  |
+| func:csv-validator | PASS |  |
+| func:csv-to-markdown | PASS |  |
+| func:xml-formatter | PASS |  |
+| func:css-formatter | PASS |  |
+| func:regex-tester | PASS |  |
+| func:url-encoder-decoder | PASS |  |
+| func:html-entities | PASS |  |
+| func:timestamp-converter | PASS |  |
+| func:base64-encoder-decoder | PASS |  |
+| func:team-splitter | PASS |  |
+| func:dice-coin | PASS |  |
+| func:morse-code | PASS |  |
+| func:morse-code | PASS |  |
+| func:roman-numerals | PASS |  |
+| func:roman-numerals | PASS |  |
+| func:text-binary | PASS |  |
+| func:text-binary | PASS |  |
+| func:invoice-generator | PASS |  |
 | func:case-converter | PASS |  |
 | func:base64-encoder-decoder | PASS |  |
 | func:json-formatter | PASS |  |
@@ -261,7 +309,7 @@ Generated: 2026-10-25T00:01:37.715Z
 | admin:no-js-errors | PASS |  |
 | home:renders | PASS |  |
 | nav:tools-index | PASS |  |
-| tools-index:cards=115 | PASS | found 115 |
+| tools-index:cards=128 | PASS | found 128 |
 | nav:card->own-page | PASS |  |
 | nav:back | PASS |  |
 | 404:status | PASS |  |
@@ -299,5 +347,5 @@ Generated: 2026-10-25T00:01:37.715Z
 | overflow:desk:dark:en:/tools/ | PASS | overflow 0px |
 | overflow:desk:dark:en:/tools/qr-code-generator/ | PASS | overflow 0px |
 | overflow:desk:dark:en:/tools/ai-assistant/ | PASS | overflow 0px |
-| overflow-320:all-pages(121) | PASS |  |
+| overflow-320:all-pages(134) | PASS |  |
 | a11y:keyboard-reaches-run-button | PASS |  |

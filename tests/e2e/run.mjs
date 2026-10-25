@@ -47,7 +47,7 @@ for (const t of TOOLS) {
     await page.waitForTimeout(900);
     const o = await page.evaluate(() => { const out = document.querySelector('#tool-root .out'); if (!out) return 'no-out-container'; if (out.querySelector('.tool-status.err')) return 'graceful-error'; return out.innerText.trim() || [...out.querySelectorAll('textarea')].some((x) => x.value.trim()) || out.querySelector('img,canvas,iframe,table') ? 'output' : 'empty'; });
     outcomes[t[0]] = o;
-    const CUSTOM = new Set(['ai-assistant', 'text-to-speech', 'scientific-calculator', 'flashcard-maker']); const mounted = (await page.locator('#tool-root').innerText()).trim().length > 20; rec(`smoke:${t[0]}`, !errs.length && (o !== 'no-out-container' || (CUSTOM.has(t[0]) && mounted)), `${o} ${errs.join('|')}`);
+    const CUSTOM = new Set(['ai-assistant', 'text-to-speech', 'scientific-calculator', 'flashcard-maker', 'countdown-timer', 'pomodoro-timer', 'typing-speed-test', 'spin-wheel']); const mounted = (await page.locator('#tool-root').innerText()).trim().length > 20; rec(`smoke:${t[0]}`, !errs.length && (o !== 'no-out-container' || (CUSTOM.has(t[0]) && mounted)), `${o} ${errs.join('|')}`);
   } catch (e) { outcomes[t[0]] = 'exception'; rec(`smoke:${t[0]}`, false, e.message.split('\n')[0]); }
   await page.close();
 }
@@ -66,6 +66,28 @@ async function run(id, fill, expect, { click = true, files } = {}) {
   await page.close();
 }
 await run('word-counter', { text: 'hello world foo bar' }, '4');
+await run('json-diff', { a: '{"p":1,"x":true}', b: '{"p":2,"n":1}' }, '.p');
+await run('json-to-xml', { text: '{"a":{"b":"c"}}' }, '<b>c</b>');
+await run('json-to-csv', { text: '[{"n":"Sara","c":{"x":"Cairo"}}]' }, 'Cairo');
+await run('csv-json-converter', { text: 'a,b\n1,2' }, '"a": 1');
+await run('csv-validator', { text: 'a,b\n1' }, 'السطر 2');
+await run('csv-to-markdown', { text: 'T,C\nx,y' }, '| x | y |');
+await run('xml-formatter', { text: '<a><b>1</b></a>' }, '  <b>1</b>');
+await run('css-formatter', { text: 'a{font-family:Arial,sans-serif}' }, 'Arial, sans-serif');
+await run('regex-tester', { re: '(\\d+)', flags: 'g', text: 'a1 b22' }, '22');
+await run('url-encoder-decoder', { text: 'a b&c' }, 'a%20b%26c');
+await run('html-entities', { text: '<b>&</b>' }, '&lt;b&gt;&amp;&lt;/b&gt;');
+await run('timestamp-converter', { ts: '1700000000' }, '2023');
+await run('base64-encoder-decoder', { text: 'مرحبا', mode: 'enc' }, '2YXYsdit2KjYpw==');
+await run('team-splitter', { names: 'a\nb\nc\nd', n: '2' }, 'الفريق 2');
+await run('dice-coin', { m: 'dice', c: '1', s: '2' }, 'المجموع');
+await run('morse-code', { m: 'enc', t: 'SOS' }, '... --- ...');
+await run('morse-code', { m: 'dec', t: '... --- ...' }, 'SOS');
+await run('roman-numerals', { v: '2026' }, 'MMXXVI');
+await run('roman-numerals', { v: 'MCMXCIV' }, '1994');
+await run('text-binary', { m: 't2b', t: 'A' }, '01000001');
+await run('text-binary', { m: 'h2t', t: '48 69' }, 'Hi');
+await run('invoice-generator', { lines: 'Item | 2 | 100', tax: '10' }, '220.00');
 await run('case-converter', { text: 'hello world', mode: 'upper' }, 'HELLO WORLD');
 await run('base64-encoder-decoder', { text: 'hello', mode: 'enc' }, 'aGVsbG8=');
 await run('json-formatter', { text: '{"a":1,"b":[1,2]}' }, '"b": [');

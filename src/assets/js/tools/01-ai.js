@@ -1,6 +1,6 @@
 /* AI tools — each one calls the Utilityra Worker (/api/ai) with a tool id; prompts live on the server. */
 (function () {
-  const { ta, tx, sel } = UT.H;
+  const { ta, tx, nm, sel } = UT.H;
   const TONES = [['professional', 'مهني', 'Professional'], ['friendly', 'ودّي', 'Friendly'], ['formal', 'رسمي', 'Formal'], ['concise', 'مختصر', 'Concise'], ['persuasive', 'مقنع', 'Persuasive'], ['simple', 'بسيط وسهل', 'Simple']];
   const LEVELS = [['beginner', 'مبتدئ', 'Beginner'], ['intermediate', 'متوسط', 'Intermediate'], ['expert', 'خبير', 'Expert']];
 
@@ -171,4 +171,16 @@
     sel('style', 'الطابع', 'Style', [['modern and short', 'عصري وقصير', 'Modern and short'], ['professional', 'احترافي', 'Professional'], ['playful', 'مرح', 'Playful'], ['arabic-inspired', 'عربي الطابع', 'Arabic-inspired']], 'modern and short'),
     sel('count', 'العدد', 'How many', [['10', '10', '10'], ['20', '20', '20']], '10')
   ], { text: 'تطبيق لتنظيم مواعيد المذاكرة للطلاب' }));
+  UT.def('ai-decision-helper', aiTool('ai-decision-helper', [
+    ta('text', 'ما القرار الذي تحتار فيه؟ اذكر الخيارات', 'What are you deciding? List the options', { rows: 6, ph: ['مثال: أختار بين وظيفة براتب أعلى بعيدة عن البيت ووظيفة براتب أقل قريبة…', 'e.g. Job A pays more but is far away; Job B pays less and is close…'] }),
+    sel('priority', 'الأهم عندك', 'What matters most', [['balanced', 'توازن بين كل شيء', 'Balanced'], ['cost', 'التكلفة والمال', 'Cost and money'], ['quality', 'الجودة', 'Quality'], ['time', 'الوقت والراحة', 'Time and comfort'], ['long-term', 'المستقبل البعيد', 'Long-term future']], 'balanced')
+  ], { text: 'أشتري لابتوب جديد بـ 25 ألف جنيه أو أصلّح القديم بـ 4 آلاف؟ أستخدمه للدراسة والبرمجة.' }));
+
+  UT.def('ai-game-master', aiTool('ai-game-master', [
+    sel('kind', 'نوع النشاط', 'Activity', [['party game ideas', 'أفكار ألعاب جماعية', 'Group game ideas'], ['truth or dare (clean)', 'صراحة أو جرأة (مهذبة)', 'Truth or dare (clean)'], ['would you rather', 'تفضّل أيهما؟', 'Would you rather'], ['icebreaker questions', 'أسئلة لكسر الجمود', 'Icebreaker questions'], ['team challenges', 'تحديات بين فريقين', 'Team challenges'], ['trivia quiz', 'مسابقة معلومات', 'Trivia quiz'], ['guessing game (charades / 20 questions)', 'لعبة تخمين', 'Guessing game']], 'party game ideas'),
+    nm('size', 'عدد اللاعبين', 'Players', 6, { min: 2, max: 50 }),
+    sel('mood', 'الأجواء', 'Mood', [['fun and light', 'مرح وخفيف', 'Fun and light'], ['competitive', 'تنافسي', 'Competitive'], ['calm and cozy', 'هادئ', 'Calm and cozy'], ['outdoor / active', 'حركي في الخارج', 'Active outdoors']], 'fun and light'),
+    sel('age', 'الفئة العمرية', 'Age group', [['kids (6-12)', 'أطفال', 'Kids'], ['teens', 'مراهقون', 'Teens'], ['adults', 'بالغون', 'Adults'], ['mixed family', 'عائلة مختلطة', 'Mixed family']], 'adults'),
+    tx('extra', 'تفاصيل إضافية (اختياري)', 'Extra details (optional)', { ph: ['مثال: رحلة، بدون أدوات، 20 دقيقة', 'e.g. road trip, no props, 20 minutes'] })
+  ], { extra: 'سهرة مع الأصدقاء بدون أدوات' }, { main: 'kind' }));
 })();

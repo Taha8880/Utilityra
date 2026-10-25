@@ -71,7 +71,7 @@ const RULES = [
   [/json|xml|html-|css|csv|sql-format|markdown-table/, 'braces'], [/api-tester/, 'api'], [/^(cron|timestamp|timezone|date-|age-|hijri)/, 'cal'],
   [/percent|vat|discount/, 'percent'], [/loan|compound|hourly|bmi/, 'coins'], [/statistics/, 'stat'], [/scientific/, 'calc'], [/unit|file-size/, 'ruler'],
   [/pdf-merge|pdf-split|pdf-rotate|pdf-page|pdf-to|images-to-pdf/, 'pdf'], [/file-metadata/, 'file'], [/crop/, 'crop'], [/rotate-flip/, 'rotate'], [/watermark|filter/, 'layers'],
-  [/compress|resiz|convert|data-uri/, 'image'], [/favicon/, 'star'], [/qr/, 'qr'], [/contrast/, 'contrast']
+  [/compress|resiz|convert|data-uri/, 'image'], [/favicon/, 'star'], [/qr/, 'qr'], [/pomodoro|countdown|typing/, 'clock'], [/ai-decision/, 'layers'], [/ai-game|spin-wheel|dice/, 'zap'], [/team-split/, 'list'], [/roman/, 'hash'], [/morse/, 'zap'], [/random-picker/, 'sparkles'], [/invoice/, 'file'], [/contrast/, 'contrast']
 ];
 export const iconFor = (id, cat) => { for (const [re, n] of RULES) if (re.test(id)) return n; return CAT_ICON[cat] || 'sparkles'; };
 export const svg = (name, cls = 'ic') => `<svg class="${cls}" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${ICONS[name] || ICONS.sparkles}</svg>`;

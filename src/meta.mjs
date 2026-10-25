@@ -36,6 +36,8 @@ export const TOOLS = [
   ['ai-social-posts', 'ai', '#', 'كاتب منشورات التواصل', 'AI Social Post Writer', 'منشورات وهاشتاجات لمنصات التواصل بنبرة تختارها.', 'Posts and hashtags for social platforms in your chosen tone.'],
   ['ai-resume-writer', 'ai', 'CV', 'كاتب السيرة وخطاب التقديم', 'AI Resume & Cover Letter', 'صياغة نقاط السيرة الذاتية وخطاب التقديم بشكل مقنع.', 'Write persuasive resume bullets and cover letters.'],
   ['ai-product-description', 'ai', '🛍', 'وصف المنتجات', 'AI Product Description', 'وصف تسويقي جذاب لمنتجك للمتاجر الإلكترونية.', 'Compelling product copy for online stores.'],
+  ['ai-decision-helper', 'ai', '⚖', 'مساعد اتخاذ القرار', 'AI Decision Helper', 'محتار بين خيارين؟ احصل على مقارنة واضحة وتوصية مع السبب.', 'Torn between options? Get a clear comparison and a recommendation with the reason.'],
+  ['ai-game-master', 'ai', '🎮', 'مدير الألعاب الجماعية', 'AI Game Master', 'أفكار وأسئلة وتحديات جاهزة لسهراتك ورحلاتك مع الأصدقاء والعائلة.', 'Ready-made games, questions and challenges for friends, family and trips.'],
   ['ai-name-ideas', 'ai', '✦', 'أفكار الأسماء', 'AI Name Ideas', 'اقتراحات لأسماء المشاريع والمنتجات والقنوات.', 'Name ideas for projects, products and channels.'],
 
   // ───────────── Text ─────────────
@@ -152,6 +154,17 @@ export const TOOLS = [
   ['security-header-checker', 'seo', '🛡', 'فاحص ترويسات الأمان', 'Security Headers Checker', 'تحقق من HSTS وCSP وغيرها من ترويسات الأمان لأي موقع.', 'Check HSTS, CSP and other security headers on any site.'],
   ['page-speed-checker', 'seo', '⚡', 'فاحص سرعة الصفحة', 'Page Speed Checker', 'قياس مبدئي لزمن الاستجابة والحجم والضغط ومعوقات العرض.', 'First-pass response time, size, compression and render-blocking check.'],
   ['accessibility-checker', 'seo', '♿', 'فاحص الوصولية', 'Accessibility Checker', 'اكتشف أبرز مشكلات الوصولية في أي صفحة.', 'Find the most common accessibility problems on any page.'],
+  ['pomodoro-timer', 'study', '⏱', 'مؤقت بومودورو', 'Pomodoro Timer', 'ركّز 25 دقيقة ثم استرح، مع تنبيه صوتي وعدّاد للجلسات.', 'Focus for 25 minutes, then rest, with a sound alert and a session counter.'],
+  ['countdown-timer', 'convert', '⏲', 'عدّاد تنازلي', 'Countdown Timer', 'اضبط الدقائق والثواني وابدأ العدّ التنازلي مع تنبيه عند الانتهاء.', 'Set minutes and seconds and get an alert when time is up.'],
+  ['typing-speed-test', 'study', '⌨', 'اختبار سرعة الكتابة', 'Typing Speed Test', 'قِس سرعتك بالكلمات في الدقيقة ودقتك بالعربية والإنجليزية.', 'Measure your words per minute and accuracy in Arabic and English.'],
+  ['random-picker', 'text', '🎲', 'الاختيار العشوائي', 'Random Picker', 'اختر فائزًا أو أكثر من قائمة بعشوائية عادلة.', 'Draw one or more winners from a list, fairly.'],
+  ['morse-code', 'text', '·−', 'شفرة مورس', 'Morse Code Translator', 'حوّل النص إلى شفرة مورس والعكس.', 'Translate text to Morse code and back.'],
+  ['roman-numerals', 'convert', 'IV', 'الأرقام الرومانية', 'Roman Numerals Converter', 'حوّل بين الأرقام العادية والرومانية من 1 إلى 3999.', 'Convert between numbers and Roman numerals from 1 to 3999.'],
+  ['text-binary', 'dev', '01', 'تحويل النص إلى ثنائي وHex', 'Text to Binary & Hex', 'حوّل النص إلى نظام ثنائي أو ست عشري وفكّ ترميزهما.', 'Convert text to binary or hex and decode it back.'],
+  ['invoice-generator', 'calc', '🧾', 'مولّد الفواتير', 'Invoice Generator', 'أنشئ فاتورة بالبنود والضريبة واطبعها أو احفظها PDF.', 'Build an invoice with lines and tax, then print or save it as PDF.'],
+  ['spin-wheel', 'text', '🎡', 'عجلة الاختيار', 'Spin the Wheel', 'أضف الأسماء أو الخيارات وأدر العجلة ليختار الحظ.', 'Add names or options and spin the wheel to let luck decide.'],
+  ['team-splitter', 'text', '👥', 'مقسّم الفرق', 'Team Splitter', 'وزّع الأسماء عشوائيًا على فرق متوازنة العدد.', 'Randomly split names into evenly sized teams.'],
+  ['dice-coin', 'text', '🎲', 'النرد والعملة', 'Dice & Coin', 'ارمِ نردًا أو أكثر أو اقلب عملة لحسم أي خلاف.', 'Roll dice or flip a coin to settle any debate.'],
   ['qr-code-generator', 'design', 'QR', 'مولّد رمز QR', 'QR Code Generator', 'أنشئ رمز QR لأي رابط أو نص وحمّله كصورة.', 'Create a QR code for any link or text and download it.']
 ];
 

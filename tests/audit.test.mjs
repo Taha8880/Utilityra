@@ -44,3 +44,13 @@ test('Arabic and English text exist for every visible bilingual span', () => {
   const bad = []; for (const { f, html } of pages) { const ar = (html.match(/class="ar"/g) || []).length, en = (html.match(/class="en"/g) || []).length; if (ar !== en) bad.push(`${f} ar=${ar} en=${en}`); }
   assert.deepEqual(bad.slice(0, 10), []);
 });
+
+test('every indexable page is in the sitemap and every tool page has FAQ + breadcrumb schema', () => {
+  const sm = readFileSync(join(DIST, 'sitemap.xml'), 'utf8'); const missing = [];
+  for (const { f, html } of pages) {
+    if (/noindex/.test(html) || f.includes('404') || f.includes('/admin/')) continue;
+    const path = '/' + f.replace(/^dist\//, '').replace(/index\.html$/, ''); if (!sm.includes(`<loc>https://utilityra.tavengers16.workers.dev${path}</loc>`)) missing.push(path);
+    if (path.startsWith('/tools/') && path !== '/tools/') { assert.match(html, /FAQPage/, path); assert.match(html, /BreadcrumbList/, path); assert.match(html, /rel="canonical"/, path); }
+  }
+  assert.deepEqual(missing.slice(0, 10), []);
+});
