@@ -160,18 +160,25 @@ export const anthropicChain = (env, strong) => (strong
 async function viaAnthropic(messages, env, gen = DEFAULT_GEN) {
   if (!env.ANTHROPIC_API_KEY) throw Object.assign(new Error("PROVIDER_NOT_CONFIGURED"), { status: 503 });
   const system = messages.find((m) => m.role === "system")?.content || "";
-  const msgs = messages.filter((m) => m.role !== "system").map((m) => ({ role: m.role, content: m.content }));
+  // Anthropic requires: first turn is "user", roles alternate, no empty content. Normalise history accordingly.
+  const msgs = [];
+  for (const m of messages.filter((x) => x.role !== "system")) {
+    const content = String(m.content || "").trim(); if (!content) continue;
+    const role = m.role === "assistant" ? "assistant" : "user";
+    if (msgs.length && msgs[msgs.length - 1].role === role) msgs[msgs.length - 1].content += "\n\n" + content; else msgs.push({ role, content });
+  }
+  while (msgs.length && msgs[0].role !== "user") msgs.shift();
   const base = env.AI_GATEWAY_URL ? `${String(env.AI_GATEWAY_URL).replace(/\/$/, "")}/anthropic` : "https://api.anthropic.com";
   let last;
   for (const model of anthropicChain(env, gen.strong)) {
-    const res = await fetch(base + "/v1/messages", { method: "POST", headers: { "x-api-key": env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "content-type": "application/json", ...gwAuth(env) }, body: JSON.stringify({ model, max_tokens: gen.max_tokens, temperature: gen.temperature, system, messages: msgs }) });
+    const res = await fetch(base + "/v1/messages", { method: "POST", headers: { "x-api-key": env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "content-type": "application/json", ...gwAuth(env) }, body: JSON.stringify({ model, max_tokens: gen.max_tokens, system, messages: msgs }) });
     const data = await res.json().catch(() => ({}));
     if (res.ok) {
       const text = (data?.content || []).map((c) => c.text || "").join("").trim();
       if (text) return text;
       last = Object.assign(new Error("EMPTY_PROVIDER_RESPONSE"), { status: 502 }); continue;
     }
-    last = Object.assign(new Error("UPSTREAM_ERROR"), { status: res.status === 429 ? 429 : 502, detail: `anthropic ${model} ${res.status} ${data?.error?.type || ""}`.trim() });
+    last = Object.assign(new Error("UPSTREAM_ERROR"), { status: res.status === 429 ? 429 : 502, detail: `anthropic ${model} ${res.status} ${data?.error?.type || ""} ${String(data?.error?.message || "").slice(0, 140)}`.trim() });
     if (res.status === 429 || res.status === 401 || res.status === 403) break; // quota / key problems: stepping down will not help
     // 400/404 (model not available for this account) and 5xx: try the next model in the chain
   }

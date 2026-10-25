@@ -307,3 +307,69 @@ html[lang="ar"] .copy, html[lang="ar"] .copy * { font-family: var(--sans); }
 .chip { transition: transform .2s var(--ease), background .2s, border-color .2s, color .2s; } .chip:hover { transform: translateY(-1px); }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
 @media (prefers-reduced-motion: reduce) { .tcard:hover, .ccat:hover, .tcard:hover .g, .ccat:hover .g, .tcard:hover .g .ic, .ccat:hover .g .ic, .btn:hover, .chip:hover { transform: none; } }
+
+/* =====================================================================
+   Redesign v4 — "workbench": mineral ground, deep-teal primary, amber signal.
+   One family for UI, ruled catalogue rows instead of boxed tiles, motion only
+   where the user acts. Appended last so it supersedes earlier rules.
+   ===================================================================== */
+:root {
+  --bg: #F3F5F2; --paper: #EAEEEA; --card: #FFFFFF; --ink: #11201C; --muted: #5D6B66; --line: #D9DFDA; --line2: #C5CEC8;
+  --accent: #0B5D52; --accent2: #12806F; --signal: #F4C430; --sand: #E7EDE8; --ok: #1d7a46; --err: #b3342a;
+  --serif: 'IBM Plex Sans Arabic', 'Inter', system-ui, sans-serif; --mono: 'Inter', 'IBM Plex Sans Arabic', system-ui, sans-serif;
+  --r: 8px; --rc: 12px; --rw: 16px;
+}
+:root[data-theme="dark"] { --bg: #0C1512; --paper: #131E1A; --card: #101A17; --ink: #E8EFEA; --muted: #93A39B; --line: #22302B; --line2: #30413A; --accent: #3FBFA9; --accent2: #5ED2BD; --sand: #1B2823; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #0C1512; --paper: #131E1A; --card: #101A17; --ink: #E8EFEA; --muted: #93A39B; --line: #22302B; --line2: #30413A; --accent: #3FBFA9; --accent2: #5ED2BD; --sand: #1B2823; } }
+body { background: var(--bg); }
+h1, h2, h3, h4, html[lang="ar"] h1, html[lang="ar"] h2, html[lang="ar"] h3, html[lang="ar"] h4 { font-family: var(--sans); font-weight: 700; letter-spacing: -.02em; line-height: 1.25; }
+html[lang="ar"] h1, html[lang="ar"] h2, html[lang="ar"] h3 { letter-spacing: 0; }
+.logo, html[lang="ar"] .logo { font: 700 21px var(--sans); letter-spacing: -.02em; }
+.logo i { background: var(--accent); border-radius: 7px; font: 700 14px var(--sans); }
+/* labels: sentence case, plain */
+.label, .mono:not(input):not(textarea), .nav a, .hbtn, .btn, .chip, .crumbs, .ccat .n, .hero .eyebrow, .aw-ai .t, .chint, .ftr h4, .fld > label, .sec-h .label { font-family: var(--sans); text-transform: none; letter-spacing: 0; }
+.sec-h .label { display: inline-block; font-size: 13px; font-weight: 600; color: var(--accent); margin-bottom: 8px; }
+.fld > label { font-size: 13.5px; font-weight: 500; }
+.nav a { font-size: 14px; font-weight: 500; } .btn { font-size: 14px; font-weight: 600; min-height: 42px; border-radius: 8px; }
+.btn.solid, .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn.solid:hover, .btn.primary:hover { background: var(--accent2); box-shadow: none; }
+.btn:hover { transform: none; }
+/* hero: deep teal field with a fine instrument grid */
+.sky { filter: none; inset: 0; background: radial-gradient(60% 55% at 50% 0%, #17766a 0%, rgba(23, 118, 106, 0) 70%), linear-gradient(180deg, #082A25 0%, #0B3B34 55%, #0F4A41 100%); animation: none; }
+.sky::after { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(255, 255, 255, .05) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, .05) 1px, transparent 1px); background-size: 48px 48px; mask-image: radial-gradient(70% 70% at 50% 35%, #000, transparent); }
+.grain { opacity: .08; }
+.hero .eyebrow { color: rgba(255, 255, 255, .8); font-size: 14px; font-weight: 500; } .hero .eyebrow::before { background: var(--signal); border-radius: 50%; }
+.hero h1 { font-weight: 800; letter-spacing: -.03em; }
+html[lang="ar"] .hero h1 { letter-spacing: 0; line-height: 1.3; }
+.hero-search input { border-radius: 12px; border: 2px solid transparent; background: #fff; height: 58px; transition: border-color .2s, box-shadow .2s; } .hero-search input:focus { outline: none; border-color: var(--signal); box-shadow: 0 0 0 4px rgba(244, 196, 48, .25); }
+.hero-search kbd { font-family: var(--sans); }
+.btn.glass { background: rgba(255, 255, 255, .1); border-color: rgba(255, 255, 255, .35); color: #fff; }
+/* catalogue rows replace boxed tiles */
+.tgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 0 32px; border-top: 1px solid var(--line2); }
+.tcard { position: relative; display: flex; align-items: flex-start; gap: 16px; padding: 18px 12px; min-height: 0; background: transparent; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; box-shadow: none; transform: none; transition: background .2s; }
+.tcard:hover, .tcard:focus-visible { background: color-mix(in srgb, var(--accent) 6%, transparent); transform: none; box-shadow: none; border-color: var(--line); }
+.tcard::before { content: ''; position: absolute; inset-block: -1px; inset-inline-start: 0; width: 3px; background: var(--accent); transform: scaleY(0); transition: transform .25s ease; } .tcard:hover::before, .tcard:focus-visible::before { transform: scaleY(1); }
+.tcard .g, .ccat .g, .g.big, .tcard:hover .g, .ccat:hover .g { width: 40px; height: 40px; border-radius: 10px; background: transparent; border: 1.5px solid var(--line2); color: var(--accent); box-shadow: none; transform: none; transition: border-color .2s, background .2s, color .2s; }
+.tcard:hover .g, .ccat:hover .g { border-color: var(--accent); background: var(--accent); color: #fff; }
+.tcard:hover .g .ic, .ccat:hover .g .ic { transform: none; }
+:root[data-theme="dark"] .tcard .g, :root[data-theme="dark"] .ccat .g { background: transparent; border-color: var(--line2); color: var(--accent); box-shadow: none; }
+:root[data-theme="dark"] .tcard:hover .g, :root[data-theme="dark"] .ccat:hover .g { background: var(--accent); color: #0C1512; }
+.g.big { width: 54px; height: 54px; border-radius: 14px; } .ttl .g.big { background: var(--accent); color: #fff; border-color: var(--accent); }
+.tcard h3 { font: 600 16px var(--sans); } .tcard p { font-size: 14px; color: var(--muted); }
+.ai, .tcard .ai { background: var(--signal); color: #3b2f00; font: 700 10px var(--sans); border-radius: 4px; letter-spacing: .02em; }
+/* categories: ruled columns */
+.cgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0; border-top: 2px solid var(--ink); }
+.ccat { padding: 22px 20px 22px 0; padding-inline: 0 24px; background: transparent; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; box-shadow: none; transform: none; }
+.ccat:hover { transform: none; box-shadow: none; background: transparent; border-color: var(--line); } .ccat:hover h3 { color: var(--accent); }
+.ccat h3 { font-size: 19px; } .ccat .n { font-size: 13px; font-weight: 600; color: var(--accent); }
+/* panels, chips, header */
+.panel { border-radius: 14px; box-shadow: none; } .chip { border-radius: 999px; font-size: 13.5px; } .chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.hdr { background: color-mix(in srgb, var(--bg) 92%, transparent); } .home .hdr:not(.stuck) .logo { color: #fff; }
+.ftr { background: var(--paper); }
+/* motion: only in response to action; no scroll-reveal sliding */
+.reveal { opacity: 1; transform: none; transition: none; }
+.tgrid > .tcard.reveal, .cgrid > .ccat.reveal { transition: background .2s; }
+@media (max-width: 720px) { .tgrid { grid-template-columns: 1fr; } .cgrid { grid-template-columns: 1fr; } }
+.hero h1, html[lang="ar"] .hero h1 { font-size: clamp(32px, 4.8vw, 54px); max-width: 17em; margin-inline: auto; text-wrap: balance; }
+.hero .btn.solid { background: var(--signal); border-color: var(--signal); color: #2a2100; } .hero .btn.solid:hover { background: #ffd24f; }
+.av, .av.b { background: var(--accent); color: #fff; } .av.b { background: #12806F; }
