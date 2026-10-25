@@ -231,3 +231,14 @@ test('ai: failed premium provider is reported in fails and falls back; Gemini ke
   const h = await (await call('/health', {}, { Gemini_API_Key: 'k' })).json();
   assert.ok(h.ai.includes('gemini'));
 });
+
+test('anthropic: request has no temperature, starts with user and alternates roles', async () => {
+  const realFetch = globalThis.fetch; let sent;
+  globalThis.fetch = async (u, init) => { sent = JSON.parse(init.body); return new Response(JSON.stringify({ content: [{ text: 'ok' }] }), { status: 200 }); };
+  try {
+    const r = await ai({ tool: 'ai-assistant', message: 'سؤال', history: [{ role: 'assistant', content: 'مرحبا' }, { role: 'user', content: 'a' }, { role: 'user', content: 'b' }] }, { ANTHROPIC_API_KEY: 'k' });
+    assert.equal((await r.json()).provider, 'anthropic');
+    assert.equal('temperature' in sent, false); assert.equal(sent.messages[0].role, 'user');
+    sent.messages.forEach((m, i) => { if (i) assert.notEqual(m.role, sent.messages[i - 1].role); });
+  } finally { globalThis.fetch = realFetch; }
+});
