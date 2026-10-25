@@ -49,3 +49,9 @@ npx wrangler secret put GEMINI_API_KEY
 - باقي الأدوات تستخدم `claude-sonnet-5-5` (أرخص وأسرع).
 - لتغيير النموذج: `ANTHROPIC_MODEL_STRONG` (للثقيلة) و`ANTHROPIC_MODEL` (للباقي) كمتغيرات في wrangler.toml أو Dashboard. التكلفة تُحسب على حسابك في Anthropic، وكلما قوي النموذج زادت التكلفة.
 - افحص المزوّد الفعّال: افتح `/health` وستجد قائمة `ai` فيها `anthropic` إن كان المفتاح مفعّلًا.
+
+## ذكاء اصطناعي مجاني (بدون دفع)
+- **Gemini (مجاني):** أنشئ مفتاحًا من Google AI Studio (طبقة مجانية) وأضفه كسرّ في الـ Worker باسم `GEMINI_API_KEY`: `npx wrangler secret put GEMINI_API_KEY`. هذا أفضل بديل مجاني للعربية.
+- **Workers AI:** مجاني ضمن حصة يومية، يعمل تلقائيًا ويُستخدم كاحتياطي أخير.
+- إن لم تدفع لـ Claude أو OpenAI فاحذف سرّيهما (`ANTHROPIC_API_KEY` و`OPENAI_API_KEY`) من إعدادات الـ Worker. الكود يتجاوز المفتاح غير الصالح تلقائيًا لمدة 10 دقائق، لكن حذفه أنظف.
+- ترتيب المزودين: ما عيّنته بـ `AI_PROVIDER` ثم Claude ثم OpenAI ثم Gemini ثم Workers AI.
