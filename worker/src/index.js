@@ -150,7 +150,7 @@ async function viaOpenAI(messages, env, gen = DEFAULT_GEN) {
   if (!env.OPENAI_API_KEY) throw Object.assign(new Error("PROVIDER_NOT_CONFIGURED"), { status: 503 });
   const res = await fetch(gw(env, "openai", "https://api.openai.com/v1") + "/chat/completions", { method: "POST", headers: { authorization: `Bearer ${env.OPENAI_API_KEY}`, "content-type": "application/json", ...gwAuth(env) }, body: JSON.stringify({ model: env.OPENAI_MODEL || (gen.strong ? "gpt-4.1" : "gpt-4.1-mini"), messages, max_tokens: gen.max_tokens, temperature: gen.temperature }) });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw Object.assign(new Error("UPSTREAM_ERROR"), { status: res.status === 429 ? 429 : 502, detail: `openai ${res.status} ${data?.error?.code || data?.error?.type || ""}`.trim() });
+  if (!res.ok) throw Object.assign(new Error("UPSTREAM_ERROR"), { status: res.status === 429 ? 429 : 502, detail: `openai ${res.status} ${data?.error?.code || data?.error?.type || ""}`.trim(), cool: res.status === 401 || res.status === 403 || data?.error?.code === "insufficient_quota" });
   const text = data?.choices?.[0]?.message?.content?.trim();
   if (!text) throw Object.assign(new Error("EMPTY_PROVIDER_RESPONSE"), { status: 502 });
   return text;
@@ -180,7 +180,7 @@ async function viaAnthropic(messages, env, gen = DEFAULT_GEN) {
       if (text) return text;
       last = Object.assign(new Error("EMPTY_PROVIDER_RESPONSE"), { status: 502 }); continue;
     }
-    last = Object.assign(new Error("UPSTREAM_ERROR"), { status: res.status === 429 ? 429 : 502, detail: `anthropic ${model} ${res.status} ${data?.error?.type || ""} ${String(data?.error?.message || "").slice(0, 140)}`.trim() });
+    last = Object.assign(new Error("UPSTREAM_ERROR"), { status: res.status === 429 ? 429 : 502, detail: `anthropic ${model} ${res.status} ${data?.error?.type || ""} ${String(data?.error?.message || "").slice(0, 140)}`.trim(), cool: res.status === 401 || res.status === 403 || /credit balance|billing/i.test(String(data?.error?.message || "")) });
     if (res.status === 429 || res.status === 401 || res.status === 403) break; // quota / key problems: stepping down will not help
     // 400/404 (model not available for this account) and 5xx: try the next model in the chain
   }
@@ -189,19 +189,39 @@ async function viaAnthropic(messages, env, gen = DEFAULT_GEN) {
 async function viaGemini(messages, env, gen = DEFAULT_GEN) {
   if (!geminiKey(env)) throw Object.assign(new Error("PROVIDER_NOT_CONFIGURED"), { status: 503 });
   const system = messages.find((m) => m.role === "system")?.content || "";
-  const contents = messages.filter((m) => m.role !== "system").map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] }));
-  const model = env.GEMINI_MODEL || (gen.strong ? "gemini-2.5-pro" : "gemini-2.5-flash");
-  const res = await fetch(`${gw(env, "google-ai-studio", "https://generativelanguage.googleapis.com")}/v1beta/models/${encodeURIComponent(model)}:generateContent`, { method: "POST", headers: { "x-goog-api-key": geminiKey(env), "content-type": "application/json", ...gwAuth(env) }, body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents, generationConfig: { maxOutputTokens: gen.max_tokens, temperature: gen.temperature } }) });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw Object.assign(new Error("UPSTREAM_ERROR"), { status: res.status === 429 ? 429 : 502 });
-  const text = (data?.candidates?.[0]?.content?.parts || []).map((p) => p.text || "").join("").trim();
-  if (!text) throw Object.assign(new Error("EMPTY_PROVIDER_RESPONSE"), { status: 502 });
-  return text;
+  const contents = [];
+  for (const m of messages.filter((x) => x.role !== "system")) {
+    const text = String(m.content || "").trim(); if (!text) continue;
+    const role = m.role === "assistant" ? "model" : "user";
+    if (contents.length && contents[contents.length - 1].role === role) contents[contents.length - 1].parts[0].text += "\n\n" + text; else contents.push({ role, parts: [{ text }] });
+  }
+  while (contents.length && contents[0].role !== "user") contents.shift();
+  const chain = env.GEMINI_MODEL ? [env.GEMINI_MODEL] : gen.strong ? ["gemini-2.5-pro", "gemini-2.5-flash"] : ["gemini-2.5-flash"];
+  let last;
+  for (const model of chain) {
+    const generationConfig = { maxOutputTokens: gen.max_tokens, temperature: gen.temperature };
+    if (/flash/.test(model)) generationConfig.thinkingConfig = { thinkingBudget: 0 };
+    const res = await fetch(`${gw(env, "google-ai-studio", "https://generativelanguage.googleapis.com")}/v1beta/models/${encodeURIComponent(model)}:generateContent`, { method: "POST", headers: { "x-goog-api-key": geminiKey(env), "content-type": "application/json", ...gwAuth(env) }, body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents, generationConfig }) });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      const text = (data?.candidates?.[0]?.content?.parts || []).filter((p) => !p.thought).map((p) => p.text || "").join("").trim();
+      if (text) return text;
+      last = Object.assign(new Error("EMPTY_PROVIDER_RESPONSE"), { status: 502, detail: `gemini ${model} empty ${data?.candidates?.[0]?.finishReason || data?.promptFeedback?.blockReason || ""}`.trim() }); continue;
+    }
+    last = Object.assign(new Error("UPSTREAM_ERROR"), { status: 502, detail: `gemini ${model} ${res.status} ${data?.error?.status || ""} ${String(data?.error?.message || "").slice(0, 120)}`.trim(), cool: res.status === 401 || (res.status === 400 && /API key/i.test(String(data?.error?.message || ""))) });
+    if (last.cool) break; // bad key: stepping down will not help; quota/model errors (403/404/429) try the next model
+  }
+  throw last || Object.assign(new Error("UPSTREAM_ERROR"), { status: 502 });
 }
+const COOL = new Map();
+const coolKey = (name, env) => name + ":" + String({ anthropic: env.ANTHROPIC_API_KEY, openai: env.OPENAI_API_KEY, gemini: geminiKey(env) }[name] || "").slice(-6);
+const isCool = (name, env) => (COOL.get(coolKey(name, env)) || 0) > Date.now();
+const coolDown = (name, env, e) => { if (e && e.cool) COOL.set(coolKey(name, env), Date.now() + 600_000); };
 const geminiKey = (env) => env.GEMINI_API_KEY || env.Gemini_API_Key || env.GOOGLE_API_KEY || "";
 export function providersFor(env) {
   const all = { anthropic: [!!env.ANTHROPIC_API_KEY, viaAnthropic], "workers-ai": [!!env.AI, viaWorkersAI], openai: [!!env.OPENAI_API_KEY, viaOpenAI], gemini: [!!geminiKey(env), viaGemini] };
-  const order = [env.AI_PROVIDER, "anthropic", "workers-ai", "openai", "gemini"].filter((v, i, a) => v && all[v] && a.indexOf(v) === i);
+  // Order: providers you configured on purpose (paid keys) -> Gemini free tier -> Workers AI. A provider whose key/billing is dead is skipped for 10 minutes. Set AI_PROVIDER to force one first.
+  const order = [env.AI_PROVIDER, "anthropic", "openai", "gemini", "workers-ai"].filter((v, i, a) => v && all[v] && a.indexOf(v) === i);
   return order.filter((k) => all[k][0]).map((k) => [k, all[k][1]]);
 }
 
@@ -241,6 +261,7 @@ async function handleAI(request, env, origin) {
   let ck; if (cacheable) { try { ck = new Request(await cacheKey(body)); const hit = await caches.default.match(ck); if (hit) { const j = await hit.json(); return wantStream ? sse([j.answer], [], j.provider || "") : json({ ...j, cached: true }, 200, origin); } } catch { ck = null; } }
   let lastErr; const fails = [];
   for (const [name, fn] of providers) {
+    if (isCool(name, env) && providers.length > 1) { fails.push(`${name} skipped (key/billing problem, retrying in 10 min)`); continue; }
     try {
       // Native Workers AI streaming (SSE passthrough); other providers answer as a single SSE chunk.
       if (wantStream && name === "workers-ai" && env.AI && typeof env.AI.run === "function") {
@@ -249,7 +270,7 @@ async function handleAI(request, env, origin) {
       const answer = await fn(messages, env, gen);
       if (ck) { try { await caches.default.put(ck, new Response(JSON.stringify({ answer, provider: name }), { headers: { "content-type": "application/json", "cache-control": "public, max-age=3600" } })); } catch { /* ignore */ } }
       return wantStream ? sse([answer], srcPub, name, fails) : json({ answer, provider: name, ...(fails.length ? { fails } : {}), ...(srcPub.length ? { sources: srcPub } : {}) }, 200, origin);
-    } catch (e) { lastErr = e; fails.push(e.detail || `${name} ${e.message}`); if (e.status === 429) break; }
+    } catch (e) { lastErr = e; coolDown(name, env, e); fails.push(e.detail || `${name} ${e.message}`); if (e.status === 429 && name === "workers-ai") break; }
   }
   return json({ error: lastErr?.message === "PROVIDER_NOT_CONFIGURED" ? "PROVIDER_NOT_CONFIGURED" : "UPSTREAM_ERROR" }, lastErr?.status === 429 ? 429 : 502, origin);
 }

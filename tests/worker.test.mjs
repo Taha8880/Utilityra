@@ -111,9 +111,10 @@ test('buildMessages: option allow-list, history only for assistant, length caps'
 test('per-tool generation settings', () => {
   assert.equal(genFor('ai-grammar-fixer').temperature, 0.1); assert.equal(genFor('ai-blog-writer').max_tokens, 3200); assert.equal(genFor('unknown').max_tokens, 1800);
 });
-test('provider order: AI_PROVIDER first, then workers-ai/openai/gemini', () => {
+test('provider order: AI_PROVIDER first, then paid keys, Gemini, Workers AI', () => {
   const names = providersFor({ AI: { run() {} }, OPENAI_API_KEY: 'k', GEMINI_API_KEY: 'g', AI_PROVIDER: 'gemini' }).map(([n]) => n);
-  assert.deepEqual(names, ['gemini', 'workers-ai', 'openai']);
+  assert.deepEqual(names, ['gemini', 'openai', 'workers-ai']);
+  assert.deepEqual(providersFor({ AI: { run() {} }, OPENAI_API_KEY: 'k', GEMINI_API_KEY: 'g' }).map(([n]) => n), ['openai', 'gemini', 'workers-ai']);
 });
 test('ai: falls back to OpenAI when Workers AI fails', async () => {
   const realFetch = globalThis.fetch; globalThis.fetch = async () => new Response(JSON.stringify({ choices: [{ message: { content: 'from openai' } }] }), { status: 200 });
@@ -240,5 +241,18 @@ test('anthropic: request has no temperature, starts with user and alternates rol
     assert.equal((await r.json()).provider, 'anthropic');
     assert.equal('temperature' in sent, false); assert.equal(sent.messages[0].role, 'user');
     sent.messages.forEach((m, i) => { if (i) assert.notEqual(m.role, sent.messages[i - 1].role); });
+  } finally { globalThis.fetch = realFetch; }
+});
+
+test('ai: unpaid Claude key falls back to free Gemini and is skipped afterwards', async () => {
+  const realFetch = globalThis.fetch; const calls = [];
+  globalThis.fetch = async (u) => { calls.push(String(u)); return String(u).includes('anthropic') ? new Response(JSON.stringify({ error: { type: 'invalid_request_error', message: 'Your credit balance is too low' } }), { status: 400 }) : new Response(JSON.stringify({ candidates: [{ content: { parts: [{ text: 'من جمني' }] } }] }), { status: 200 }); };
+  try {
+    const env = { ANTHROPIC_API_KEY: 'nocredit-key-xyz', Gemini_API_Key: 'g-key-123456' };
+    const j1 = await (await ai({ tool: 'ai-summarizer', message: 'نص للتلخيص هنا' }, env)).json();
+    assert.equal(j1.provider, 'gemini'); assert.equal(j1.answer, 'من جمني'); assert.match(j1.fails.join(' '), /credit balance/);
+    const before = calls.filter((c) => c.includes('anthropic')).length;
+    const j2 = await (await ai({ tool: 'ai-summarizer', message: 'نص آخر للتلخيص' }, env)).json();
+    assert.equal(j2.provider, 'gemini'); assert.equal(calls.filter((c) => c.includes('anthropic')).length, before);
   } finally { globalThis.fetch = realFetch; }
 });
