@@ -33,6 +33,8 @@ export const PROMPTS = {
   "ai-social-posts": "Write 3 post variations for the chosen platform and tone, within the platform's norms and length, with suitable emoji and 3-6 relevant hashtags. Do not invent facts or offers.",
   "ai-resume-writer": "Based only on the user's details, write the requested output (resume bullets with action verbs and the user's own metrics, a cover letter, or a professional summary) for the target job. Never invent employers, degrees or numbers; use [placeholders] if needed.",
   "ai-product-description": "Write a persuasive, honest product description for an online store at the requested length and tone: a headline, a short paragraph, and 4-5 benefit bullets. Use only the details provided.",
+  "ai-decision-helper": "You help a person who cannot decide between options. Steps: (1) restate the decision in one line; (2) for each option list 2-3 concrete pros and cons based ONLY on what the user said plus well-established general knowledge; (3) apply the user's priority; (4) give ONE clear recommendation with the main reason and the condition under which you would change it; (5) if key information is missing, ask up to 2 short questions at the end. Be honest about uncertainty, never invent facts, prices or statistics, and never pressure the user. For medical, legal or financial decisions add a one-line reminder to consult a professional.",
+  "ai-game-master": "You are a fun, friendly game master for a group of friends or family. Produce ready-to-play content for the requested activity type, group size, mood and age group: clear rules in 2-3 lines, then the actual items (questions, dares, challenges, ideas) numbered. Keep everything respectful and safe: no humiliation, no dangerous dares, no alcohol or adult content, and suit the stated age group. Match the user's language and dialect.",
   "ai-name-ideas": "Suggest the requested number of distinct name ideas in the chosen style, each with a one-line rationale. Avoid names that are obviously existing famous brands, and remind the user to check availability."
 };
 const OPTION_KEYS = new Set(["length", "format", "tone", "to", "style", "mode", "kind", "outLang", "level", "flavor", "examples", "dialect", "schema", "app", "count", "keywords", "keyword", "platform", "job", "error", "language"]);
@@ -44,10 +46,10 @@ export const TOOL_GEN = {
   "ai-grammar-fixer": { max_tokens: 2000, temperature: 0.1 }, "ai-paraphraser": { max_tokens: 1800, temperature: 0.6 }, "ai-code-explainer": { max_tokens: 2200, temperature: 0.2 },
   "ai-code-debugger": { max_tokens: 2400, temperature: 0.2 }, "ai-regex-generator": { max_tokens: 900, temperature: 0.1 }, "ai-sql-generator": { max_tokens: 1200, temperature: 0.1 },
   "excel-formula-helper": { max_tokens: 900, temperature: 0.1 }, "ai-quiz-generator": { max_tokens: 2600, temperature: 0.5 }, "ai-blog-writer": { max_tokens: 3200, temperature: 0.7 },
-  "ai-social-posts": { max_tokens: 1200, temperature: 0.8 }, "ai-name-ideas": { max_tokens: 900, temperature: 0.9 }, "ai-seo-titles": { max_tokens: 900, temperature: 0.7 }
+  "ai-social-posts": { max_tokens: 1200, temperature: 0.8 }, "ai-name-ideas": { max_tokens: 900, temperature: 0.9 }, "ai-decision-helper": { max_tokens: 1800, temperature: 0.4 }, "ai-game-master": { max_tokens: 2200, temperature: 0.9 }, "ai-seo-titles": { max_tokens: 900, temperature: 0.7 }
 };
 // Tools that benefit most from the strongest model (reasoning, code, long-form). Others use the cheaper default model.
-export const STRONG_TOOLS = new Set(["ai-assistant", "ai-code-debugger", "ai-code-explainer", "ai-sql-generator", "ai-regex-generator", "excel-formula-helper", "ai-blog-writer", "ai-study-explainer", "ai-resume-writer"]);
+export const STRONG_TOOLS = new Set(["ai-assistant", "ai-code-debugger", "ai-code-explainer", "ai-sql-generator", "ai-regex-generator", "excel-formula-helper", "ai-blog-writer", "ai-study-explainer", "ai-resume-writer", "ai-decision-helper"]);
 export const genFor = (tool) => ({ ...DEFAULT_GEN, ...(TOOL_GEN[tool] || {}), strong: STRONG_TOOLS.has(tool) });
 const MODELS = { primary: "@cf/meta/llama-3.3-70b-instruct-fp8-fast", fallback: "@cf/meta/llama-3.1-8b-instruct" };
 const buckets = new Map();

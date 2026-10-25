@@ -373,3 +373,4 @@ html[lang="ar"] .hero h1 { letter-spacing: 0; line-height: 1.3; }
 .hero h1, html[lang="ar"] .hero h1 { font-size: clamp(32px, 4.8vw, 54px); max-width: 17em; margin-inline: auto; text-wrap: balance; }
 .hero .btn.solid { background: var(--signal); border-color: var(--signal); color: #2a2100; } .hero .btn.solid:hover { background: #ffd24f; }
 .av, .av.b { background: var(--accent); color: #fff; } .av.b { background: #12806F; }
+.faq details { border-bottom: 1px solid var(--line); padding: 14px 4px; } .faq summary { cursor: pointer; font-weight: 600; font-size: 16px; list-style-position: inside; } .faq details p { margin-top: 8px; color: var(--muted); max-width: 70ch; }

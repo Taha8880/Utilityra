@@ -298,14 +298,15 @@
     let out = '', d = 0, par = 0, q = '', buf = '';
     const pad = () => ind.repeat(d);
     const flushBuf = () => { const t = buf.trim(); buf = ''; return t; };
+    const decl = (t) => { t = t.replace(/\s*:\s*/, ': ').replace(/\s+/g, ' '); return /url\(|["']/.test(t) ? t : t.replace(/,\s*/g, ', '); };
     for (let i = 0; i < s.length; i++) {
       const c = s[i];
       if (q) { buf += c; if (c === q && s[i - 1] !== '\\') q = ''; continue; }
       if (c === '"' || c === "'") { q = c; buf += c; continue; }
       if (c === '(') par++; if (c === ')') par--;
       if (c === '{' && !par) { out += pad() + flushBuf().replace(/\s*,\s*/g, ',\n' + pad()).replace(/\s+/g, ' ') + ' {\n'; d++; }
-      else if (c === ';' && !par) { const t = flushBuf(); if (t) out += pad() + t.replace(/\s*:\s*/, ': ').replace(/\s+/g, ' ') + ';\n'; }
-      else if (c === '}' && !par) { const t = flushBuf(); if (t) out += pad() + t.replace(/\s*:\s*/, ': ').replace(/\s+/g, ' ') + ';\n'; d = Math.max(0, d - 1); out += pad() + '}\n\n'; }
+      else if (c === ';' && !par) { const t = flushBuf(); if (t) out += pad() + decl(t) + ';\n'; }
+      else if (c === '}' && !par) { const t = flushBuf(); if (t) out += pad() + decl(t) + ';\n'; d = Math.max(0, d - 1); out += pad() + '}\n' + (d ? '' : '\n'); }
       else buf += c;
     }
     if (buf.trim()) out += buf.trim();
