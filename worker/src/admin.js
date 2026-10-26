@@ -89,7 +89,7 @@ export async function runChecks(origin, fetchImpl = fetch) {
   for (const [key, path, test] of CHECKS) {
     const t0 = Date.now();
     try {
-      const r = await fetchImpl(new URL(path, origin).toString(), { redirect: "manual", headers: { "user-agent": "UtilityraEngineer/1.0", "cache-control": "no-cache" } });
+      const r = await fetchImpl(new URL(path, origin).toString(), { redirect: "follow", headers: { "user-agent": "UtilityraEngineer/1.0", "cache-control": "no-cache" } });
       const body = await r.text();
       const ok = !!test(r, body);
       out.push({
