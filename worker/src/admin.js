@@ -165,7 +165,17 @@ export async function engineerRun(env, origin, ask) {
           { role: "system", content: DIAG_SYSTEM },
           { role: "user", content: "Verified source/configuration facts:\n" + DEPLOYMENT_CONTEXT + "\n\nObserved failed checks (JSON):\n" + detail + "\n\nEvidence-based baseline diagnosis:\n" + baseline + "\n\nImprove the diagnosis only where the observations support it. Keep source facts separate from hypotheses. Do not propose duplicate handlers." }
         ]);
-        if (enhanced && enhanced.trim()) diagnosis += "\n\nAI review (hypotheses; verify before changing code):\n" + enhanced.slice(0, 3500);
+        if (enhanced && enhanced.trim()) {
+          // Reject known-invalid legacy Worker advice instead of displaying it as a plausible fix.
+          const conflictsWithVerifiedArchitecture =
+            /addEventListener\\s*\\(\\s*['"]fetch['"]|event\\.respondWith|duplicate (?:route|handler)|add a (?:second|duplicate) handler/i.test(enhanced) &&
+            failed.some((x) => x.key === "health-endpoint");
+          if (conflictsWithVerifiedArchitecture) {
+            diagnosis += "\\n\\nAI review omitted: the model suggested legacy/duplicate routing that conflicts with the verified module-Worker architecture. No source patch was applied.";
+          } else {
+            diagnosis += "\\n\\nAI review (hypotheses; verify before changing code):\\n" + enhanced.slice(0, 3500);
+          }
+        }
       } catch { /* deterministic diagnosis remains available even when every AI provider fails */ }
     }
     if (!open) {
