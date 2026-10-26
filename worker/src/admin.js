@@ -164,6 +164,14 @@ export async function handleAdmin(request, env, url, json, origin, readJson, ask
       return json({ ok: true, changed: r.meta?.changes || 0 }, 200, origin);
     }
     if (p === "/api/admin/stats" && m === "GET") return json(await stats(env), 200, origin);
+    if (p === "/api/admin/analytics/reset" && m === "POST") {
+      let b; try { b = await readJson(request, 1000); } catch { return json({ error: "INVALID_REQUEST" }, 400, origin); }
+      if (b.confirm !== "RESET ANALYTICS") return json({ error: "CONFIRMATION_REQUIRED" }, 400, origin);
+      const r = await env.DB.prepare("DELETE FROM analytics_events").run();
+      const deleted = Number(r.meta?.changes || 0);
+      await audit(env, "analytics_reset", "deleted=" + deleted);
+      return json({ ok: true, deleted, resetAt: new Date().toISOString() }, 200, origin);
+    }
     if (p === "/api/admin/incidents" && m === "GET") return json({ incidents: await listIncidents(env) }, 200, origin);
     if (p === "/api/admin/engineer/run" && m === "POST") { await audit(env, "health_check", "manual run"); return json(await engineerRun(env, url.origin, ask), 200, origin); }
     if (p === "/api/admin/assistant" && m === "POST") {
