@@ -2,14 +2,14 @@
 
 > تحديث آلي كل 6 ساعات، وعند تغييرات main. الاختبارات المحلية وفحص الموقع الحي نتيجتان منفصلتان.
 
-- آخر تحديث: 2026-10-26 19:51 UTC
+- آخر تحديث: 2026-10-26 19:52 UTC
 - الحدث: push
 - الفرع: main
-- Commit: 8593026e5592554e27ee13ee45b3e4c11b46b116 (https://github.com/Taha8880/Utilityra/commit/8593026e5592554e27ee13ee45b3e4c11b46b116)
+- Commit: 978d3c37d4cffb01c1555008c2bf60dcaf5fe98b (https://github.com/Taha8880/Utilityra/commit/978d3c37d4cffb01c1555008c2bf60dcaf5fe98b)
 - بدأه: Taha8880
 - نتيجة npm test: success
 - نتيجة فحص الموقع الحي: success
-- سجل التشغيل: https://github.com/Taha8880/Utilityra/actions/runs/40390311819
+- سجل التشغيل: https://github.com/Taha8880/Utilityra/actions/runs/40390488499
 
 ## طلبات الدمج المفتوحة وقت آخر تشغيل
 - [#25 — Fix false health-check failures and enable Gemini-backed repair workflow](https://github.com/Taha8880/Utilityra/pull/25) — فرع: fix/engineer-self-diagnosis-autofix — آخر تحديث: 2026-10-26T19:34:06Z
@@ -21,7 +21,7 @@
 
 ## الملفات التي تغيرت في هذا الـ commit
 ---
-M	docs/INCIDENTS.md
+M	.github/workflows/project-report.yml
 ---
 
 ## نقاط المتابعة — غير مثبتة كمنجزة حتى يظهر دليل
