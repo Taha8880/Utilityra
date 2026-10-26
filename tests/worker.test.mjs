@@ -3,11 +3,29 @@ import assert from 'node:assert/strict';
 import worker from '../worker/src/index.js';
 import { parseTarget, isBlockedHost, inspectUrl } from '../worker/src/inspect.js';
 import { makeToken, validToken, sameSecret, runChecks, devMessages } from '../worker/src/admin.js';
+import { askProviders } from '../worker/src/index.js';
 
 const ASSETS = { fetch: async (req) => new Response('<html>asset ' + new URL(req.url).pathname + '</html>', { headers: { 'content-type': 'text/html' } }) };
 const call = (path, init = {}, env = {}) => worker.fetch(new Request('https://utilityra.test' + path, init), { ASSETS, ...env });
 const ai = (body, env, headers = {}) => call('/api/ai', { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(body) }, env);
 const okAI = { AI: { run: async () => ({ response: 'مرحبا' }) } };
+
+test('developer assistant falls back to Gemini when Anthropic is rate limited', async () => {
+  const realFetch = globalThis.fetch;
+  const seen = [];
+  globalThis.fetch = async (url) => {
+    seen.push(String(url));
+    if (String(url).includes('anthropic.com')) return new Response(JSON.stringify({ error: { type: 'rate_limit_error', message: 'busy' } }), { status: 429 });
+    if (String(url).includes('googleapis.com')) return new Response(JSON.stringify({ candidates: [{ content: { parts: [{ text: 'fallback answer' }] } }] }), { status: 200 });
+    return new Response('{}', { status: 500 });
+  };
+  try {
+    const answer = await askProviders({ ANTHROPIC_API_KEY: 'test-anthropic-key', Gemini_API_Key: 'test-gemini-key' }, [{ role: 'user', content: 'diagnose this' }]);
+    assert.equal(answer, 'fallback answer');
+    assert.ok(seen.some((url) => url.includes('anthropic.com')));
+    assert.ok(seen.some((url) => url.includes('googleapis.com')));
+  } finally { globalThis.fetch = realFetch; }
+});
 
 test('technical engineer records HTTP evidence for a public health 404', async () => {
   const bodies = {
