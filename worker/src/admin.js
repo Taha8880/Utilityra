@@ -37,7 +37,7 @@ async function failLogin(env, key) {
   else { const a = Number(row.attempts) + 1; await env.DB.prepare("UPDATE admin_login_attempts SET attempts=?, blocked_until=? WHERE ip_hash=?").bind(a, a >= 8 ? now + 900 : 0, key).run(); }
 }
 
-const BOT = /bot|crawler|spider|headless|playwright|puppeteer|lighthouse|inspectiontool|chatgpt|openai|anthropic|claude|perplexity|gemini|bingpreview/i;
+const BOT = /bot|crawler|spider|headless|playwright|puppeteer|lighthouse|inspectiontool|chatgpt|openai|anthropic|claude|perplexity|gemini|bingpreview|facebookexternalhit|twitterbot|slackbot|discordbot|whatsapp|curl\/|wget\/|node-fetch|undici|pagespeed|validator|ahrefsbot|semrushbot|screaming.?frog/i;
 const EVENTS = ["page_view", "tool_open", "tool_action", "search", "search_miss"];
 export async function recordEvent(request, env, body) {
   if (!env.DB) return { ignored: true, reason: "analytics_not_configured" };
