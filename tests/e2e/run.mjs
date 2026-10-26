@@ -53,6 +53,22 @@ for (const t of TOOLS) {
 }
 writeFileSync(join(LOG, 'smoke-outcomes.json'), JSON.stringify(outcomes, null, 1));
 
+// 1c) every non-AI, non-file tool must produce a real result from its own "Try an example" data, with no error and no console errors
+const SAMPLE_SKIP = new Set([...FILE_TOOLS, 'ai-assistant', 'text-to-speech', 'api-tester', 'seo-auditor', 'security-header-checker', 'page-speed-checker', 'accessibility-checker', 'html-preview', 'countdown-timer', 'pomodoro-timer', 'typing-speed-test', 'spin-wheel', 'flashcard-maker', 'scientific-calculator', 'qr-code-generator', 'markdown-table-generator', 'unit-converter']);
+for (const t of TOOLS) {
+  if (t[1] === 'ai' || SAMPLE_SKIP.has(t[0])) continue;
+  const { page, errs } = await open(ctx, `/tools/${t[0]}/`);
+  try {
+    await page.waitForSelector('#tool-root [data-f]', { timeout: 8000 });
+    const ex = page.locator('#tool-root [data-sample]'); if (await ex.count()) await ex.first().click();
+    const run = page.locator('#tool-root [data-run]'); if (await run.count()) await run.first().click();
+    await page.waitForTimeout(600);
+    const o = await page.evaluate(() => { const out = document.querySelector('#tool-root .out'); if (!out) return { empty: true }; return { err: !!out.querySelector('.tool-status.err'), text: (out.innerText + [...out.querySelectorAll('textarea,input')].map((x) => x.value).join('')).trim().length }; });
+    rec(`sample:${t[0]}`, !errs.length && !o.empty && !o.err && o.text > 0, JSON.stringify(o) + ' ' + errs.join('|'));
+  } catch (e) { rec(`sample:${t[0]}`, false, e.message.split('\n')[0]); }
+  await page.close();
+}
+
 // 2) functional checks (input -> output)
 async function run(id, fill, expect, { click = true, files } = {}) {
   const { page, errs } = await open(ctx, `/tools/${id}/`);

@@ -1,8 +1,8 @@
 # E2E test log
 
-Generated: 2026-10-25T00:43:35.067Z
+Generated: 2026-10-26T20:21:58.071Z
 
-**343/343 passed**, 0 failed.
+**418/418 passed**, 0 failed.
 
 | test | result | note |
 |---|---|---|
@@ -262,6 +262,81 @@ Generated: 2026-10-25T00:43:35.067Z
 | smoke:team-splitter | PASS | empty  |
 | smoke:dice-coin | PASS | output  |
 | smoke:qr-code-generator | PASS | output  |
+| sample:word-counter | PASS | {"err":false,"text":136}  |
+| sample:case-converter | PASS | {"err":false,"text":49}  |
+| sample:text-cleaner | PASS | {"err":false,"text":73}  |
+| sample:line-sorter | PASS | {"err":false,"text":52}  |
+| sample:duplicate-line-remover | PASS | {"err":false,"text":50}  |
+| sample:find-replace | PASS | {"err":false,"text":78}  |
+| sample:text-compare | PASS | {"err":false,"text":93}  |
+| sample:word-frequency | PASS | {"err":false,"text":229}  |
+| sample:reading-time | PASS | {"err":false,"text":115}  |
+| sample:lorem-ipsum-generator | PASS | {"err":false,"text":1155}  |
+| sample:slug-generator | PASS | {"err":false,"text":96}  |
+| sample:arabic-diacritics-remover | PASS | {"err":false,"text":40}  |
+| sample:number-to-words | PASS | {"err":false,"text":79}  |
+| sample:markdown-preview | PASS | {"err":false,"text":161}  |
+| sample:json-formatter | PASS | {"err":false,"text":193}  |
+| sample:json-diff | PASS | {"err":false,"text":104}  |
+| sample:json-to-xml | PASS | {"err":false,"text":186}  |
+| sample:json-to-csv | PASS | {"err":false,"text":73}  |
+| sample:csv-json-converter | PASS | {"err":false,"text":166}  |
+| sample:csv-validator | PASS | {"err":false,"text":125}  |
+| sample:csv-to-markdown | PASS | {"err":false,"text":101}  |
+| sample:sql-formatter | PASS | {"err":false,"text":298}  |
+| sample:xml-formatter | PASS | {"err":false,"text":178}  |
+| sample:html-formatter | PASS | {"err":false,"text":183}  |
+| sample:css-formatter | PASS | {"err":false,"text":204}  |
+| sample:regex-tester | PASS | {"err":false,"text":166}  |
+| sample:jwt-decoder | PASS | {"err":false,"text":340}  |
+| sample:base64-encoder-decoder | PASS | {"err":false,"text":53}  |
+| sample:url-encoder-decoder | PASS | {"err":false,"text":145}  |
+| sample:url-parser | PASS | {"err":false,"text":234}  |
+| sample:html-entities | PASS | {"err":false,"text":84}  |
+| sample:uuid-generator | PASS | {"err":false,"text":201}  |
+| sample:cron-validator | PASS | {"err":false,"text":370}  |
+| sample:timestamp-converter | PASS | {"err":false,"text":216}  |
+| sample:password-generator | PASS | {"err":false,"text":149}  |
+| sample:password-strength-checker | PASS | {"err":false,"text":176}  |
+| sample:sha256-hash | PASS | {"err":false,"text":369}  |
+| sample:random-number-generator | PASS | {"err":false,"text":19}  |
+| sample:binary-hex-converter | PASS | {"err":false,"text":133}  |
+| sample:number-base-converter | PASS | {"err":false,"text":100}  |
+| sample:meta-tag-generator | PASS | {"err":false,"text":1124}  |
+| sample:robots-txt-generator | PASS | {"err":false,"text":90}  |
+| sample:sitemap-generator | PASS | {"err":false,"text":610}  |
+| sample:serp-preview | PASS | {"err":false,"text":459}  |
+| sample:utm-builder | PASS | {"err":false,"text":108}  |
+| sample:percentage-calculator | PASS | {"err":false,"text":107}  |
+| sample:vat-calculator | PASS | {"err":false,"text":73}  |
+| sample:discount-calculator | PASS | {"err":false,"text":65}  |
+| sample:hourly-pay-calculator | PASS | {"err":false,"text":79}  |
+| sample:loan-calculator | PASS | {"err":false,"text":1113}  |
+| sample:compound-interest | PASS | {"err":false,"text":445}  |
+| sample:bmi-calculator | PASS | {"err":false,"text":132}  |
+| sample:statistics-calculator | PASS | {"err":false,"text":270}  |
+| sample:grade-calculator | PASS | {"err":false,"text":65}  |
+| sample:weighted-grade-calculator | PASS | {"err":false,"text":109}  |
+| sample:gpa-calculator | PASS | {"err":false,"text":175}  |
+| sample:study-plan-generator | PASS | {"err":false,"text":920}  |
+| sample:citation-formatter | PASS | {"err":false,"text":188}  |
+| sample:file-size-converter | PASS | {"err":false,"text":100}  |
+| sample:timezone-converter | PASS | {"err":false,"text":1566}  |
+| sample:date-difference | PASS | {"err":false,"text":120}  |
+| sample:age-calculator | PASS | {"err":false,"text":143}  |
+| sample:hijri-converter | PASS | {"err":false,"text":78}  |
+| sample:color-converter | PASS | {"err":false,"text":170}  |
+| sample:gradient-generator | PASS | {"err":false,"text":71}  |
+| sample:box-shadow-generator | PASS | {"err":false,"text":68}  |
+| sample:reverse-text | PASS | {"err":false,"text":32}  |
+| sample:contrast-checker | PASS | {"err":false,"text":150}  |
+| sample:random-picker | PASS | {"err":false,"text":43}  |
+| sample:morse-code | PASS | {"err":false,"text":61}  |
+| sample:roman-numerals | PASS | {"err":false,"text":23}  |
+| sample:text-binary | PASS | {"err":false,"text":97}  |
+| sample:invoice-generator | PASS | {"err":false,"text":286}  |
+| sample:team-splitter | PASS | {"err":false,"text":64}  |
+| sample:dice-coin | PASS | {"err":false,"text":27}  |
 | func:word-counter | PASS |  |
 | func:json-diff | PASS |  |
 | func:json-to-xml | PASS |  |
