@@ -279,7 +279,7 @@ function misc() {
     writeFileSync(join(OUT, '_redirects'), lines.join('\n') + '\n');
   } catch (e) { /* legacy manifest optional */ }
   if (existsSync(join(ROOT, 'src/static'))) cpSync(join(ROOT, 'src/static'), OUT, { recursive: true });
-  writeFileSync(join(OUT, '_headers'), `/sw.js\n  Cache-Control: no-cache\n\n/admin/*\n  X-Robots-Tag: noindex\n  Cache-Control: no-store\n\n/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n  X-Frame-Options: SAMEORIGIN\n  Permissions-Policy: camera=(), microphone=(), geolocation=()\n\n/assets/*\n  Cache-Control: public, max-age=31536000, immutable\n`);
+  writeFileSync(join(OUT, '_headers'), `/sw.js\n  Cache-Control: no-cache\n\n/admin/*\n  X-Robots-Tag: noindex\n  Cache-Control: no-store\n\n/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n  X-Frame-Options: SAMEORIGIN\n  Strict-Transport-Security: max-age=31536000; includeSubDomains\n  Cross-Origin-Opener-Policy: same-origin-allow-popups\n  Permissions-Policy: camera=(), microphone=(), geolocation=()\n\n/assets/*\n  Cache-Control: public, max-age=31536000, immutable\n`);
 }
 
 
