@@ -14,6 +14,8 @@ run_worker_first = ["/api/*", "/health"]
 [vars]
 # Extra origins allowed to call /api/* (comma separated). The site's own origin is always allowed.
 ALLOWED_ORIGINS = ""
+# Prefer the built-in no-key provider first; Gemini and any configured paid providers are fallback options.
+AI_PROVIDER = "workers-ai"
 # Cloudflare AI Gateway (dashboard: AI > AI Gateway). Workers AI calls go through it; if the id is missing the Worker falls back to a direct call.
 AI_GATEWAY_ID = "utilityra"
 # Optional, to route OpenAI/Gemini through the gateway too: AI_GATEWAY_URL = "https://gateway.ai.cloudflare.com/v1/<ACCOUNT_ID>/utilityra"
