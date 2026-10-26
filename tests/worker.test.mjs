@@ -309,3 +309,33 @@ test('ai: unpaid Claude key falls back to free Gemini and is skipped afterwards'
     assert.equal(j2.provider, 'gemini'); assert.equal(calls.filter((c) => c.includes('anthropic')).length, before);
   } finally { globalThis.fetch = realFetch; }
 });
+
+
+test('admin health checks use the ASSETS binding instead of recursively fetching the Worker origin', async () => {
+  const requested = [];
+  const assets = { fetch: async (req) => {
+    const path = new URL(req.url).pathname; requested.push(path);
+    const bodies = {
+      '/': '<html>Utilityra</html>',
+      '/tools/': '<h1>Tools</h1>',
+      '/tools/word-counter/': '<main data-tool="word-counter"></main>',
+      '/tools/ai-summarizer/': '<main data-tool="ai-summarizer"></main>',
+      '/sitemap.xml': '<urlset></urlset>',
+      '/robots.txt': 'Sitemap: https://utilityra.test/sitemap.xml',
+      '/ads.txt': 'google.com, pub-123, DIRECT',
+      '/this-page-does-not-exist-xyz/': 'missing',
+      '/tools/sort-lines': '<main data-tool="line-sorter"></main>',
+      '/admin/': '<div id="admin-root"></div>'
+    };
+    const status = path === '/this-page-does-not-exist-xyz/' ? 404 : 200;
+    return new Response(bodies[path] || 'missing', { status, headers: { 'content-type': path.endsWith('.xml') ? 'application/xml' : 'text/html' } });
+  } };
+  let externalFetches = 0;
+  const results = await runChecks('https://utilityra.test', async () => { externalFetches++; return new Response('error code: 1042', { status: 404 }); }, { ASSETS: assets, AI: { run: async () => ({ response: 'ok' }) } });
+  assert.equal(externalFetches, 0);
+  assert.equal(requested.length, 10);
+  assert.ok(results.every((x) => x.ok), JSON.stringify(results.filter((x) => !x.ok)));
+  const health = results.find((x) => x.key === 'health-endpoint');
+  assert.equal(health.status, 200);
+  assert.match(health.bodyPreview, /"ok":true/);
+});
