@@ -44,8 +44,9 @@
       const result = await post('/api/admin/analytics/reset', { confirm: phrase });
       button.disabled = false;
       if (!result.ok || !result.j.ok) { status.textContent = t('فشل التصفير؛ لم يتم تأكيد نجاح العملية.', 'Reset failed; success was not confirmed.'); return; }
-      status.textContent = t('تم حذف ' + result.j.deleted + ' سجل تحليلات. الإحصائيات الآن تبدأ من الصفر.', 'Deleted ' + result.j.deleted + ' analytics records. Statistics now start from zero.');
       await dash();
+      const finalStatus = $('#reset-analytics-status');
+      if (finalStatus) finalStatus.textContent = t('تم حذف ' + result.j.deleted + ' سجل تحليلات. الإحصائيات الآن تبدأ من الصفر.', 'Deleted ' + result.j.deleted + ' analytics records. Statistics now start from zero.');
     });
   }
   async function tools() {
