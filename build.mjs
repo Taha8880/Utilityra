@@ -46,7 +46,7 @@ cpSync(join(ROOT, 'src/assets/vendor'), join(OUT, 'assets/vendor'), { recursive:
 const V = { css: hash(css), app: hash(appJs), tools: hash(toolsJs), idx: hash(indexJs) };
 
 // ---------- shared layout ----------
-const FONTS = 'https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Inter+Tight:wght@300;400&family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Noto+Naskh+Arabic:wght@500;600&display=swap';
+const FONTS = 'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap';
 const FAVICON = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#E45A1F"/><stop offset="1" stop-color="#FF7C30"/></linearGradient></defs><rect width="64" height="64" rx="16" fill="url(#g)"/><path d="M20 18v18a12 12 0 0 0 24 0V18" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round"/></svg>');
 writeFileSync(join(OUT, 'favicon.svg'), decodeURIComponent(FAVICON.split(',')[1]));
 
@@ -72,7 +72,7 @@ function head({ titleAr, titleEn, descAr, descEn, path, extra = '', noindex = fa
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="manifest" href="/site.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="${FONTS}">
+<link rel="preload" as="style" href="${FONTS}" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="${FONTS}"></noscript>
 ${initScript}
 <link rel="stylesheet" href="/assets/css/app.css?v=${V.css}">
 ${extra}${gaHead}${adsHead}
