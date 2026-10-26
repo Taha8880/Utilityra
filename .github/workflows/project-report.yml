@@ -112,10 +112,25 @@ jobs:
       - name: Publish report update
         if: always() && github.event_name != 'pull_request'
         run: |
+          # Keep generated reports, but rebase them onto the latest main to avoid losing concurrent commits.
+          cp docs/AUTO_STATUS.md /tmp/AUTO_STATUS.md
+          cp docs/LIVE_STATUS.md /tmp/LIVE_STATUS.md
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/AUTO_STATUS.md docs/LIVE_STATUS.md
-          if git diff --cached --quiet; then echo "Reports unchanged."; else git commit -m "docs: refresh automated project and live status"; git push; fi
+          for attempt in 1 2 3 4 5; do
+            git fetch origin main
+            git reset --hard origin/main
+            cp /tmp/AUTO_STATUS.md docs/AUTO_STATUS.md
+            cp /tmp/LIVE_STATUS.md docs/LIVE_STATUS.md
+            git add docs/AUTO_STATUS.md docs/LIVE_STATUS.md
+            if git diff --cached --quiet; then echo "Reports unchanged."; exit 0; fi
+            git commit -m "docs: refresh automated project and live status"
+            if git push origin HEAD:main; then exit 0; fi
+            echo "Push race on attempt $attempt; retrying against latest main."
+            sleep $((attempt * 2))
+          done
+          echo "Could not publish reports after 5 attempts." >&2
+          exit 1
       - name: Fail if project tests failed
         if: steps.tests.outcome != 'success'
         run: exit 1
