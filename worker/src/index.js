@@ -220,8 +220,8 @@ const coolDown = (name, env, e) => { if (e && e.cool) COOL.set(coolKey(name, env
 const geminiKey = (env) => env.GEMINI_API_KEY || env.Gemini_API_Key || env.GOOGLE_API_KEY || "";
 export function providersFor(env) {
   const all = { anthropic: [!!env.ANTHROPIC_API_KEY, viaAnthropic], "workers-ai": [!!env.AI, viaWorkersAI], openai: [!!env.OPENAI_API_KEY, viaOpenAI], gemini: [!!geminiKey(env), viaGemini] };
-  // Order: providers you configured on purpose (paid keys) -> Gemini free tier -> Workers AI. A provider whose key/billing is dead is skipped for 10 minutes. Set AI_PROVIDER to force one first.
-  const order = [env.AI_PROVIDER, "anthropic", "openai", "gemini", "workers-ai"].filter((v, i, a) => v && all[v] && a.indexOf(v) === i);
+  // Free-first by default: Workers AI, then Gemini, then optional paid providers. AI_PROVIDER can explicitly choose the first provider; remaining providers are fallback candidates.
+  const order = [env.AI_PROVIDER, "workers-ai", "gemini", "anthropic", "openai"].filter((v, i, a) => v && all[v] && a.indexOf(v) === i);
   return order.filter((k) => all[k][0]).map((k) => [k, all[k][1]]);
 }
 
