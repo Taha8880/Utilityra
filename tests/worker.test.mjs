@@ -105,11 +105,14 @@ test('analytics: excludes review payloads, automation and admin sessions', async
 
 test('analytics reset requires admin session and exact confirmation, then clears only analytics', async () => {
   const rows = [];
-  const DB = { prepare: (sql) => ({ bind: (...args) => ({
-    run: async () => { rows.push({ sql, args }); return { meta: { changes: sql.startsWith('DELETE FROM analytics_events') ? 12 : 1 } }; },
-    first: async () => null,
-    all: async () => ({ results: [] })
-  }) }) };
+  const DB = { prepare: (sql) => ({
+    run: async () => { rows.push({ sql, args: [] }); return { meta: { changes: sql.startsWith('DELETE FROM analytics_events') ? 12 : 1 } }; },
+    bind: (...args) => ({
+      run: async () => { rows.push({ sql, args }); return { meta: { changes: 1 } }; },
+      first: async () => null,
+      all: async () => ({ results: [] })
+    })
+  }) };
   const env = { DB, ADMIN_PASSWORD: 'p', ADMIN_SESSION_SECRET: 'session-secret' };
   assert.equal((await call('/api/admin/analytics/reset', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ confirm: 'RESET ANALYTICS' }) }, env)).status, 401);
   const exp = Math.floor(Date.now() / 1000) + 600;
