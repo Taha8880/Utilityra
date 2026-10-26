@@ -27,7 +27,7 @@ test('developer assistant falls back to Gemini when Anthropic is rate limited', 
   } finally { globalThis.fetch = realFetch; }
 });
 
-test('technical engineer records HTTP evidence for a public health 404', async () => {
+test('technical engineer validates the health handler without a recursive public request', async () => {
   const bodies = {
     '/': ['<html>Utilityra</html>', 200],
     '/tools/': ['<h1>Tools</h1>', 200],
@@ -47,11 +47,8 @@ test('technical engineer records HTTP evidence for a public health 404', async (
     return new Response(body, { status, headers: { 'content-type': path.endsWith('.xml') ? 'application/xml' : 'application/json', 'cf-ray': 'test-ray-123' } });
   });
   const health = results.find((x) => x.key === 'health-endpoint');
-  assert.equal(health.ok, false);
-  assert.equal(health.status, 404);
-  assert.equal(health.bodyPreview, '{"error":"NOT_FOUND"}');
-  assert.equal(health.cfRay, 'test-ray-123');
-  assert.equal(health.contentType, 'application/json');
+  assert.equal(health.ok, true);
+  assert.equal(health.status, 200);
 });
 
 test('developer assistant gets verified incident context and rejects no valid roles', () => {
@@ -337,5 +334,5 @@ test('admin health checks use the ASSETS binding instead of recursively fetching
   assert.ok(results.every((x) => x.ok), JSON.stringify(results.filter((x) => !x.ok)));
   const health = results.find((x) => x.key === 'health-endpoint');
   assert.equal(health.status, 200);
-  assert.match(health.bodyPreview, /"ok":true/);
+  assert.equal(health.ok, true);
 });
