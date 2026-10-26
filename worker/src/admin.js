@@ -224,7 +224,15 @@ export async function handleAdmin(request, env, url, json, origin, readJson, ask
       if (typeof b.message !== "string" || !b.message.trim()) return json({ error: "EMPTY_MESSAGE" }, 400, origin);
       if (!ask) return json({ error: "PROVIDER_NOT_CONFIGURED" }, 503, origin);
       await audit(env, "dev_assistant", b.message.slice(0, 120));
-      try { return json({ answer: await ask(devMessages(b.history, b.message)) }, 200, origin); } catch (e) { return json({ error: e?.message === "PROVIDER_NOT_CONFIGURED" ? "PROVIDER_NOT_CONFIGURED" : "UPSTREAM_ERROR", detail: String(e?.detail || "").slice(0, 700) }, 502, origin); }
+      let runtimeContext = "No recent incident context could be loaded.";
+      try {
+        const recent = (await env.DB.prepare("SELECT id,check_key,title,severity,status,detail,diagnosis,updated_at FROM incidents ORDER BY id DESC LIMIT 5").all()).results || [];
+        runtimeContext = recent.length ? JSON.stringify(recent.map((x) => ({
+          id: x.id, checks: x.check_key, title: x.title, severity: x.severity, status: x.status,
+          detail: String(x.detail || "").slice(0, 1200), diagnosis: String(x.diagnosis || "").slice(0, 1800), updatedAt: x.updated_at
+        }))) : "No incidents are currently recorded.";
+      } catch { /* assistant remains usable if the optional incident query fails */ }
+      try { return json({ answer: await ask(devMessages(b.history, b.message, runtimeContext)) }, 200, origin); } catch (e) { return json({ error: e?.message === "PROVIDER_NOT_CONFIGURED" ? "PROVIDER_NOT_CONFIGURED" : "UPSTREAM_ERROR", detail: String(e?.detail || "").slice(0, 700) }, 502, origin); }
     }
     if (p === "/api/admin/tools" && m === "GET") return json({ flags: (await env.DB.prepare("SELECT tool_key, enabled, featured, sort FROM tool_flags").all()).results || [] }, 200, origin);
     if (p === "/api/admin/tools/flag" && m === "POST") {
