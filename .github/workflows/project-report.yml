@@ -5,10 +5,11 @@ on:
     branches: [main]
     paths-ignore:
       - docs/AUTO_STATUS.md
+      - docs/LIVE_STATUS.md
   pull_request:
     branches: [main]
   schedule:
-    - cron: '17 6 * * *'
+    - cron: '17 */6 * * *'
   workflow_dispatch:
 
 permissions:
@@ -27,24 +28,34 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
-
       - name: Install dependencies
         run: npm install
-
       - name: Run project tests
         id: tests
         continue-on-error: true
         run: npm test
-
+      - name: Check public production site
+        id: live
+        continue-on-error: true
+        env:
+          SITE_URL: https://utilityra.tavengers16.workers.dev
+        run: node scripts/monitor.mjs --strict --report docs/LIVE_STATUS.md
+      - name: Collect open pull requests
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh pr list --repo "$GH_REPO" --state open --limit 100 --json number,title,url,headRefName,updatedAt --jq '.[] | "- [#\(.number) — \(.title)](\(.url)) — فرع: \(.headRefName) — آخر تحديث: \(.updatedAt)"' > /tmp/open-prs.txt
+          if [ ! -s /tmp/open-prs.txt ]; then echo "لا توجد طلبات دمج مفتوحة." > /tmp/open-prs.txt; fi
       - name: Generate current project report
         if: always()
         env:
           TEST_OUTCOME: ${{ steps.tests.outcome }}
+          LIVE_OUTCOME: ${{ steps.live.outcome }}
           GH_EVENT: ${{ github.event_name }}
           GH_REF: ${{ github.ref_name }}
           GH_SHA: ${{ github.sha }}
@@ -58,7 +69,7 @@ jobs:
           {
             echo "# Utilityra — التقرير التلقائي للحالة"
             echo
-            echo "> يتحدث تلقائيًا عند كل Push إلى main، وعند طلبات الدمج، ويوميًا. نجاح الاختبارات لا يثبت وحده نجاح الموقع الحي."
+            echo "> تحديث آلي كل 6 ساعات، وعند تغييرات main. الاختبارات المحلية وفحص الموقع الحي نتيجتان منفصلتان."
             echo
             echo "- آخر تحديث: $(date -u '+%Y-%m-%d %H:%M UTC')"
             echo "- الحدث: $GH_EVENT"
@@ -66,51 +77,48 @@ jobs:
             echo "- Commit: $GH_SHA ($GH_SERVER/$GH_REPOSITORY/commit/$GH_SHA)"
             echo "- بدأه: $GH_ACTOR"
             echo "- نتيجة npm test: $TEST_OUTCOME"
+            echo "- نتيجة فحص الموقع الحي: $LIVE_OUTCOME"
             echo "- سجل التشغيل: $GH_SERVER/$GH_REPOSITORY/actions/runs/$GH_RUN_ID"
-            if [ -n "$GH_PR_NUMBER" ]; then
-              echo "- طلب الدمج: $GH_SERVER/$GH_REPOSITORY/pull/$GH_PR_NUMBER"
-            fi
+            if [ -n "$GH_PR_NUMBER" ]; then echo "- طلب الدمج الجاري فحصه: $GH_SERVER/$GH_REPOSITORY/pull/$GH_PR_NUMBER"; fi
+            echo
+            echo "## طلبات الدمج المفتوحة وقت آخر تشغيل"
+            cat /tmp/open-prs.txt 2>/dev/null || echo "تعذر جلب القائمة في هذا التشغيل."
             echo
             echo "## الملفات التي تغيرت في هذا الـ commit"
             echo '---'
             git diff-tree --no-commit-id --name-status -r "$GH_SHA" || true
             echo '---'
             echo
-            echo "## نقاط متابعة ثابتة — لا تعتبر منجزة لمجرد نجاح الاختبارات"
-            echo "- [ ] التحقق خارجيًا من الصفحة الرئيسية وصفحات الأدوات و/health و/sitemap.xml و/robots.txt."
-            echo "- [ ] تأكيد سبب Cloudflare 1042 بعد النشر، وعدم الاعتماد على فحص داخلي فقط."
+            echo "## نقاط المتابعة — غير مثبتة كمنجزة حتى يظهر دليل"
+            echo "- [ ] مراجعة docs/LIVE_STATUS.md؛ أي فشل خارجي يحتاج تشخيصًا وإعادة اختبار."
+            echo "- [ ] تأكيد سبب Cloudflare 1042 بعد النشر؛ لا يُعلن الإصلاح دون نجاح فحص خارجي."
             echo "- [ ] اختبار لوحة الإدارة واتصال D1 الحقيقي وتسجيل الدخول والصلاحيات."
-            echo "- [ ] اختبار مزودات الذكاء الاصطناعي بمفاتيح صالحة؛ اختبارات mock لا تثبت نجاح المزود الحقيقي."
-            echo "- [ ] اختبار الأدوات الـ115 بنتائج فعلية، وليس مجرد تحميل الصفحات أو القيم الافتراضية."
+            echo "- [ ] اختبار مزودات الذكاء الاصطناعي بمفاتيح صالحة؛ الاختبارات الوهمية لا تثبت نجاح المزود الحقيقي."
+            echo "- [ ] اختبار الأدوات الـ115 بنتائج فعلية؛ smoke test لا يثبت صحة كل نتيجة."
             echo "- [ ] استكمال اختبارات Android والمتصفحات المتعددة وLighthouse وإمكانية الوصول."
-            echo "- [ ] التأكد من وجود نسخة احتياطية واستعادة مجرّبة لقاعدة D1."
+            echo "- [ ] التحقق من النسخ الاحتياطي واستعادة D1 فعليًا."
             echo
-            echo "## ملفات السجل المرجعية"
-            echo "- docs/REQUIREMENTS_STATUS.md"
-            echo "- docs/TECHNICAL_ENGINEER.md"
-            echo "- docs/INCIDENTS.md"
+            echo "## السجلات"
+            echo "- [فحص الموقع الحي](LIVE_STATUS.md)"
+            echo "- [حالة المتطلبات](REQUIREMENTS_STATUS.md)"
+            echo "- [سجل الأعطال والإصلاحات](INCIDENTS.md)"
+            echo "- [المهندس التقني](TECHNICAL_ENGINEER.md)"
             echo
-            echo "## تفسير الحالة"
-            echo "- نجاح npm test يثبت نجاح الاختبارات الموجودة فقط، ولا يثبت وحده أن الموقع الحي يعمل."
-            echo "- فشل الاختبارات يستلزم مراجعة سجل التشغيل قبل إعلان الإصلاح."
-            echo "- يجب تسجيل السبب الجذري والإصلاح والدليل في سجل الأعطال بعد التحقق، لا بناءً على التخمين."
+            echo "## قواعد تفسير الحالة"
+            echo "- نجاح npm test لا يثبت وحده أن الموقع الحي يعمل."
+            echo "- فشل فحص الموقع الحي يثبت فشل نقاط فحص محددة فقط؛ راجع التقرير الحي وسجل التشغيل."
+            echo "- لا يُسجل سبب جذري أو إصلاح كحقيقة قبل وجود دليل واختبار بعد الإصلاح."
           } > docs/AUTO_STATUS.md
-
       - name: Publish report update
         if: always() && github.event_name != 'pull_request'
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/AUTO_STATUS.md
-          if git diff --cached --quiet; then
-            echo "Report unchanged."
-          else
-            git commit -m "docs: auto-update project status report"
-            git push
-          fi
-
-      - name: Fail if tests failed
+          git add docs/AUTO_STATUS.md docs/LIVE_STATUS.md
+          if git diff --cached --quiet; then echo "Reports unchanged."; else git commit -m "docs: refresh automated project and live status"; git push; fi
+      - name: Fail if project tests failed
         if: steps.tests.outcome != 'success'
+        run: exit 1
+      - name: Fail if live-site monitor failed
+        if: steps.live.outcome != 'success'
         run: exit 1
