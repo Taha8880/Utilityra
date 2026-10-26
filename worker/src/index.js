@@ -278,14 +278,20 @@ async function handleAI(request, env, origin) {
 import { inspectUrl } from "./inspect.js";
 import { SITE_KNOWLEDGE } from "./knowledge.generated.js";
 import { ground, wantsGrounding, sourcesBlock } from "./ground.js";
-import { handleAdmin, publicConfig } from "./admin.js";
+import { handleAdmin, publicConfig, engineerRun } from "./admin.js";
 async function handleConfig(env, origin) {
   const r = json(await publicConfig(env), 200, origin);
   r.headers.set("cache-control", "public, max-age=60");
   return r;
 }
 
-export default {
+const worker = {
+  // Cron trigger (wrangler.toml): the technical engineer checks the site on its own, logs incidents with a diagnosis and waits for owner approval.
+  async scheduled(event, env, ctx) {
+    if (!env.DB) return;
+    const origin = env.SITE_URL || "https://utilityra.tavengers16.workers.dev";
+    ctx.waitUntil(engineerRun(env, origin, askProviders.bind(null, env), (req) => worker.fetch(req, env)).catch(() => {}));
+  },
   async fetch(request, env) {
     const url = new URL(request.url);
     const origin = allowedOrigin(request, env);
@@ -303,7 +309,7 @@ export default {
     if (url.pathname === "/api/analytics/event" || url.pathname.startsWith("/api/admin/")) {
       if (origin === null) return json({ error: "ORIGIN_NOT_ALLOWED" }, 403);
       if (url.pathname !== "/api/analytics/event" && request.method !== "GET" && origin && origin !== url.origin) return json({ error: "ORIGIN_NOT_ALLOWED" }, 403);
-      const res = await handleAdmin(request, env, url, json, origin || "", readJson, askProviders.bind(null, env));
+      const res = await handleAdmin(request, env, url, json, origin || "", readJson, askProviders.bind(null, env), (req) => worker.fetch(req, env));
       if (res) return res;
     }
     if (url.pathname === "/api/config" && request.method === "GET") return handleConfig(env, origin || "");
@@ -319,6 +325,7 @@ export default {
     return new Response("Utilityra API is running. Static assets are not bound.", { status: 200, headers: { "content-type": "text/plain; charset=utf-8" } });
   }
 };
+export default worker;
 
 export async function askProviders(env, messages) {
   let last;

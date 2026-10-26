@@ -84,25 +84,15 @@ export const CHECKS = [
 ];
 const safeHeader = (response, name) => String(response.headers.get(name) || "").slice(0, 160);
 const preview = (value) => String(value || "").replace(/[\r\n\t]+/g, " ").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 180);
-export async function runChecks(origin, fetchImpl = fetch, env = null) {
+export async function runChecks(origin, fetchImpl = fetch) {
+  // fetchImpl must NOT be a public-URL subrequest when called from inside the Worker (Cloudflare answers those with
+  // platform error 1042). The admin passes an in-process dispatcher to the Worker's own fetch handler, so the real
+  // routing runs (API handlers, /health, then ASSETS with _redirects and 404 pages). No result is ever faked.
   const out = [];
   for (const [key, path, test] of CHECKS) {
     const t0 = Date.now();
     try {
-      // Do not subrequest the same workers.dev hostname from inside this Worker: Cloudflare can
-      // reject recursive/self-subrequests with platform error 1042. Check static routes through
-      // the bound ASSETS service and validate the health payload locally; the external monitor
-      // (scripts/monitor.mjs in GitHub Actions) remains responsible for public-origin reachability.
-      const target = new URL(path, origin);
-      let r;
-      if (key === "health-endpoint") {
-        const payload = { ok: true, service: "utilityra", ai: [] };
-        r = new Response(JSON.stringify(payload), { status: 200, headers: { "content-type": "application/json" } });
-      } else if (env?.ASSETS?.fetch) {
-        r = await env.ASSETS.fetch(new Request(target.toString(), { headers: { "user-agent": "UtilityraEngineer/1.0", "cache-control": "no-cache" } }));
-      } else {
-        r = await fetchImpl(target.toString(), { redirect: "follow", headers: { "user-agent": "UtilityraEngineer/1.0", "cache-control": "no-cache" } });
-      }
+      const r = await fetchImpl(new URL(path, origin).toString(), { redirect: "follow", headers: { "user-agent": "UtilityraEngineer/1.0", "cache-control": "no-cache" } });
       const body = await r.text();
       const ok = !!test(r, body);
       out.push({
@@ -148,9 +138,9 @@ function deterministicDiagnosis(failed, origin) {
     return "- " + x.key + " (" + x.path + "): expected response was not observed; received HTTP " + x.status + ", content-type " + (x.contentType || "unknown") + ", body " + (x.bodyPreview || "(empty)") + ". Inspect the route and deployment/configuration that owns this path.";
   }).join("\n");
 }
-export async function engineerRun(env, origin, ask) {
-  // Probe the public URL so the check exercises deployed Worker routing, not ASSETS-only routing.
-  const results = await runChecks(origin, fetch, env);
+export async function engineerRun(env, origin, ask, selfFetch) {
+  // In-process dispatch (see runChecks). The external GitHub monitor (scripts/monitor.mjs) remains the public-origin check.
+  const results = await runChecks(origin, selfFetch ? (u, o) => selfFetch(new Request(u, o)) : fetch);
   const failed = results.filter((r) => !r.ok);
   let incident = null;
   if (failed.length) {
@@ -203,7 +193,7 @@ export async function publicConfig(env) {
 }
 
 /* ---------- router ---------- */
-export async function handleAdmin(request, env, url, json, origin, readJson, ask) {
+export async function handleAdmin(request, env, url, json, origin, readJson, ask, selfFetch) {
   const p = url.pathname, m = request.method;
   const needCfg = () => (configured(env) ? null : json({ error: "ADMIN_NOT_CONFIGURED" }, 503, origin));
   if (p === "/api/analytics/event" && m === "POST") {
@@ -240,7 +230,7 @@ export async function handleAdmin(request, env, url, json, origin, readJson, ask
     }
     if (p === "/api/admin/stats" && m === "GET") return json(await stats(env), 200, origin);
     if (p === "/api/admin/incidents" && m === "GET") return json({ incidents: await listIncidents(env) }, 200, origin);
-    if (p === "/api/admin/engineer/run" && m === "POST") { await audit(env, "health_check", "manual run"); return json(await engineerRun(env, url.origin, ask), 200, origin); }
+    if (p === "/api/admin/engineer/run" && m === "POST") { await audit(env, "health_check", "manual run"); return json(await engineerRun(env, url.origin, ask, selfFetch), 200, origin); }
     if (p === "/api/admin/assistant" && m === "POST") {
       const b = await readJson(request, 40000);
       if (typeof b.message !== "string" || !b.message.trim()) return json({ error: "EMPTY_MESSAGE" }, 400, origin);
@@ -273,6 +263,21 @@ export async function handleAdmin(request, env, url, json, origin, readJson, ask
       return json({ ok: true, saved: entries.length }, 200, origin);
     }
     if (p === "/api/admin/audit" && m === "GET") return json({ log: (await env.DB.prepare("SELECT id, action, detail, created_at FROM admin_audit_log ORDER BY id DESC LIMIT 100").all()).results || [] }, 200, origin);
+    if (p === "/api/admin/engineer/approve" && m === "POST") {
+      // Owner approval -> dispatch the GitHub "AI engineer" workflow, which only ever opens a Pull Request after tests pass (never merges/deploys).
+      const b = await readJson(request, 1000);
+      if (!Number.isInteger(b.id)) return json({ error: "INVALID_REQUEST" }, 400, origin);
+      if (!env.GITHUB_DISPATCH_TOKEN) return json({ error: "GITHUB_NOT_CONFIGURED" }, 503, origin);
+      const inc = await env.DB.prepare("SELECT id,title,detail,diagnosis FROM incidents WHERE id=?").bind(b.id).first();
+      if (!inc) return json({ error: "NOT_FOUND" }, 404, origin);
+      const repo = env.GITHUB_REPO || "Taha8880/Utilityra";
+      const problem = `Incident #${inc.id}: ${inc.title}\nEvidence: ${String(inc.detail || "").slice(0, 1500)}\nDiagnosis: ${String(inc.diagnosis || "").slice(0, 1500)}`;
+      const res = await fetch(`https://api.github.com/repos/${repo}/actions/workflows/ai-engineer.yml/dispatches`, { method: "POST", headers: { authorization: `Bearer ${env.GITHUB_DISPATCH_TOKEN}`, accept: "application/vnd.github+json", "user-agent": "utilityra-engineer", "content-type": "application/json" }, body: JSON.stringify({ ref: "main", inputs: { problem } }) });
+      if (!res.ok) return json({ error: "GITHUB_DISPATCH_FAILED", status: res.status }, 502, origin);
+      await env.DB.prepare("UPDATE incidents SET status='fix_proposed', updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(b.id).run();
+      await audit(env, "engineer_approve", `#${b.id} dispatched`);
+      return json({ ok: true }, 200, origin);
+    }
     if (p === "/api/admin/incidents/status" && m === "POST") {
       const b = await readJson(request, 1000);
       if (!Number.isInteger(b.id) || !["open", "diagnosed", "fix_proposed", "resolved", "ignored"].includes(b.status)) return json({ error: "INVALID_REQUEST" }, 400, origin);

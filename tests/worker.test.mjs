@@ -27,7 +27,7 @@ test('developer assistant falls back to Gemini when Anthropic is rate limited', 
   } finally { globalThis.fetch = realFetch; }
 });
 
-test('technical engineer validates the health handler without a recursive public request', async () => {
+test('technical engineer records HTTP evidence for a failing /health (never faked)', async () => {
   const bodies = {
     '/': ['<html>Utilityra</html>', 200],
     '/tools/': ['<h1>Tools</h1>', 200],
@@ -47,8 +47,7 @@ test('technical engineer validates the health handler without a recursive public
     return new Response(body, { status, headers: { 'content-type': path.endsWith('.xml') ? 'application/xml' : 'application/json', 'cf-ray': 'test-ray-123' } });
   });
   const health = results.find((x) => x.key === 'health-endpoint');
-  assert.equal(health.ok, true);
-  assert.equal(health.status, 200);
+  assert.equal(health.ok, false); assert.equal(health.status, 404); assert.equal(health.cfRay, 'test-ray-123'); assert.match(health.bodyPreview, /NOT_FOUND/);
 });
 
 test('developer assistant gets verified incident context and rejects no valid roles', () => {
@@ -308,31 +307,40 @@ test('ai: unpaid Claude key falls back to free Gemini and is skipped afterwards'
 });
 
 
-test('admin health checks use the ASSETS binding instead of recursively fetching the Worker origin', async () => {
-  const requested = [];
-  const assets = { fetch: async (req) => {
-    const path = new URL(req.url).pathname; requested.push(path);
-    const bodies = {
-      '/': '<html>Utilityra</html>',
-      '/tools/': '<h1>Tools</h1>',
-      '/tools/word-counter/': '<main data-tool="word-counter"></main>',
-      '/tools/ai-summarizer/': '<main data-tool="ai-summarizer"></main>',
-      '/sitemap.xml': '<urlset></urlset>',
-      '/robots.txt': 'Sitemap: https://utilityra.test/sitemap.xml',
-      '/ads.txt': 'google.com, pub-123, DIRECT',
-      '/this-page-does-not-exist-xyz/': 'missing',
-      '/tools/sort-lines': '<main data-tool="line-sorter"></main>',
-      '/admin/': '<div id="admin-root"></div>'
-    };
-    const status = path === '/this-page-does-not-exist-xyz/' ? 404 : 200;
-    return new Response(bodies[path] || 'missing', { status, headers: { 'content-type': path.endsWith('.xml') ? 'application/xml' : 'text/html' } });
-  } };
-  let externalFetches = 0;
-  const results = await runChecks('https://utilityra.test', async () => { externalFetches++; return new Response('error code: 1042', { status: 404 }); }, { ASSETS: assets, AI: { run: async () => ({ response: 'ok' }) } });
-  assert.equal(externalFetches, 0);
-  assert.equal(requested.length, 10);
-  assert.ok(results.every((x) => x.ok), JSON.stringify(results.filter((x) => !x.ok)));
-  const health = results.find((x) => x.key === 'health-endpoint');
-  assert.equal(health.status, 200);
-  assert.equal(health.ok, true);
+test('admin engineer run dispatches checks in-process (no public subrequest) and exercises the real /health handler', async () => {
+  const requested = []; let publicFetches = 0;
+  const realFetch = globalThis.fetch; globalThis.fetch = async () => { publicFetches++; return new Response('error code: 1042', { status: 404 }); };
+  const ASSETS = { fetch: async (req) => { const p = new URL(req.url).pathname; requested.push(p);
+    const pages = { '/': '<html>Utilityra</html>', '/tools/': '<h1>Tools</h1>', '/tools/word-counter/': '<main data-tool="word-counter"></main>', '/tools/ai-summarizer/': '<main data-tool="ai-summarizer"></main>', '/sitemap.xml': '<urlset></urlset>', '/robots.txt': 'Sitemap: https://utilityra.test/sitemap.xml', '/ads.txt': 'google.com, pub-1, DIRECT', '/tools/sort-lines': '<main data-tool="line-sorter"></main>', '/admin/': '<div id="admin-root"></div>' };
+    return pages[p] ? new Response(pages[p], { status: 200, headers: { 'content-type': p.endsWith('.xml') ? 'application/xml' : 'text/html' } }) : new Response('missing', { status: 404 }); } };
+  const DB = { prepare: () => { const s = { bind: () => s, run: async () => ({}), first: async () => null, all: async () => ({ results: [] }) }; return s; } };
+  try {
+    const env = { ASSETS, DB, AI: { run: async () => ({ response: 'ok' }) }, ADMIN_PASSWORD: 'pw-123456', ADMIN_SESSION_SECRET: 's'.repeat(40) };
+    const login = await worker.fetch(new Request('https://utilityra.test/api/admin/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password: 'pw-123456' }) }), env);
+    const cookie = login.headers.get('set-cookie').split(';')[0];
+    const r = await worker.fetch(new Request('https://utilityra.test/api/admin/engineer/run', { method: 'POST', headers: { cookie } }), env);
+    const j = await r.json();
+    assert.equal(publicFetches, 0);
+    assert.ok(j.results.every((x) => x.ok), JSON.stringify(j.results.filter((x) => !x.ok)));
+    assert.equal(j.results.find((x) => x.key === 'health-endpoint').status, 200);
+  } finally { globalThis.fetch = realFetch; }
+});
+
+test('scheduled engineer run records an incident without any admin session', async () => {
+  const runs = []; const DB = { prepare: (sql) => { const s = { bind: (...a) => { runs.push([sql, a]); return s; }, run: async () => ({}), first: async () => null, all: async () => ({ results: [] }) }; return s; } };
+  const ASSETS = { fetch: async () => new Response('down', { status: 500 }) };
+  let pending; const ctx = { waitUntil: (p) => { pending = p; } };
+  await worker.scheduled({}, { DB, ASSETS }, ctx); await pending;
+  assert.ok(runs.some(([sql]) => /INSERT INTO incidents/i.test(sql)), 'incident should be inserted');
+});
+test('engineer approve: needs auth and a dispatch token, then dispatches the PR workflow', async () => {
+  const DB = { prepare: () => { const s = { bind: () => s, run: async () => ({}), first: async () => ({ id: 7, title: 'x', detail: 'd', diagnosis: 'g' }), all: async () => ({ results: [] }) }; return s; } };
+  const base = { DB, ADMIN_PASSWORD: 'pw-123456', ADMIN_SESSION_SECRET: 's'.repeat(40) };
+  const login = await call('/api/admin/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password: 'pw-123456' }) }, base);
+  const cookie = login.headers.get('set-cookie').split(';')[0]; const req = (env) => call('/api/admin/engineer/approve', { method: 'POST', headers: { cookie, 'content-type': 'application/json' }, body: JSON.stringify({ id: 7 }) }, env);
+  assert.equal((await call('/api/admin/engineer/approve', { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{"id":7}' }, base)).status, 401);
+  assert.equal((await req(base)).status, 503);
+  const realFetch = globalThis.fetch; let hit;
+  globalThis.fetch = async (u, init) => { hit = [String(u), init]; return new Response(null, { status: 204 }); };
+  try { assert.equal((await req({ ...base, GITHUB_DISPATCH_TOKEN: 't' })).status, 200); assert.match(hit[0], /actions\/workflows\/ai-engineer\.yml\/dispatches/); } finally { globalThis.fetch = realFetch; }
 });
