@@ -329,7 +329,7 @@ export async function askProviders(env, messages) {
     catch (e) {
       last = e;
       failures.push(String(e?.detail || `${name}: ${e?.message || "provider failed"}`).slice(0, 180));
-      if (e.status === 429) break;
+      // A provider-specific 429 should not block configured fallback providers for admin diagnostics.
     }
   }
   if (!last) throw new Error("PROVIDER_NOT_CONFIGURED");
