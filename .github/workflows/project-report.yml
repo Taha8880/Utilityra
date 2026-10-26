@@ -1,0 +1,116 @@
+name: Keep project report updated
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - docs/AUTO_STATUS.md
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: project-report-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run project tests
+        id: tests
+        continue-on-error: true
+        run: npm test
+
+      - name: Generate current project report
+        if: always()
+        env:
+          TEST_OUTCOME: ${{ steps.tests.outcome }}
+          GH_EVENT: ${{ github.event_name }}
+          GH_REF: ${{ github.ref_name }}
+          GH_SHA: ${{ github.sha }}
+          GH_ACTOR: ${{ github.actor }}
+          GH_SERVER: ${{ github.server_url }}
+          GH_REPOSITORY: ${{ github.repository }}
+          GH_RUN_ID: ${{ github.run_id }}
+          GH_PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          mkdir -p docs
+          {
+            echo "# Utilityra — التقرير التلقائي للحالة"
+            echo
+            echo "> يتحدث تلقائيًا عند كل Push إلى main، وعند طلبات الدمج، ويوميًا. نجاح الاختبارات لا يثبت وحده نجاح الموقع الحي."
+            echo
+            echo "- آخر تحديث: $(date -u '+%Y-%m-%d %H:%M UTC')"
+            echo "- الحدث: $GH_EVENT"
+            echo "- الفرع: $GH_REF"
+            echo "- Commit: $GH_SHA ($GH_SERVER/$GH_REPOSITORY/commit/$GH_SHA)"
+            echo "- بدأه: $GH_ACTOR"
+            echo "- نتيجة npm test: $TEST_OUTCOME"
+            echo "- سجل التشغيل: $GH_SERVER/$GH_REPOSITORY/actions/runs/$GH_RUN_ID"
+            if [ -n "$GH_PR_NUMBER" ]; then
+              echo "- طلب الدمج: $GH_SERVER/$GH_REPOSITORY/pull/$GH_PR_NUMBER"
+            fi
+            echo
+            echo "## الملفات التي تغيرت في هذا الـ commit"
+            echo '---'
+            git diff-tree --no-commit-id --name-status -r "$GH_SHA" || true
+            echo '---'
+            echo
+            echo "## نقاط متابعة ثابتة — لا تعتبر منجزة لمجرد نجاح الاختبارات"
+            echo "- [ ] التحقق خارجيًا من الصفحة الرئيسية وصفحات الأدوات و/health و/sitemap.xml و/robots.txt."
+            echo "- [ ] تأكيد سبب Cloudflare 1042 بعد النشر، وعدم الاعتماد على فحص داخلي فقط."
+            echo "- [ ] اختبار لوحة الإدارة واتصال D1 الحقيقي وتسجيل الدخول والصلاحيات."
+            echo "- [ ] اختبار مزودات الذكاء الاصطناعي بمفاتيح صالحة؛ اختبارات mock لا تثبت نجاح المزود الحقيقي."
+            echo "- [ ] اختبار الأدوات الـ115 بنتائج فعلية، وليس مجرد تحميل الصفحات أو القيم الافتراضية."
+            echo "- [ ] استكمال اختبارات Android والمتصفحات المتعددة وLighthouse وإمكانية الوصول."
+            echo "- [ ] التأكد من وجود نسخة احتياطية واستعادة مجرّبة لقاعدة D1."
+            echo
+            echo "## ملفات السجل المرجعية"
+            echo "- docs/REQUIREMENTS_STATUS.md"
+            echo "- docs/TECHNICAL_ENGINEER.md"
+            echo "- docs/INCIDENTS.md"
+            echo
+            echo "## تفسير الحالة"
+            echo "- نجاح npm test يثبت نجاح الاختبارات الموجودة فقط، ولا يثبت وحده أن الموقع الحي يعمل."
+            echo "- فشل الاختبارات يستلزم مراجعة سجل التشغيل قبل إعلان الإصلاح."
+            echo "- يجب تسجيل السبب الجذري والإصلاح والدليل في سجل الأعطال بعد التحقق، لا بناءً على التخمين."
+          } > docs/AUTO_STATUS.md
+
+      - name: Publish report update
+        if: always() && github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/AUTO_STATUS.md
+          if git diff --cached --quiet; then
+            echo "Report unchanged."
+          else
+            git commit -m "docs: auto-update project status report"
+            git push
+          fi
+
+      - name: Fail if tests failed
+        if: steps.tests.outcome != 'success'
+        run: exit 1
