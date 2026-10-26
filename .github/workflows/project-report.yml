@@ -135,5 +135,5 @@ jobs:
         if: steps.tests.outcome != 'success'
         run: exit 1
       - name: Fail if live-site monitor failed
-        if: steps.live.outcome != 'success'
+        if: steps.live.outcome != 'success' && github.event_name != 'pull_request'
         run: exit 1
