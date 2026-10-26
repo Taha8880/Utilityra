@@ -168,12 +168,12 @@ export async function engineerRun(env, origin, ask) {
         if (enhanced && enhanced.trim()) {
           // Reject known-invalid legacy Worker advice instead of displaying it as a plausible fix.
           const conflictsWithVerifiedArchitecture =
-            /addEventListener\\s*\\(\\s*['"]fetch['"]|event\\.respondWith|duplicate (?:route|handler)|add a (?:second|duplicate) handler/i.test(enhanced) &&
+            /addEventListener\s*\(\s*['"]fetch['"]|event\.respondWith|duplicate (?:route|handler)|add a (?:second|duplicate) handler/i.test(enhanced) &&
             failed.some((x) => x.key === "health-endpoint");
           if (conflictsWithVerifiedArchitecture) {
-            diagnosis += "\\n\\nAI review omitted: the model suggested legacy/duplicate routing that conflicts with the verified module-Worker architecture. No source patch was applied.";
+            diagnosis += "\n\nAI review omitted: the model suggested legacy/duplicate routing that conflicts with the verified module-Worker architecture. No source patch was applied.";
           } else {
-            diagnosis += "\\n\\nAI review (hypotheses; verify before changing code):\\n" + enhanced.slice(0, 3500);
+            diagnosis += "\n\nAI review (hypotheses; verify before changing code):\n" + enhanced.slice(0, 3500);
           }
         }
       } catch { /* deterministic diagnosis remains available even when every AI provider fails */ }
