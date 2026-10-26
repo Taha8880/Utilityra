@@ -6,7 +6,7 @@
   "description": "Utilityra — 115 free bilingual tools (AI, PDF, images, dev, SEO, study) on Cloudflare Workers",
   "scripts": {
     "build": "node build.mjs",
-    "test": "npm run build && node --test tests/*.test.mjs",
+    "test": "npm run build && node --check scripts/engineer-fix.mjs && node --check scripts/monitor.mjs && node --test tests/*.test.mjs",
     "test:e2e": "node tests/e2e/run.mjs",
     "deploy": "npm run build && wrangler deploy",
     "dev": "npm run build && wrangler dev"

@@ -10,7 +10,7 @@ permissions: { contents: write, pull-requests: write, issues: read }
 jobs:
   fix:
     # Only when the monitor failed, or manually. Needs repo secret ANTHROPIC_API_KEY (or OPENAI_API_KEY).
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'failure'
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4

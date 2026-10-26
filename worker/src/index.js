@@ -322,6 +322,17 @@ export default {
 
 export async function askProviders(env, messages) {
   let last;
-  for (const [, fn] of providersFor(env)) { try { return await fn(messages, env, { ...DEFAULT_GEN, max_tokens: 3000, temperature: 0.2, strong: true }); } catch (e) { last = e; if (e.status === 429) break; } }
-  throw last || new Error("PROVIDER_NOT_CONFIGURED");
+  const failures = [];
+  const providers = providersFor(env);
+  for (const [name, fn] of providers) {
+    try { return await fn(messages, env, { ...DEFAULT_GEN, max_tokens: 3000, temperature: 0.2, strong: true }); }
+    catch (e) {
+      last = e;
+      failures.push(String(e?.detail || `${name}: ${e?.message || "provider failed"}`).slice(0, 180));
+      // A provider-specific 429 should not block configured fallback providers for admin diagnostics.
+    }
+  }
+  if (!last) throw new Error("PROVIDER_NOT_CONFIGURED");
+  last.detail = failures.join("; ").slice(0, 700) || String(last.detail || "");
+  throw last;
 }
