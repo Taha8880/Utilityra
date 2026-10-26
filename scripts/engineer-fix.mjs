@@ -20,7 +20,7 @@ const files = walk('.').map((f) => f.replace(/^\.\//, '')).filter((f) => ALLOW.s
 
 async function llm(system, user) {
   if (process.env.ANTHROPIC_API_KEY) {
-    const r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' }, body: JSON.stringify({ model: process.env.ENGINEER_MODEL || 'claude-sonnet-4-5', max_tokens: 8000, system, messages: [{ role: 'user', content: user }] }) });
+    const r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' }, body: JSON.stringify({ model: process.env.ENGINEER_MODEL || 'claude-sonnet-5-5', max_tokens: 8000, system, messages: [{ role: 'user', content: user }] }) });
     const j = await r.json(); if (!r.ok) throw new Error('Anthropic API: ' + JSON.stringify(j).slice(0, 300)); return j.content.map((c) => c.text || '').join('');
   }
   if (process.env.OPENAI_API_KEY) {
