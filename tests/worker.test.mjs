@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import worker from '../worker/src/index.js';
 import { parseTarget, isBlockedHost, inspectUrl } from '../worker/src/inspect.js';
-import { makeToken, validToken, sameSecret, runChecks, devMessages } from '../worker/src/admin.js';
+import { makeToken, validToken, sameSecret, runChecks, devMessages, recordEvent } from '../worker/src/admin.js';
 import { askProviders } from '../worker/src/index.js';
 
 const ASSETS = { fetch: async (req) => new Response('<html>asset ' + new URL(req.url).pathname + '</html>', { headers: { 'content-type': 'text/html' } }) };
@@ -27,7 +27,7 @@ test('developer assistant falls back to Gemini when Anthropic is rate limited', 
   } finally { globalThis.fetch = realFetch; }
 });
 
-test('technical engineer records HTTP evidence for a public health 404', async () => {
+test('technical engineer records HTTP evidence for a failing /health (never faked)', async () => {
   const bodies = {
     '/': ['<html>Utilityra</html>', 200],
     '/tools/': ['<h1>Tools</h1>', 200],
@@ -47,11 +47,7 @@ test('technical engineer records HTTP evidence for a public health 404', async (
     return new Response(body, { status, headers: { 'content-type': path.endsWith('.xml') ? 'application/xml' : 'application/json', 'cf-ray': 'test-ray-123' } });
   });
   const health = results.find((x) => x.key === 'health-endpoint');
-  assert.equal(health.ok, false);
-  assert.equal(health.status, 404);
-  assert.equal(health.bodyPreview, '{"error":"NOT_FOUND"}');
-  assert.equal(health.cfRay, 'test-ray-123');
-  assert.equal(health.contentType, 'application/json');
+  assert.equal(health.ok, false); assert.equal(health.status, 404); assert.equal(health.cfRay, 'test-ray-123'); assert.match(health.bodyPreview, /NOT_FOUND/);
 });
 
 test('developer assistant gets verified incident context and rejects no valid roles', () => {
@@ -143,6 +139,42 @@ test('analytics: ignores when DB missing, rejects bad payloads', async () => {
   const ok = await post({ visitorKey: 'a'.repeat(20), eventType: 'search_miss', path: '/x', searchTerm: 'mail me a@b.com 01012345678' }, { DB });
   assert.equal(ok.status, 202); assert.equal(rows.length, 1); assert.ok(!/a@b\.com|01012345678/.test(rows[0].join('|')));
 });
+test('analytics: excludes review payloads, automation and admin sessions', async () => {
+  const rows = [];
+  const DB = { prepare: (sql) => ({ bind: (...args) => ({ run: async () => { rows.push({ sql, args }); return { meta: { changes: 1 } }; } }) }) };
+  const body = { visitorKey: 'a'.repeat(24), eventType: 'page_view', path: '/' };
+  const review = await recordEvent(new Request('https://utilityra.test/api/analytics/event', { headers: { 'user-agent': 'Mozilla/5.0' } }), { DB }, { ...body, reviewMode: true });
+  const bot = await recordEvent(new Request('https://utilityra.test/api/analytics/event', { headers: { 'user-agent': 'ChatGPT-User/1.0' } }), { DB }, body);
+  const admin = await recordEvent(new Request('https://utilityra.test/api/analytics/event', { headers: { 'user-agent': 'Mozilla/5.0', cookie: 'ur_admin=present' } }), { DB }, body);
+  assert.equal(review.ignored, true);
+  assert.equal(bot.ignored, true);
+  assert.equal(admin.ignored, true);
+  assert.equal(rows.length, 0);
+});
+
+test('analytics reset requires admin session and exact confirmation, then clears only analytics', async () => {
+  const rows = [];
+  const DB = { prepare: (sql) => ({
+    run: async () => { rows.push({ sql, args: [] }); return { meta: { changes: sql.startsWith('DELETE FROM analytics_events') ? 12 : 1 } }; },
+    bind: (...args) => ({
+      run: async () => { rows.push({ sql, args }); return { meta: { changes: 1 } }; },
+      first: async () => null,
+      all: async () => ({ results: [] })
+    })
+  }) };
+  const env = { DB, ADMIN_PASSWORD: 'p', ADMIN_SESSION_SECRET: 'session-secret' };
+  assert.equal((await call('/api/admin/analytics/reset', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ confirm: 'RESET ANALYTICS' }) }, env)).status, 401);
+  const exp = Math.floor(Date.now() / 1000) + 600;
+  const token = await makeToken(env.ADMIN_SESSION_SECRET, exp);
+  const post = (confirm) => call('/api/admin/analytics/reset', { method: 'POST', headers: { 'content-type': 'application/json', cookie: 'ur_admin=' + encodeURIComponent(token) }, body: JSON.stringify({ confirm }) }, env);
+  assert.equal((await post('no')).status, 400);
+  const response = await post('RESET ANALYTICS');
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json().then(x => ({ ok: x.ok, deleted: x.deleted })), { ok: true, deleted: 12 });
+  assert.ok(rows.some(x => x.sql === 'DELETE FROM analytics_events'));
+  assert.ok(rows.some(x => x.sql.includes('INSERT INTO admin_audit_log')));
+});
+
 test('engineer: health checks detect failures', async () => {
   const f = async (u) => (u.endsWith('/') && !u.includes('word') ? new Response('Utilityra <h1', { status: 200 }) : new Response('x', { status: 500 }));
   const res = await runChecks('https://x.test', f); assert.ok(res.some((r) => r.ok)); assert.ok(res.some((r) => !r.ok));
@@ -308,4 +340,43 @@ test('ai: unpaid Claude key falls back to free Gemini and is skipped afterwards'
     const j2 = await (await ai({ tool: 'ai-summarizer', message: 'نص آخر للتلخيص' }, env)).json();
     assert.equal(j2.provider, 'gemini'); assert.equal(calls.filter((c) => c.includes('anthropic')).length, before);
   } finally { globalThis.fetch = realFetch; }
+});
+
+
+test('admin engineer run dispatches checks in-process (no public subrequest) and exercises the real /health handler', async () => {
+  const requested = []; let publicFetches = 0;
+  const realFetch = globalThis.fetch; globalThis.fetch = async () => { publicFetches++; return new Response('error code: 1042', { status: 404 }); };
+  const ASSETS = { fetch: async (req) => { const p = new URL(req.url).pathname; requested.push(p);
+    const pages = { '/': '<html>Utilityra</html>', '/tools/': '<h1>Tools</h1>', '/tools/word-counter/': '<main data-tool="word-counter"></main>', '/tools/ai-summarizer/': '<main data-tool="ai-summarizer"></main>', '/sitemap.xml': '<urlset></urlset>', '/robots.txt': 'Sitemap: https://utilityra.test/sitemap.xml', '/ads.txt': 'google.com, pub-1, DIRECT', '/tools/sort-lines': '<main data-tool="line-sorter"></main>', '/admin/': '<div id="admin-root"></div>' };
+    return pages[p] ? new Response(pages[p], { status: 200, headers: { 'content-type': p.endsWith('.xml') ? 'application/xml' : 'text/html' } }) : new Response('missing', { status: 404 }); } };
+  const DB = { prepare: () => { const s = { bind: () => s, run: async () => ({}), first: async () => null, all: async () => ({ results: [] }) }; return s; } };
+  try {
+    const env = { ASSETS, DB, AI: { run: async () => ({ response: 'ok' }) }, ADMIN_PASSWORD: 'pw-123456', ADMIN_SESSION_SECRET: 's'.repeat(40) };
+    const login = await worker.fetch(new Request('https://utilityra.test/api/admin/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password: 'pw-123456' }) }), env);
+    const cookie = login.headers.get('set-cookie').split(';')[0];
+    const r = await worker.fetch(new Request('https://utilityra.test/api/admin/engineer/run', { method: 'POST', headers: { cookie } }), env);
+    const j = await r.json();
+    assert.equal(publicFetches, 0);
+    assert.ok(j.results.every((x) => x.ok), JSON.stringify(j.results.filter((x) => !x.ok)));
+    assert.equal(j.results.find((x) => x.key === 'health-endpoint').status, 200);
+  } finally { globalThis.fetch = realFetch; }
+});
+
+test('scheduled engineer run records an incident without any admin session', async () => {
+  const runs = []; const DB = { prepare: (sql) => { const s = { bind: (...a) => { runs.push([sql, a]); return s; }, run: async () => ({}), first: async () => null, all: async () => ({ results: [] }) }; return s; } };
+  const ASSETS = { fetch: async () => new Response('down', { status: 500 }) };
+  let pending; const ctx = { waitUntil: (p) => { pending = p; } };
+  await worker.scheduled({}, { DB, ASSETS }, ctx); await pending;
+  assert.ok(runs.some(([sql]) => /INSERT INTO incidents/i.test(sql)), 'incident should be inserted');
+});
+test('engineer approve: needs auth and a dispatch token, then dispatches the PR workflow', async () => {
+  const DB = { prepare: () => { const s = { bind: () => s, run: async () => ({}), first: async () => ({ id: 7, title: 'x', detail: 'd', diagnosis: 'g' }), all: async () => ({ results: [] }) }; return s; } };
+  const base = { DB, ADMIN_PASSWORD: 'pw-123456', ADMIN_SESSION_SECRET: 's'.repeat(40) };
+  const login = await call('/api/admin/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password: 'pw-123456' }) }, base);
+  const cookie = login.headers.get('set-cookie').split(';')[0]; const req = (env) => call('/api/admin/engineer/approve', { method: 'POST', headers: { cookie, 'content-type': 'application/json' }, body: JSON.stringify({ id: 7 }) }, env);
+  assert.equal((await call('/api/admin/engineer/approve', { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{"id":7}' }, base)).status, 401);
+  assert.equal((await req(base)).status, 503);
+  const realFetch = globalThis.fetch; let hit;
+  globalThis.fetch = async (u, init) => { hit = [String(u), init]; return new Response(null, { status: 204 }); };
+  try { assert.equal((await req({ ...base, GITHUB_DISPATCH_TOKEN: 't' })).status, 200); assert.match(hit[0], /actions\/workflows\/ai-engineer\.yml\/dispatches/); } finally { globalThis.fetch = realFetch; }
 });

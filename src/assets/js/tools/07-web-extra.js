@@ -7,6 +7,7 @@
 
   /* ---------- text / html ---------- */
   def('reverse-text', {
+    sample: { t: 'Utilityra مرحبا', m: 'chars' },
     fields: [ta('t', 'النص', 'Text', { ph: ['اكتب النص هنا', 'Type text here'] }), sel('m', 'الطريقة', 'Mode', [['chars', 'عكس الحروف', 'Reverse characters'], ['words', 'عكس ترتيب الكلمات', 'Reverse word order'], ['lines', 'عكس ترتيب الأسطر', 'Reverse line order']], 'chars')],
     run(v) {
       if (!v.t) return null;

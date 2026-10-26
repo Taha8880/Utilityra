@@ -4,6 +4,10 @@ main = "worker/src/index.js"
 compatibility_date = "2026-10-01"
 workers_dev = true
 
+# Autonomous technical engineer: health check every 30 minutes (incidents + diagnosis appear in /admin/ awaiting your approval).
+[triggers]
+crons = ["*/30 * * * *"]
+
 [assets]
 directory = "./dist"
 binding = "ASSETS"

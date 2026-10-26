@@ -37,7 +37,7 @@ async function failLogin(env, key) {
   else { const a = Number(row.attempts) + 1; await env.DB.prepare("UPDATE admin_login_attempts SET attempts=?, blocked_until=? WHERE ip_hash=?").bind(a, a >= 8 ? now + 900 : 0, key).run(); }
 }
 
-const BOT = /bot|crawler|spider|headless|playwright|puppeteer|lighthouse|inspectiontool|chatgpt|openai|anthropic|claude|perplexity|gemini|bingpreview/i;
+const BOT = /bot|crawler|spider|headless|playwright|puppeteer|lighthouse|inspectiontool|chatgpt|openai|anthropic|claude|perplexity|gemini|bingpreview|facebookexternalhit|twitterbot|slackbot|discordbot|whatsapp|curl\/|wget\/|node-fetch|undici|pagespeed|validator|ahrefsbot|semrushbot|screaming.?frog/i;
 const EVENTS = ["page_view", "tool_open", "tool_action", "search", "search_miss"];
 export async function recordEvent(request, env, body) {
   if (!env.DB) return { ignored: true, reason: "analytics_not_configured" };
@@ -85,6 +85,9 @@ export const CHECKS = [
 const safeHeader = (response, name) => String(response.headers.get(name) || "").slice(0, 160);
 const preview = (value) => String(value || "").replace(/[\r\n\t]+/g, " ").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 180);
 export async function runChecks(origin, fetchImpl = fetch) {
+  // fetchImpl must NOT be a public-URL subrequest when called from inside the Worker (Cloudflare answers those with
+  // platform error 1042). The admin passes an in-process dispatcher to the Worker's own fetch handler, so the real
+  // routing runs (API handlers, /health, then ASSETS with _redirects and 404 pages). No result is ever faked.
   const out = [];
   for (const [key, path, test] of CHECKS) {
     const t0 = Date.now();
@@ -135,9 +138,9 @@ function deterministicDiagnosis(failed, origin) {
     return "- " + x.key + " (" + x.path + "): expected response was not observed; received HTTP " + x.status + ", content-type " + (x.contentType || "unknown") + ", body " + (x.bodyPreview || "(empty)") + ". Inspect the route and deployment/configuration that owns this path.";
   }).join("\n");
 }
-export async function engineerRun(env, origin, ask) {
-  // Probe the public URL so the check exercises deployed Worker routing, not ASSETS-only routing.
-  const results = await runChecks(origin, fetch);
+export async function engineerRun(env, origin, ask, selfFetch) {
+  // In-process dispatch (see runChecks). The external GitHub monitor (scripts/monitor.mjs) remains the public-origin check.
+  const results = await runChecks(origin, selfFetch ? (u, o) => selfFetch(new Request(u, o)) : fetch);
   const failed = results.filter((r) => !r.ok);
   let incident = null;
   if (failed.length) {
@@ -152,7 +155,17 @@ export async function engineerRun(env, origin, ask) {
           { role: "system", content: DIAG_SYSTEM },
           { role: "user", content: "Verified source/configuration facts:\n" + DEPLOYMENT_CONTEXT + "\n\nObserved failed checks (JSON):\n" + detail + "\n\nEvidence-based baseline diagnosis:\n" + baseline + "\n\nImprove the diagnosis only where the observations support it. Keep source facts separate from hypotheses. Do not propose duplicate handlers." }
         ]);
-        if (enhanced && enhanced.trim()) diagnosis += "\n\nAI review (hypotheses; verify before changing code):\n" + enhanced.slice(0, 3500);
+        if (enhanced && enhanced.trim()) {
+          // Reject known-invalid legacy Worker advice instead of displaying it as a plausible fix.
+          const conflictsWithVerifiedArchitecture =
+            /addEventListener\s*\(\s*['"]fetch['"]|event\.respondWith|duplicate (?:route|handler)|add a (?:second|duplicate) handler/i.test(enhanced) &&
+            failed.some((x) => x.key === "health-endpoint");
+          if (conflictsWithVerifiedArchitecture) {
+            diagnosis += "\n\nAI review omitted: the model suggested legacy/duplicate routing that conflicts with the verified module-Worker architecture. No source patch was applied.";
+          } else {
+            diagnosis += "\n\nAI review (hypotheses; verify before changing code):\n" + enhanced.slice(0, 3500);
+          }
+        }
       } catch { /* deterministic diagnosis remains available even when every AI provider fails */ }
     }
     if (!open) {
@@ -180,7 +193,7 @@ export async function publicConfig(env) {
 }
 
 /* ---------- router ---------- */
-export async function handleAdmin(request, env, url, json, origin, readJson, ask) {
+export async function handleAdmin(request, env, url, json, origin, readJson, ask, selfFetch) {
   const p = url.pathname, m = request.method;
   const needCfg = () => (configured(env) ? null : json({ error: "ADMIN_NOT_CONFIGURED" }, 503, origin));
   if (p === "/api/analytics/event" && m === "POST") {
@@ -216,8 +229,16 @@ export async function handleAdmin(request, env, url, json, origin, readJson, ask
       return json({ ok: true, changed: r.meta?.changes || 0 }, 200, origin);
     }
     if (p === "/api/admin/stats" && m === "GET") return json(await stats(env), 200, origin);
+    if (p === "/api/admin/analytics/reset" && m === "POST") {
+      let b; try { b = await readJson(request, 1000); } catch { return json({ error: "INVALID_REQUEST" }, 400, origin); }
+      if (b.confirm !== "RESET ANALYTICS") return json({ error: "CONFIRMATION_REQUIRED" }, 400, origin);
+      const r = await env.DB.prepare("DELETE FROM analytics_events").run();
+      const deleted = Number(r.meta?.changes || 0);
+      await audit(env, "analytics_reset", "deleted=" + deleted);
+      return json({ ok: true, deleted, resetAt: new Date().toISOString() }, 200, origin);
+    }
     if (p === "/api/admin/incidents" && m === "GET") return json({ incidents: await listIncidents(env) }, 200, origin);
-    if (p === "/api/admin/engineer/run" && m === "POST") { await audit(env, "health_check", "manual run"); return json(await engineerRun(env, url.origin, ask), 200, origin); }
+    if (p === "/api/admin/engineer/run" && m === "POST") { await audit(env, "health_check", "manual run"); return json(await engineerRun(env, url.origin, ask, selfFetch), 200, origin); }
     if (p === "/api/admin/assistant" && m === "POST") {
       const b = await readJson(request, 40000);
       if (typeof b.message !== "string" || !b.message.trim()) return json({ error: "EMPTY_MESSAGE" }, 400, origin);
@@ -250,6 +271,21 @@ export async function handleAdmin(request, env, url, json, origin, readJson, ask
       return json({ ok: true, saved: entries.length }, 200, origin);
     }
     if (p === "/api/admin/audit" && m === "GET") return json({ log: (await env.DB.prepare("SELECT id, action, detail, created_at FROM admin_audit_log ORDER BY id DESC LIMIT 100").all()).results || [] }, 200, origin);
+    if (p === "/api/admin/engineer/approve" && m === "POST") {
+      // Owner approval -> dispatch the GitHub "AI engineer" workflow, which only ever opens a Pull Request after tests pass (never merges/deploys).
+      const b = await readJson(request, 1000);
+      if (!Number.isInteger(b.id)) return json({ error: "INVALID_REQUEST" }, 400, origin);
+      if (!env.GITHUB_DISPATCH_TOKEN) return json({ error: "GITHUB_NOT_CONFIGURED" }, 503, origin);
+      const inc = await env.DB.prepare("SELECT id,title,detail,diagnosis FROM incidents WHERE id=?").bind(b.id).first();
+      if (!inc) return json({ error: "NOT_FOUND" }, 404, origin);
+      const repo = env.GITHUB_REPO || "Taha8880/Utilityra";
+      const problem = `Incident #${inc.id}: ${inc.title}\nEvidence: ${String(inc.detail || "").slice(0, 1500)}\nDiagnosis: ${String(inc.diagnosis || "").slice(0, 1500)}`;
+      const res = await fetch(`https://api.github.com/repos/${repo}/actions/workflows/ai-engineer.yml/dispatches`, { method: "POST", headers: { authorization: `Bearer ${env.GITHUB_DISPATCH_TOKEN}`, accept: "application/vnd.github+json", "user-agent": "utilityra-engineer", "content-type": "application/json" }, body: JSON.stringify({ ref: "main", inputs: { problem } }) });
+      if (!res.ok) return json({ error: "GITHUB_DISPATCH_FAILED", status: res.status }, 502, origin);
+      await env.DB.prepare("UPDATE incidents SET status='fix_proposed', updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(b.id).run();
+      await audit(env, "engineer_approve", `#${b.id} dispatched`);
+      return json({ ok: true }, 200, origin);
+    }
     if (p === "/api/admin/incidents/status" && m === "POST") {
       const b = await readJson(request, 1000);
       if (!Number.isInteger(b.id) || !["open", "diagnosed", "fix_proposed", "resolved", "ignored"].includes(b.status)) return json({ error: "INVALID_REQUEST" }, 400, origin);
