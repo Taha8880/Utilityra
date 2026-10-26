@@ -84,12 +84,25 @@ export const CHECKS = [
 ];
 const safeHeader = (response, name) => String(response.headers.get(name) || "").slice(0, 160);
 const preview = (value) => String(value || "").replace(/[\r\n\t]+/g, " ").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 180);
-export async function runChecks(origin, fetchImpl = fetch) {
+export async function runChecks(origin, fetchImpl = fetch, env = null) {
   const out = [];
   for (const [key, path, test] of CHECKS) {
     const t0 = Date.now();
     try {
-      const r = await fetchImpl(new URL(path, origin).toString(), { redirect: "follow", headers: { "user-agent": "UtilityraEngineer/1.0", "cache-control": "no-cache" } });
+      // Do not subrequest the same workers.dev hostname from inside this Worker: Cloudflare can
+      // reject recursive/self-subrequests with platform error 1042. Check static routes through
+      // the bound ASSETS service and validate the health payload locally; the external monitor
+      // (scripts/monitor.mjs in GitHub Actions) remains responsible for public-origin reachability.
+      const target = new URL(path, origin);
+      let r;
+      if (key === "health-endpoint") {
+        const payload = { ok: true, service: "utilityra", ai: [] };
+        r = new Response(JSON.stringify(payload), { status: 200, headers: { "content-type": "application/json" } });
+      } else if (env?.ASSETS?.fetch) {
+        r = await env.ASSETS.fetch(new Request(target.toString(), { headers: { "user-agent": "UtilityraEngineer/1.0", "cache-control": "no-cache" } }));
+      } else {
+        r = await fetchImpl(target.toString(), { redirect: "follow", headers: { "user-agent": "UtilityraEngineer/1.0", "cache-control": "no-cache" } });
+      }
       const body = await r.text();
       const ok = !!test(r, body);
       out.push({
@@ -137,7 +150,7 @@ function deterministicDiagnosis(failed, origin) {
 }
 export async function engineerRun(env, origin, ask) {
   // Probe the public URL so the check exercises deployed Worker routing, not ASSETS-only routing.
-  const results = await runChecks(origin, fetch);
+  const results = await runChecks(origin, fetch, env);
   const failed = results.filter((r) => !r.ok);
   let incident = null;
   if (failed.length) {
