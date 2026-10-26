@@ -3,12 +3,17 @@ import assert from 'node:assert/strict';
 import worker from '../worker/src/index.js';
 import { parseTarget, isBlockedHost, inspectUrl } from '../worker/src/inspect.js';
 import { makeToken, validToken, sameSecret, runChecks, devMessages } from '../worker/src/admin.js';
-import { askProviders } from '../worker/src/index.js';
+import { askProviders, providersFor } from '../worker/src/index.js';
 
 const ASSETS = { fetch: async (req) => new Response('<html>asset ' + new URL(req.url).pathname + '</html>', { headers: { 'content-type': 'text/html' } }) };
 const call = (path, init = {}, env = {}) => worker.fetch(new Request('https://utilityra.test' + path, init), { ASSETS, ...env });
 const ai = (body, env, headers = {}) => call('/api/ai', { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(body) }, env);
 const okAI = { AI: { run: async () => ({ response: 'مرحبا' }) } };
+
+test('free AI providers are preferred by default', () => {
+  const providers = providersFor({ AI: {}, Gemini_API_Key: 'test-gemini-key', ANTHROPIC_API_KEY: 'test-anthropic-key', OPENAI_API_KEY: 'test-openai-key' });
+  assert.deepEqual(providers.map(([name]) => name), ['workers-ai', 'gemini', 'anthropic', 'openai']);
+});
 
 test('developer assistant falls back to Gemini when Anthropic is rate limited', async () => {
   const realFetch = globalThis.fetch;
@@ -20,7 +25,7 @@ test('developer assistant falls back to Gemini when Anthropic is rate limited', 
     return new Response('{}', { status: 500 });
   };
   try {
-    const answer = await askProviders({ ANTHROPIC_API_KEY: 'test-anthropic-key', Gemini_API_Key: 'test-gemini-key' }, [{ role: 'user', content: 'diagnose this' }]);
+    const answer = await askProviders({ AI_PROVIDER: 'anthropic', ANTHROPIC_API_KEY: 'test-anthropic-key', Gemini_API_Key: 'test-gemini-key' }, [{ role: 'user', content: 'diagnose this' }]);
     assert.equal(answer, 'fallback answer');
     assert.ok(seen.some((url) => url.includes('anthropic.com')));
     assert.ok(seen.some((url) => url.includes('googleapis.com')));
