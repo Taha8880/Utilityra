@@ -146,6 +146,10 @@
   })();
 
 
+
+  /* pause hero/carousel animation while off-screen (saves CPU/GPU) */
+  (function () { try { if (!('IntersectionObserver' in window)) return; const io = new IntersectionObserver((es) => es.forEach((e) => e.target.classList.toggle('offscreen', !e.isIntersecting)), { rootMargin: '120px' }); document.querySelectorAll('.hero, .carousel, .marq').forEach((el) => io.observe(el)); } catch (e) { /* optional */ } })();
+
   /* ---------- admin-controlled config: disabled tools + announcement ---------- */
   (function () {
     try {
