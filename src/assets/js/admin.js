@@ -32,10 +32,23 @@
     const days = j.daily || [], max = Math.max(1, ...days.map((d) => d.page_views || 0));
     const bars = days.map((d, i) => { const h = Math.round(((d.page_views || 0) / max) * 90); return `<rect x="${i * 14}" y="${100 - h}" width="10" height="${h}" rx="2" fill="currentColor"><title>${esc(d.day)}: ${d.page_views} / ${d.visitors}</title></rect>`; }).join('');
     $('#view').innerHTML = banner + `<div class="cards">${[['الزوار (30 يومًا)', 'Visitors (30d)', m.visitors], ['مشاهدات الصفحات', 'Page views', m.page_views], ['فتح الأدوات', 'Tool opens', m.tool_opens], ['عمليات البحث', 'Searches', m.searches], ['بحث بلا نتيجة', 'Missed searches', m.search_misses]].map((c) => `<div class="rc"><span class="rc-l">${t(c[0], c[1])}</span><b class="rc-v">${esc(c[2] || 0)}</b></div>`).join('')}</div>
+    <section class="panel" style="margin-block:16px"><h2>${t('خصوصية الإحصائيات', 'Analytics privacy')}</h2><p>${t('لوحة الإدارة والمتصفحات الآلية المعروفة لا تُحتسب. لوقف التتبع في هذا المتصفح، افتح لوحة الإدارة مرة واحدة أو استخدم ?notrack=1 في رابط الموقع. تصفير الإحصائيات يحذف سجلات التحليلات فقط ولا يحذف البلاغات أو سجل الإدارة.', 'Admin sessions and known automation bots are excluded. To opt this browser out, open the admin once or use ?notrack=1 in a site URL. Reset deletes analytics records only; reports and the admin audit log remain.')}</p><button class="btn ghost" id="reset-analytics" type="button">${t('تصفير كل الإحصائيات', 'Reset all analytics')}</button><p id="reset-analytics-status" role="status"></p></section>
     <h2>${t('مشاهدات يومية', 'Daily page views')}</h2><svg viewBox="0 0 ${Math.max(days.length * 14, 14)} 100" role="img" aria-label="${t('رسم المشاهدات اليومية', 'Daily page views chart')}" style="width:100%;height:140px;color:var(--accent)" preserveAspectRatio="none">${bars}</svg>
     <h2>${t('الأدوات الأكثر استخدامًا', 'Top tools')}</h2>${tbl([t('الأداة', 'Tool'), t('فتح', 'Opens'), t('تشغيل', 'Runs')], (j.topTools || []).map((x) => [x.tool_key, x.opens, x.actions]))}
     <h2>${t('الصفحات الأكثر زيارة', 'Top pages')}</h2>${tbl([t('الصفحة', 'Path'), t('مشاهدات', 'Views')], (j.topPages || []).map((x) => [x.path, x.views]))}
     <h2>${t('عمليات بحث بلا نتيجة (أفكار أدوات جديدة)', 'Searches with no result (new tool ideas)')}</h2>${tbl([t('الكلمة', 'Term'), t('العدد', 'Count')], (j.missedSearches || []).map((x) => [x.search_term, x.searches]))}`;
+    $('#reset-analytics').addEventListener('click', async () => {
+      const phrase = window.prompt(t('هذا الإجراء يحذف جميع سجلات التحليلات نهائيًا. اكتب RESET ANALYTICS للتأكيد:', 'This permanently deletes all analytics records. Type RESET ANALYTICS to confirm:'));
+      if (phrase !== 'RESET ANALYTICS') return;
+      const button = $('#reset-analytics'), status = $('#reset-analytics-status');
+      button.disabled = true; status.textContent = t('جارٍ تصفير الإحصائيات…', 'Resetting analytics…');
+      const result = await post('/api/admin/analytics/reset', { confirm: phrase });
+      button.disabled = false;
+      if (!result.ok || !result.j.ok) { status.textContent = t('فشل التصفير؛ لم يتم تأكيد نجاح العملية.', 'Reset failed; success was not confirmed.'); return; }
+      await dash();
+      const finalStatus = $('#reset-analytics-status');
+      if (finalStatus) finalStatus.textContent = t('تم حذف ' + result.j.deleted + ' سجل تحليلات. الإحصائيات الآن تبدأ من الصفر.', 'Deleted ' + result.j.deleted + ' analytics records. Statistics now start from zero.');
+    });
   }
   async function tools() {
     const r = await api('/api/admin/tools'); if (!guard(r)) return; const fl = Object.fromEntries((r.j.flags || []).map((f) => [f.tool_key, f]));

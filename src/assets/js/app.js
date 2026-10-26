@@ -134,7 +134,9 @@
   (function () {
     try {
       if (/^\/admin(\/|$)/.test(location.pathname)) { try { localStorage.setItem('ur-notrack', '1'); } catch (e) { /* ignore */ } return; }
-      if (navigator.doNotTrack === '1' || navigator.webdriver || localStorage.getItem('ur-notrack') === '1' || /[?&]notrack=1/.test(location.search)) { if (/[?&]notrack=1/.test(location.search)) localStorage.setItem('ur-notrack', '1'); return; }
+      const optOut = /[?&](?:notrack|review|preview|ai-review)=1(?:&|$)/i.test(location.search);
+      if (optOut) { try { localStorage.setItem('ur-notrack', '1'); } catch (e) { /* ignore */ } return; }
+      if (navigator.doNotTrack === '1' || navigator.webdriver || localStorage.getItem('ur-notrack') === '1') return;
       let vk = localStorage.getItem('ur-vk'); if (!vk) { vk = (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2) + Date.now().toString(16) + 'xxxxxxxx'); localStorage.setItem('ur-vk', vk); }
       const send = (eventType, extra) => { const body = JSON.stringify(Object.assign({ visitorKey: vk, eventType, path: location.pathname, referrer: document.referrer }, extra || {})); const url = ((window.UTILITYRA || {}).apiBase || '') + '/api/analytics/event'; try { fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body, keepalive: true }).catch(() => {}); } catch (e) { /* ignore */ } };
       window.URAnalytics = { send };

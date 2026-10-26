@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import worker from '../worker/src/index.js';
 import { parseTarget, isBlockedHost, inspectUrl } from '../worker/src/inspect.js';
-import { makeToken, validToken, sameSecret, runChecks, devMessages } from '../worker/src/admin.js';
+import { makeToken, validToken, sameSecret, runChecks, devMessages, recordEvent } from '../worker/src/admin.js';
 import { askProviders } from '../worker/src/index.js';
 
 const ASSETS = { fetch: async (req) => new Response('<html>asset ' + new URL(req.url).pathname + '</html>', { headers: { 'content-type': 'text/html' } }) };
@@ -139,6 +139,42 @@ test('analytics: ignores when DB missing, rejects bad payloads', async () => {
   const ok = await post({ visitorKey: 'a'.repeat(20), eventType: 'search_miss', path: '/x', searchTerm: 'mail me a@b.com 01012345678' }, { DB });
   assert.equal(ok.status, 202); assert.equal(rows.length, 1); assert.ok(!/a@b\.com|01012345678/.test(rows[0].join('|')));
 });
+test('analytics: excludes review payloads, automation and admin sessions', async () => {
+  const rows = [];
+  const DB = { prepare: (sql) => ({ bind: (...args) => ({ run: async () => { rows.push({ sql, args }); return { meta: { changes: 1 } }; } }) }) };
+  const body = { visitorKey: 'a'.repeat(24), eventType: 'page_view', path: '/' };
+  const review = await recordEvent(new Request('https://utilityra.test/api/analytics/event', { headers: { 'user-agent': 'Mozilla/5.0' } }), { DB }, { ...body, reviewMode: true });
+  const bot = await recordEvent(new Request('https://utilityra.test/api/analytics/event', { headers: { 'user-agent': 'ChatGPT-User/1.0' } }), { DB }, body);
+  const admin = await recordEvent(new Request('https://utilityra.test/api/analytics/event', { headers: { 'user-agent': 'Mozilla/5.0', cookie: 'ur_admin=present' } }), { DB }, body);
+  assert.equal(review.ignored, true);
+  assert.equal(bot.ignored, true);
+  assert.equal(admin.ignored, true);
+  assert.equal(rows.length, 0);
+});
+
+test('analytics reset requires admin session and exact confirmation, then clears only analytics', async () => {
+  const rows = [];
+  const DB = { prepare: (sql) => ({
+    run: async () => { rows.push({ sql, args: [] }); return { meta: { changes: sql.startsWith('DELETE FROM analytics_events') ? 12 : 1 } }; },
+    bind: (...args) => ({
+      run: async () => { rows.push({ sql, args }); return { meta: { changes: 1 } }; },
+      first: async () => null,
+      all: async () => ({ results: [] })
+    })
+  }) };
+  const env = { DB, ADMIN_PASSWORD: 'p', ADMIN_SESSION_SECRET: 'session-secret' };
+  assert.equal((await call('/api/admin/analytics/reset', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ confirm: 'RESET ANALYTICS' }) }, env)).status, 401);
+  const exp = Math.floor(Date.now() / 1000) + 600;
+  const token = await makeToken(env.ADMIN_SESSION_SECRET, exp);
+  const post = (confirm) => call('/api/admin/analytics/reset', { method: 'POST', headers: { 'content-type': 'application/json', cookie: 'ur_admin=' + encodeURIComponent(token) }, body: JSON.stringify({ confirm }) }, env);
+  assert.equal((await post('no')).status, 400);
+  const response = await post('RESET ANALYTICS');
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json().then(x => ({ ok: x.ok, deleted: x.deleted })), { ok: true, deleted: 12 });
+  assert.ok(rows.some(x => x.sql === 'DELETE FROM analytics_events'));
+  assert.ok(rows.some(x => x.sql.includes('INSERT INTO admin_audit_log')));
+});
+
 test('engineer: health checks detect failures', async () => {
   const f = async (u) => (u.endsWith('/') && !u.includes('word') ? new Response('Utilityra <h1', { status: 200 }) : new Response('x', { status: 500 }));
   const res = await runChecks('https://x.test', f); assert.ok(res.some((r) => r.ok)); assert.ok(res.some((r) => !r.ok));

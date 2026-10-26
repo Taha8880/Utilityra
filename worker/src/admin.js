@@ -37,7 +37,7 @@ async function failLogin(env, key) {
   else { const a = Number(row.attempts) + 1; await env.DB.prepare("UPDATE admin_login_attempts SET attempts=?, blocked_until=? WHERE ip_hash=?").bind(a, a >= 8 ? now + 900 : 0, key).run(); }
 }
 
-const BOT = /bot|crawler|spider|headless|playwright|puppeteer|lighthouse|inspectiontool|chatgpt|openai|anthropic|claude|perplexity|gemini|bingpreview/i;
+const BOT = /bot|crawler|spider|headless|playwright|puppeteer|lighthouse|inspectiontool|chatgpt|openai|anthropic|claude|perplexity|gemini|bingpreview|facebookexternalhit|twitterbot|slackbot|discordbot|whatsapp|curl\/|wget\/|node-fetch|undici|pagespeed|validator|ahrefsbot|semrushbot|screaming.?frog/i;
 const EVENTS = ["page_view", "tool_open", "tool_action", "search", "search_miss"];
 export async function recordEvent(request, env, body) {
   if (!env.DB) return { ignored: true, reason: "analytics_not_configured" };
@@ -229,6 +229,14 @@ export async function handleAdmin(request, env, url, json, origin, readJson, ask
       return json({ ok: true, changed: r.meta?.changes || 0 }, 200, origin);
     }
     if (p === "/api/admin/stats" && m === "GET") return json(await stats(env), 200, origin);
+    if (p === "/api/admin/analytics/reset" && m === "POST") {
+      let b; try { b = await readJson(request, 1000); } catch { return json({ error: "INVALID_REQUEST" }, 400, origin); }
+      if (b.confirm !== "RESET ANALYTICS") return json({ error: "CONFIRMATION_REQUIRED" }, 400, origin);
+      const r = await env.DB.prepare("DELETE FROM analytics_events").run();
+      const deleted = Number(r.meta?.changes || 0);
+      await audit(env, "analytics_reset", "deleted=" + deleted);
+      return json({ ok: true, deleted, resetAt: new Date().toISOString() }, 200, origin);
+    }
     if (p === "/api/admin/incidents" && m === "GET") return json({ incidents: await listIncidents(env) }, 200, origin);
     if (p === "/api/admin/engineer/run" && m === "POST") { await audit(env, "health_check", "manual run"); return json(await engineerRun(env, url.origin, ask, selfFetch), 200, origin); }
     if (p === "/api/admin/assistant" && m === "POST") {
