@@ -98,7 +98,8 @@ const DEV_SYSTEM = "You are the senior engineer for the Utilityra website (stati
 export const devMessages = (history, message) => [{ role: "system", content: DEV_SYSTEM }, ...(Array.isArray(history) ? history.slice(-10).filter((h) => h && (h.role === "user" || h.role === "assistant") && typeof h.content === "string").map((h) => ({ role: h.role, content: h.content.slice(0, 6000) })) : []), { role: "user", content: String(message || "").slice(0, 12000) }];
 const DIAG_SYSTEM = "You are the Utilityra site reliability engineer. Given failed health checks of a static site served by a Cloudflare Worker (assets in dist/, redirects in _redirects, API in worker/src/index.js), give: 1) the most likely root cause, 2) the exact files to inspect, 3) a minimal proposed fix as a unified diff or steps, 4) the test that proves it is fixed. Be concise. A human reviews everything; never claim a fix is applied.";
 export async function engineerRun(env, origin, ask) {
-  const results = await runChecks(origin, env.ASSETS ? (u, o) => env.ASSETS.fetch(new Request(u, o)) : fetch);
+  // Use the public origin so checks exercise Worker routing (including run_worker_first), not ASSETS-only routing.
+  const results = await runChecks(origin, fetch);
   const failed = results.filter((r) => !r.ok);
   let incident = null;
   if (failed.length) {
@@ -171,7 +172,7 @@ export async function handleAdmin(request, env, url, json, origin, readJson, ask
       if (typeof b.message !== "string" || !b.message.trim()) return json({ error: "EMPTY_MESSAGE" }, 400, origin);
       if (!ask) return json({ error: "PROVIDER_NOT_CONFIGURED" }, 503, origin);
       await audit(env, "dev_assistant", b.message.slice(0, 120));
-      try { return json({ answer: await ask(devMessages(b.history, b.message)) }, 200, origin); } catch { return json({ error: "UPSTREAM_ERROR" }, 502, origin); }
+      try { return json({ answer: await ask(devMessages(b.history, b.message)) }, 200, origin); } catch (e) { return json({ error: e?.message === "PROVIDER_NOT_CONFIGURED" ? "PROVIDER_NOT_CONFIGURED" : "UPSTREAM_ERROR", detail: String(e?.detail || "").slice(0, 700) }, 502, origin); }
     }
     if (p === "/api/admin/tools" && m === "GET") return json({ flags: (await env.DB.prepare("SELECT tool_key, enabled, featured, sort FROM tool_flags").all()).results || [] }, 200, origin);
     if (p === "/api/admin/tools/flag" && m === "POST") {
