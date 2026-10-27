@@ -2,14 +2,14 @@
 
 > تحديث آلي كل 6 ساعات، وعند تغييرات main. الاختبارات المحلية وفحص الموقع الحي نتيجتان منفصلتان.
 
-- آخر تحديث: 2026-10-27 21:11 UTC
+- آخر تحديث: 2026-10-27 21:12 UTC
 - الحدث: push
 - الفرع: main
-- Commit: c7985b97c06472e5e1d039be2c1365556bf4b047 (https://github.com/Taha8880/Utilityra/commit/c7985b97c06472e5e1d039be2c1365556bf4b047)
+- Commit: bb311632f8f16e3d1480cbf76c01e9f0ebf4c853 (https://github.com/Taha8880/Utilityra/commit/bb311632f8f16e3d1480cbf76c01e9f0ebf4c853)
 - بدأه: Taha8880
 - نتيجة npm test: failure
 - نتيجة فحص الموقع الحي: success
-- سجل التشغيل: https://github.com/Taha8880/Utilityra/actions/runs/40584628716
+- سجل التشغيل: https://github.com/Taha8880/Utilityra/actions/runs/40584706876
 
 ## طلبات الدمج المفتوحة وقت آخر تشغيل
 - [#29 — Engineer script: Gemini discovery and provider fall-through](https://github.com/Taha8880/Utilityra/pull/29) — فرع: engfix — آخر تحديث: 2026-10-27T20:48:29Z
@@ -20,8 +20,6 @@
 ## الملفات التي تغيرت في هذا الـ commit
 ---
 M	build.mjs
-M	scripts/monitor.mjs
-M	worker/src/index.js
 ---
 
 ## نقاط المتابعة — غير مثبتة كمنجزة حتى يظهر دليل
