@@ -20,7 +20,24 @@ for (const [name, path, status, re] of checks) {
   const t0 = Date.now();
   try {
     const r = await fetch(site + path, { redirect: 'follow', headers: { 'user-agent': 'UtilityraMonitor/1.0' } });
-    const body = await r.text(); const ok = r.status === status && (!re || re.test(body));
+    const body = await r.text();
+    let detail = '';
+    let ok = r.status === status && (!re || re.test(body));
+    if (path === '/sitemap.xml') {
+      const type = (r.headers.get('content-type') || '').toLowerCase();
+      const locs = [...body.matchAll(/<loc>([^<]+)<\\/loc>/g)].map((m) => m[1]);
+      ok = ok && type.includes('application/xml') && body.startsWith('<?xml') &&
+        /<urlset\\b[^>]*xmlns="http:\\/\\/www\\.sitemaps\\.org\\/schemas\\/sitemap\\/0\\.9"/.test(body) &&
+        /<\\/urlset>\\s*$/.test(body) && locs.length >= 50 &&
+        locs.every((loc) => { try { const u = new URL(loc); return u.origin === site && !u.pathname.startsWith('/admin') && !u.pathname.includes('404'); } catch { return false; } });
+      if (!ok) detail = ` content-type=${type || '(missing)'}, loc-count=${locs.length}`;
+    }
+    if (path === '/robots.txt') {
+      const type = (r.headers.get('content-type') || '').toLowerCase();
+      ok = ok && type.startsWith('text/plain') && body.includes(site + '/sitemap.xml') && !body.includes('&lt;');
+      if (!ok) detail = ` content-type=${type || '(missing)'}`;
+    }
+    rows.push({ name, path, status: r.status, ms: Date.now() - t0, ok, detail }); if (!ok) bad++;
     rows.push({ name, path, status: r.status, ms: Date.now() - t0, ok }); if (!ok) bad++;
   } catch (e) { rows.push({ name, path, status: 0, ms: Date.now() - t0, ok: false, err: String(e.message) }); bad++; }
 }
