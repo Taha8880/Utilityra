@@ -7,6 +7,7 @@
 import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { join } from 'node:path';
+import { pickGemini } from '../worker/src/index.js';
 
 const args = process.argv.slice(2); const arg = (k) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : ''; };
 const incident = arg('--incident') ? readFileSync(arg('--incident'), 'utf8') : arg('--text');
@@ -20,32 +21,38 @@ const files = walk('.').map((f) => f.replace(/^\.\//, '')).filter((f) => ALLOW.s
 
 async function llm(system, user) {
   // Prefer Gemini when configured so automatic repair does not require a paid Anthropic API key.
+  const errors = [];
   if (process.env.GEMINI_API_KEY) {
-    const model = process.env.ENGINEER_MODEL || 'gemini-2.5-flash';
-    const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent', {
-      method: 'POST',
-      headers: { 'x-goog-api-key': process.env.GEMINI_API_KEY, 'content-type': 'application/json' },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: system }] },
-        contents: [{ role: 'user', parts: [{ text: user }] }],
-        generationConfig: { maxOutputTokens: 8000, temperature: 0.1, responseMimeType: 'application/json' }
-      })
-    });
-    const j = await r.json();
-    if (!r.ok) throw new Error('Gemini API: ' + JSON.stringify(j).slice(0, 300));
-    const answer = (j.candidates?.[0]?.content?.parts || []).filter((p) => !p.thought).map((p) => p.text || '').join('');
-    if (!answer.trim()) throw new Error('Gemini returned an empty response');
-    return answer;
+    try {
+      // Discover the models this key can use (model names get retired); ENGINEER_MODEL overrides.
+      let chain = process.env.ENGINEER_MODEL ? [process.env.ENGINEER_MODEL] : [];
+      if (!chain.length) {
+        try { const lr = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200', { headers: { 'x-goog-api-key': process.env.GEMINI_API_KEY } }); const lj = await lr.json(); if (lr.ok) chain = pickGemini(lj.models || [], true); } catch { /* use fallback names */ }
+        if (!chain.length) chain = ['gemini-2.5-pro', 'gemini-2.5-flash'];
+      }
+      for (const model of chain) {
+        const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent', {
+          method: 'POST',
+          headers: { 'x-goog-api-key': process.env.GEMINI_API_KEY, 'content-type': 'application/json' },
+          body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: [{ role: 'user', parts: [{ text: user }] }], generationConfig: { maxOutputTokens: 8000, temperature: 0.1, responseMimeType: 'application/json' } })
+        });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok) { errors.push(`Gemini ${model} ${r.status}: ${JSON.stringify(j).slice(0, 160)}`); continue; }
+        const answer = (j.candidates?.[0]?.content?.parts || []).filter((x) => !x.thought).map((x) => x.text || '').join('');
+        if (answer.trim()) return answer;
+        errors.push(`Gemini ${model}: empty response`);
+      }
+    } catch (e) { errors.push('Gemini: ' + e.message); }
   }
   if (process.env.ANTHROPIC_API_KEY) {
     const r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' }, body: JSON.stringify({ model: process.env.ENGINEER_MODEL || 'claude-sonnet-5-5', max_tokens: 8000, system, messages: [{ role: 'user', content: user }] }) });
-    const j = await r.json(); if (!r.ok) throw new Error('Anthropic API: ' + JSON.stringify(j).slice(0, 300)); return j.content.map((c) => c.text || '').join('');
+    const j = await r.json(); if (!r.ok) errors.push('Anthropic ' + r.status + ': ' + JSON.stringify(j).slice(0, 160)); else return j.content.map((c) => c.text || '').join('');
   }
   if (process.env.OPENAI_API_KEY) {
     const r = await fetch('https://api.openai.com/v1/chat/completions', { method: 'POST', headers: { authorization: 'Bearer ' + process.env.OPENAI_API_KEY, 'content-type': 'application/json' }, body: JSON.stringify({ model: process.env.ENGINEER_MODEL || 'gpt-4.1', messages: [{ role: 'system', content: system }, { role: 'user', content: user }] }) });
-    const j = await r.json(); if (!r.ok) throw new Error('OpenAI API: ' + JSON.stringify(j).slice(0, 300)); return j.choices[0].message.content;
+    const j = await r.json(); if (!r.ok) errors.push('OpenAI ' + r.status + ': ' + JSON.stringify(j).slice(0, 160)); else return j.choices[0].message.content;
   }
-  throw new Error('No GEMINI_API_KEY, ANTHROPIC_API_KEY, or OPENAI_API_KEY set — cannot run the AI engineer.');
+  throw new Error(errors.length ? 'All AI providers failed: ' + errors.join(' | ') : 'No GEMINI_API_KEY, ANTHROPIC_API_KEY, or OPENAI_API_KEY set — cannot run the AI engineer.');
 }
 const SYS = `You are Utilityra's production reliability engineer. The project is a Cloudflare Worker with static assets: build.mjs generates dist/, worker/src/index.js is the module Worker entrypoint, worker/src/admin.js owns the admin/analytics/incident APIs, wrangler.toml controls assets and run_worker_first, .github/workflows/deploy.yml tests, applies the D1 schema and deploys, and scripts/monitor.mjs checks the public site.
 Reply with ONLY JSON: {"summary":"...","root_cause":"...","edits":[{"path":"...","search":"exact existing text, unique in the file","replace":"new text"}],"test_note":"how to verify"}.
