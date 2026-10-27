@@ -1,3 +1,4 @@
+import { SITEMAP_XML } from "./sitemap.generated.js";
 // Utilityra Worker: serves the static site (ASSETS) and the AI gateway (POST /api/ai).
 // Secrets/provider keys never reach the browser. No database is required.
 
@@ -329,9 +330,10 @@ const worker = {
     // Static asset MIME inference can vary; Google must receive XML for the sitemap, not generic text/octet-stream.
     if ((url.pathname === "/sitemap.xml" || url.pathname === "/robots.txt") && (request.method === "GET" || request.method === "HEAD")) {
       if (!env.ASSETS) return new Response("Static assets are not bound.", { status: 503 });
+      if (url.pathname === "/sitemap.xml") return new Response(request.method === "HEAD" ? null : SITEMAP_XML, { status: 200, headers: { "content-type": "application/xml; charset=utf-8", "cache-control": "public, max-age=3600", "x-content-type-options": "nosniff" } });
       const asset = await env.ASSETS.fetch(request);
       const headers = new Headers(asset.headers);
-      headers.set("content-type", url.pathname === "/sitemap.xml" ? "application/xml; charset=utf-8" : "text/plain; charset=utf-8");
+      headers.set("content-type", "text/plain; charset=utf-8");
       headers.set("cache-control", "public, max-age=3600");
       headers.set("x-content-type-options", "nosniff");
       return new Response(request.method === "HEAD" ? null : asset.body, { status: asset.status, statusText: asset.statusText, headers });
