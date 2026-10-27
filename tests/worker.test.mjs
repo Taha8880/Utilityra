@@ -380,3 +380,24 @@ test('engineer approve: needs auth and a dispatch token, then dispatches the PR 
   globalThis.fetch = async (u, init) => { hit = [String(u), init]; return new Response(null, { status: 204 }); };
   try { assert.equal((await req({ ...base, GITHUB_DISPATCH_TOKEN: 't' })).status, 200); assert.match(hit[0], /actions\/workflows\/ai-engineer\.yml\/dispatches/); } finally { globalThis.fetch = realFetch; }
 });
+
+test('gemini: discovers the newest usable model instead of a retired name, and follows the API hint', async () => {
+  const { pickGemini } = await import('../worker/src/index.js');
+  const list = [
+    { name: 'models/gemini-2.5-flash', supportedGenerationMethods: ['generateContent'] }, { name: 'models/gemini-3.8-flash', supportedGenerationMethods: ['generateContent'] },
+    { name: 'models/gemini-3.8-pro', supportedGenerationMethods: ['generateContent'] }, { name: 'models/gemini-3.8-flash-image', supportedGenerationMethods: ['generateContent'] },
+    { name: 'models/gemini-embedding-001', supportedGenerationMethods: ['embedContent'] }, { name: 'models/gemini-3.8-flash-lite', supportedGenerationMethods: ['generateContent'] }
+  ];
+  assert.equal(pickGemini(list, false)[0], 'gemini-3.8-flash'); assert.ok(!pickGemini(list, false).some((n) => /image|lite|embedding/.test(n)));
+  assert.equal(pickGemini(list, true)[0], 'gemini-3.8-pro');
+});
+
+test('inspect: this site\'s own URL is served in-process (no recursive public subrequest)', async () => {
+  const realFetch = globalThis.fetch; let publicCalls = 0; globalThis.fetch = async () => { publicCalls++; return new Response('error code: 1042', { status: 404 }); };
+  const ASSETS = { fetch: async () => new Response('<!doctype html><html lang="ar"><head><title>Utilityra</title></head><body><main><h1>x</h1></main></body></html>', { status: 200, headers: { 'content-type': 'text/html' } }) };
+  try {
+    const r = await worker.fetch(new Request('https://utilityra.test/api/inspect?url=' + encodeURIComponent('https://utilityra.test/'), { headers: { origin: 'https://utilityra.test' } }), { ASSETS });
+    const j = await r.json();
+    assert.equal(publicCalls, 0); assert.equal(j.httpStatus, 200); assert.match(JSON.stringify(j), /<title>Utilityra|lang=/);
+  } finally { globalThis.fetch = realFetch; }
+});

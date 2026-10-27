@@ -150,7 +150,7 @@ async function viaOpenAI(messages, env, gen = DEFAULT_GEN) {
   if (!env.OPENAI_API_KEY) throw Object.assign(new Error("PROVIDER_NOT_CONFIGURED"), { status: 503 });
   const res = await fetch(gw(env, "openai", "https://api.openai.com/v1") + "/chat/completions", { method: "POST", headers: { authorization: `Bearer ${env.OPENAI_API_KEY}`, "content-type": "application/json", ...gwAuth(env) }, body: JSON.stringify({ model: env.OPENAI_MODEL || (gen.strong ? "gpt-4.1" : "gpt-4.1-mini"), messages, max_tokens: gen.max_tokens, temperature: gen.temperature }) });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw Object.assign(new Error("UPSTREAM_ERROR"), { status: res.status === 429 ? 429 : 502, detail: `openai ${res.status} ${data?.error?.code || data?.error?.type || ""}`.trim(), cool: res.status === 401 || res.status === 403 || data?.error?.code === "insufficient_quota" });
+  if (!res.ok) throw Object.assign(new Error("UPSTREAM_ERROR"), { status: res.status === 429 ? 429 : 502, detail: `openai ${res.status} ${data?.error?.code || data?.error?.type || ""}`.trim(), cool: res.status === 401 || res.status === 403 || /credit|quota|billing/i.test(`${data?.error?.code || ""} ${data?.error?.message || ""}`) });
   const text = data?.choices?.[0]?.message?.content?.trim();
   if (!text) throw Object.assign(new Error("EMPTY_PROVIDER_RESPONSE"), { status: 502 });
   return text;
@@ -186,6 +186,29 @@ async function viaAnthropic(messages, env, gen = DEFAULT_GEN) {
   }
   throw last || Object.assign(new Error("UPSTREAM_ERROR"), { status: 502 });
 }
+// Gemini model names change (older ones get "no longer available to new users"). Ask the API which models this key can use
+// and pick the newest suitable one; cached per isolate for an hour. GEMINI_MODEL still overrides everything.
+let GEMINI_MODELS = { at: 0, list: [] };
+export const pickGemini = (models, strong) => {
+  const ver = (n) => { const m = /gemini-(\d+(?:\.\d+)?)/.exec(n); return m ? parseFloat(m[1]) : 0; };
+  const ok = models.filter((m) => /generateContent/.test((m.supportedGenerationMethods || []).join(",")) && /^models\/gemini-[\d.]+-(flash|pro)(-[a-z0-9]+)?$/.test(m.name || "") && !/(tts|image|embed|live|audio|preview-\d|exp|lite|latest|thinking|vision|robotics|computer)/i.test(m.name));
+  const fam = (f) => ok.filter((m) => m.name.includes("-" + f)).sort((a, b) => ver(b.name) - ver(a.name) || a.name.length - b.name.length).map((m) => m.name.replace(/^models\//, ""));
+  const order = strong ? [...fam("pro"), ...fam("flash")] : [...fam("flash"), ...fam("pro")];
+  return [...new Set(order)].slice(0, 3);
+};
+async function geminiChain(env, strong) {
+  if (env.GEMINI_MODEL) return [env.GEMINI_MODEL];
+  const now = Date.now();
+  if (!GEMINI_MODELS.list.length || now - GEMINI_MODELS.at > 3_600_000) {
+    try {
+      const res = await fetch(`${gw(env, "google-ai-studio", "https://generativelanguage.googleapis.com")}/v1beta/models?pageSize=200`, { headers: { "x-goog-api-key": geminiKey(env), ...gwAuth(env) } });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && Array.isArray(data.models)) GEMINI_MODELS = { at: now, list: data.models };
+    } catch { /* fall back to static names */ }
+  }
+  const found = pickGemini(GEMINI_MODELS.list, strong);
+  return found.length ? found : strong ? ["gemini-2.5-pro", "gemini-2.5-flash"] : ["gemini-2.5-flash"];
+}
 async function viaGemini(messages, env, gen = DEFAULT_GEN) {
   if (!geminiKey(env)) throw Object.assign(new Error("PROVIDER_NOT_CONFIGURED"), { status: 503 });
   const system = messages.find((m) => m.role === "system")?.content || "";
@@ -196,7 +219,7 @@ async function viaGemini(messages, env, gen = DEFAULT_GEN) {
     if (contents.length && contents[contents.length - 1].role === role) contents[contents.length - 1].parts[0].text += "\n\n" + text; else contents.push({ role, parts: [{ text }] });
   }
   while (contents.length && contents[0].role !== "user") contents.shift();
-  const chain = env.GEMINI_MODEL ? [env.GEMINI_MODEL] : gen.strong ? ["gemini-2.5-pro", "gemini-2.5-flash"] : ["gemini-2.5-flash"];
+  const chain = await geminiChain(env, gen.strong);
   let last;
   for (const model of chain) {
     const generationConfig = { maxOutputTokens: gen.max_tokens, temperature: gen.temperature };
@@ -209,6 +232,7 @@ async function viaGemini(messages, env, gen = DEFAULT_GEN) {
       last = Object.assign(new Error("EMPTY_PROVIDER_RESPONSE"), { status: 502, detail: `gemini ${model} empty ${data?.candidates?.[0]?.finishReason || data?.promptFeedback?.blockReason || ""}`.trim() }); continue;
     }
     last = Object.assign(new Error("UPSTREAM_ERROR"), { status: 502, detail: `gemini ${model} ${res.status} ${data?.error?.status || ""} ${String(data?.error?.message || "").slice(0, 120)}`.trim(), cool: res.status === 401 || (res.status === 400 && /API key/i.test(String(data?.error?.message || ""))) });
+    { const hint = /models\/(gemini-[\w.-]+)/.exec(String(data?.error?.message || "").replace(res.url || "", "").split("update your code to use")[1] || ""); if (hint && !chain.includes(hint[1])) chain.push(hint[1]); }
     if (last.cool) break; // bad key: stepping down will not help; quota/model errors (403/404/429) try the next model
   }
   throw last || Object.assign(new Error("UPSTREAM_ERROR"), { status: 502 });
@@ -317,7 +341,9 @@ const worker = {
       if (request.method !== "GET") return json({ error: "METHOD_NOT_ALLOWED" }, 405, origin || "");
       if (origin === null) return json({ error: "ORIGIN_NOT_ALLOWED" }, 403);
       if (await rateLimited(request, env)) return json({ error: "RATE_LIMITED" }, 429, origin || "");
-      const r = await inspectUrl(url.searchParams.get("url"));
+      // Inspecting this site's own URL from inside the Worker would be a recursive public subrequest (Cloudflare error 1042), so dispatch those in-process.
+      const selfFetch = (u, init) => { let same = false; try { same = new URL(u).host === url.host; } catch { /* ignore */ } return same ? worker.fetch(new Request(u, init), env) : fetch(u, init); };
+      const r = await inspectUrl(url.searchParams.get("url"), selfFetch);
       return json(r.body, r.status, origin || "");
     }
     if (url.pathname.startsWith("/api/")) return json({ error: "NOT_FOUND" }, 404, origin || "");
