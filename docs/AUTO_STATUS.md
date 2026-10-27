@@ -2,14 +2,14 @@
 
 > تحديث آلي كل 6 ساعات، وعند تغييرات main. الاختبارات المحلية وفحص الموقع الحي نتيجتان منفصلتان.
 
-- آخر تحديث: 2026-10-26 21:54 UTC
-- الحدث: push
+- آخر تحديث: 2026-10-27 00:51 UTC
+- الحدث: schedule
 - الفرع: main
-- Commit: 6efbcbe0f491b19139ef3544339753889c06ed6e (https://github.com/Taha8880/Utilityra/commit/6efbcbe0f491b19139ef3544339753889c06ed6e)
+- Commit: 394fc664e64c518a85d96467741be87fdd73743a (https://github.com/Taha8880/Utilityra/commit/394fc664e64c518a85d96467741be87fdd73743a)
 - بدأه: Taha8880
 - نتيجة npm test: success
 - نتيجة فحص الموقع الحي: success
-- سجل التشغيل: https://github.com/Taha8880/Utilityra/actions/runs/40408208090
+- سجل التشغيل: https://github.com/Taha8880/Utilityra/actions/runs/40429006377
 
 ## طلبات الدمج المفتوحة وقت آخر تشغيل
 - [#7 — chore(deps): bump actions/upload-artifact from 4 to 7](https://github.com/Taha8880/Utilityra/pull/7) — فرع: dependabot/github_actions/actions/upload-artifact-7 — آخر تحديث: 2026-10-24T01:54:35Z
@@ -18,22 +18,8 @@
 
 ## الملفات التي تغيرت في هذا الـ commit
 ---
-M	build.mjs
-M	docs/test-logs/e2e-latest.md
-M	docs/test-logs/screens/desk-dark-ar-_.png
-M	docs/test-logs/screens/desk-dark-ar-_tools_qr_code_generator_.png
-M	docs/test-logs/screens/desk-dark-en-_.png
-M	docs/test-logs/screens/desk-dark-en-_tools_qr_code_generator_.png
-M	docs/test-logs/screens/desk-light-ar-_.png
-M	docs/test-logs/screens/desk-light-ar-_tools_qr_code_generator_.png
-M	docs/test-logs/screens/desk-light-en-_.png
-M	docs/test-logs/screens/desk-light-en-_tools_qr_code_generator_.png
-M	docs/test-logs/screens/m360-dark-ar-_.png
-M	docs/test-logs/screens/m360-dark-en-_.png
-M	docs/test-logs/screens/m360-light-ar-_.png
-M	docs/test-logs/screens/m360-light-en-_.png
-M	src/assets/css/app.css
-M	src/assets/js/app.js
+M	docs/AUTO_STATUS.md
+M	docs/LIVE_STATUS.md
 ---
 
 ## نقاط المتابعة — غير مثبتة كمنجزة حتى يظهر دليل
