@@ -13,7 +13,7 @@ directory = "./dist"
 binding = "ASSETS"
 not_found_handling = "404-page"
 # Only the API and health endpoints run the Worker first; pages are served straight from assets.
-run_worker_first = ["/api/*", "/health"]
+run_worker_first = ["/api/*", "/health", "/sitemap.xml", "/robots.txt"]
 
 [vars]
 # Extra origins allowed to call /api/* (comma separated). The site's own origin is always allowed.

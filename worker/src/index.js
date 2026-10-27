@@ -325,6 +325,17 @@ const worker = {
     if (url.pathname === "/health" && (request.method === "GET" || request.method === "HEAD")) {
       return json({ ok: true, service: "utilityra", ai: providersFor(env).map(([n]) => n) }, 200, origin || "");
     }
+    // Serve crawler discovery files through the Worker with explicit standards-compliant MIME types.
+    // Static asset MIME inference can vary; Google must receive XML for the sitemap, not generic text/octet-stream.
+    if ((url.pathname === "/sitemap.xml" || url.pathname === "/robots.txt") && (request.method === "GET" || request.method === "HEAD")) {
+      if (!env.ASSETS) return new Response("Static assets are not bound.", { status: 503 });
+      const asset = await env.ASSETS.fetch(request);
+      const headers = new Headers(asset.headers);
+      headers.set("content-type", url.pathname === "/sitemap.xml" ? "application/xml; charset=utf-8" : "text/plain; charset=utf-8");
+      headers.set("cache-control", "public, max-age=3600");
+      headers.set("x-content-type-options", "nosniff");
+      return new Response(request.method === "HEAD" ? null : asset.body, { status: asset.status, statusText: asset.statusText, headers });
+    }
     if (url.pathname === "/api/ai") {
       if (request.method !== "POST") return json({ error: "METHOD_NOT_ALLOWED" }, 405, origin || "");
       if (origin === null) return json({ error: "ORIGIN_NOT_ALLOWED" }, 403);
