@@ -143,7 +143,7 @@
   });
 })();
 (function () {
-  const { ta, nm, ck, esc } = UT.H;
+  const { ta, nm, sel, ck, esc } = UT.H;
   const def = UT.def;
   const rnd = (k) => { const a = new Uint32Array(1); const lim = Math.floor(4294967296 / k) * k; do { crypto.getRandomValues(a); } while (a[0] >= lim); return a[0] % k; };
   const lines = (s) => s.split('\n').map((x) => x.trim()).filter(Boolean);
@@ -212,6 +212,42 @@
         requestAnimationFrame(step);
       };
       $('#sw-go').onclick = spin; $('#sw-items').addEventListener('input', () => { if (!spinning) { ang = 0; draw(); } }); draw();
+    }
+  });
+
+  /* ---------- zakat ---------- */
+  def('zakat-calculator', {
+    fields: [nm('gold', 'سعر جرام الذهب عيار 24 (بعملتك)', 'Price of 1 g of 24k gold (your currency)', 3500, { min: 0 }), nm('cash', 'النقد والمدخرات', 'Cash and savings', 0, { min: 0 }), nm('goldg', 'وزن الذهب المدّخر (جرام عيار 24)', 'Saved gold (grams, 24k)', 0, { min: 0 }), nm('trade', 'قيمة عروض التجارة', 'Value of trade goods', 0, { min: 0 }), nm('debt', 'ديون مستحقة عليك حالّة', 'Debts you owe now', 0, { min: 0 })],
+    sample: { gold: 3500, cash: 500000, goldg: 20, trade: 0, debt: 10000 },
+    note: ['النصاب = 85 جرامًا من الذهب عيار 24، والنسبة 2.5% بعد مرور حول هجري كامل. هذه حاسبة إرشادية؛ للحالات الخاصة راجع جهة الفتوى.', 'Nisab = 85 g of 24k gold, rate 2.5% after a full lunar year. Indicative only; consult a scholar for special cases.'],
+    run(v, h) {
+      const net = (v.cash || 0) + (v.goldg || 0) * (v.gold || 0) + (v.trade || 0) - (v.debt || 0), nisab = 85 * (v.gold || 0);
+      if (!(v.gold > 0)) return null;
+      const due = net >= nisab && net > 0, z = due ? net * 0.025 : 0, f = (x) => Math.round(x).toLocaleString('en-US');
+      return { cards: [['صافي المال الخاضع للزكاة', 'Net zakatable wealth', f(net)], ['النصاب', 'Nisab', f(nisab)], ['الزكاة المستحقة', 'Zakat due', due ? f(z) : '0'], ['الحالة', 'Status', due ? h.t('بلغ النصاب', 'Above nisab') : h.t('لم يبلغ النصاب', 'Below nisab')]] };
+    }
+  });
+
+  /* ---------- calories ---------- */
+  def('calorie-calculator', {
+    fields: [sel('g', 'الجنس', 'Sex', [['m', 'ذكر', 'Male'], ['f', 'أنثى', 'Female']], 'm'), nm('a', 'العمر', 'Age', 30, { min: 10 }), nm('w', 'الوزن (كجم)', 'Weight (kg)', 70, { min: 20 }), nm('hg', 'الطول (سم)', 'Height (cm)', 175, { min: 100 }), sel('act', 'مستوى النشاط', 'Activity', [['1.2', 'خامل', 'Sedentary'], ['1.375', 'خفيف (1-3 أيام)', 'Light (1-3 d/wk)'], ['1.55', 'متوسط (3-5 أيام)', 'Moderate (3-5 d/wk)'], ['1.725', 'عالٍ (6-7 أيام)', 'High (6-7 d/wk)']], '1.375'), sel('goal', 'الهدف', 'Goal', [['lose', 'خسارة وزن', 'Lose weight'], ['keep', 'ثبات الوزن', 'Maintain'], ['gain', 'زيادة وزن', 'Gain weight']], 'keep')],
+    sample: { g: 'm', a: 30, w: 70, hg: 175, act: '1.375', goal: 'keep' },
+    note: ['تقدير بمعادلة Mifflin-St Jeor، وليس بديلًا عن استشارة مختص تغذية.', 'Estimate via the Mifflin-St Jeor equation; not a substitute for professional advice.'],
+    run(v, h) {
+      if (!(v.a > 0 && v.w > 0 && v.hg > 0)) return null;
+      const bmr = 10 * v.w + 6.25 * v.hg - 5 * v.a + (v.g === 'm' ? 5 : -161), tdee = bmr * parseFloat(v.act), t = v.goal === 'lose' ? tdee - 500 : v.goal === 'gain' ? tdee + 400 : tdee;
+      return { cards: [['معدل الحرق الأساسي', 'BMR', Math.round(bmr) + ' kcal'], ['احتياجك للثبات', 'Maintenance', Math.round(tdee) + ' kcal'], ['هدفك اليومي', 'Daily target', Math.round(Math.max(t, v.g === 'm' ? 1500 : 1200)) + ' kcal']] };
+    }
+  });
+
+  /* ---------- tip & split ---------- */
+  def('tip-calculator', {
+    fields: [nm('b', 'قيمة الفاتورة', 'Bill amount', 500, { min: 0 }), nm('p', 'نسبة الإكرامية %', 'Tip %', 10, { min: 0 }), nm('n', 'عدد الأشخاص', 'People', 4, { min: 1 })],
+    sample: { b: 500, p: 10, n: 4 },
+    run(v, h) {
+      if (!(v.b >= 0) || !(v.n >= 1)) return null;
+      const tip = v.b * (v.p || 0) / 100, total = v.b + tip, f = (x) => (Math.round(x * 100) / 100).toLocaleString('en-US');
+      return { cards: [['الإكرامية', 'Tip', f(tip)], ['الإجمالي', 'Total', f(total)], ['نصيب كل شخص', 'Per person', f(total / Math.floor(v.n))]] };
     }
   });
 })();
