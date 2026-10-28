@@ -346,7 +346,7 @@ const worker = {
     if (url.pathname === "/api/analytics/event" || url.pathname.startsWith("/api/admin/")) {
       if (origin === null) return json({ error: "ORIGIN_NOT_ALLOWED" }, 403);
       if (url.pathname !== "/api/analytics/event" && request.method !== "GET" && origin && origin !== url.origin) return json({ error: "ORIGIN_NOT_ALLOWED" }, 403);
-      const res = await handleAdmin(request, env, url, json, origin || "", readJson, askProviders.bind(null, env), (req) => worker.fetch(req, env));
+      const res = await handleAdmin(request, env, url, json, origin || "", readJson, askProviders.bind(null, env), (req) => worker.fetch(req, env), probeProviders.bind(null, env));
       if (res) return res;
     }
     if (url.pathname === "/api/config" && request.method === "GET") return handleConfig(env, origin || "");
@@ -365,6 +365,21 @@ const worker = {
   }
 };
 export default worker;
+
+// Real probe: calls every configured provider with a tiny prompt and reports which one actually answers.
+export async function probeProviders(env) {
+  const out = [];
+  for (const [name, fn] of providersFor(env)) {
+    const t0 = Date.now();
+    try {
+      const r = await fn([{ role: "user", content: "Reply with the single word: OK" }], env, { ...DEFAULT_GEN, max_tokens: 16, temperature: 0, strong: false });
+      out.push({ provider: name, ok: true, ms: Date.now() - t0, sample: String(typeof r === "string" ? r : r?.answer || r?.text || "").slice(0, 40) });
+    } catch (e) {
+      out.push({ provider: name, ok: false, ms: Date.now() - t0, error: String(e?.detail || e?.message || "failed").slice(0, 300) });
+    }
+  }
+  return out;
+}
 
 export async function askProviders(env, messages) {
   let last;
