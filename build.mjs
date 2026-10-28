@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Utilityra static site generator: node build.mjs  ->  dist/
 // Env: SITE_URL, API_BASE, ADSENSE_ID, GA_ID, CONTACT_EMAIL
-import { readFileSync, writeFileSync, mkdirSync, rmSync, cpSync, readdirSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, rmSync, cpSync, copyFileSync, readdirSync, existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join, dirname } from 'node:path';
 import { ICONS, iconFor, CAT_ICON, svg } from './src/icons.mjs';
@@ -48,6 +48,7 @@ const V = { css: hash(css), app: hash(appJs), tools: hash(toolsJs), idx: hash(in
 // ---------- shared layout ----------
 const FONTS = 'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap';
 const FAVICON = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#E45A1F"/><stop offset="1" stop-color="#FF7C30"/></linearGradient></defs><rect width="64" height="64" rx="16" fill="url(#g)"/><path d="M20 18v18a12 12 0 0 0 24 0V18" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round"/></svg>');
+copyFileSync(join(ROOT, 'src/assets/og.png'), join(OUT, 'og.png'));
 writeFileSync(join(OUT, 'favicon.svg'), decodeURIComponent(FAVICON.split(',')[1]));
 
 const initScript = `<script>(function(){try{var d=document.documentElement,l=localStorage.getItem('ur-lang'),t=localStorage.getItem('ur-theme');if(!l){l='ar'}d.lang=l;d.dir=l==='ar'?'rtl':'ltr';if(t)d.dataset.theme=t}catch(e){}})();window.UTILITYRA=${JSON.stringify({ apiBase: API_BASE, assetBase: '/assets/' })};</script>`;
@@ -69,7 +70,7 @@ function head({ titleAr, titleEn, descAr, descEn, path, extra = '', noindex = fa
 <meta name="msvalidate.01" content="${String(process.env.BING_SITE_VERIFICATION).replace(/[^\w-]/g, '')}">` : ''}
 <link rel="canonical" href="${url}">
 <meta property="og:type" content="website"><meta property="og:site_name" content="Utilityra"><meta property="og:title" content="${esc(full(titleAr))}"><meta property="og:description" content="${esc(descAr)}"><meta property="og:url" content="${url}"><meta property="og:locale" content="ar_AR"><meta property="og:locale:alternate" content="en_US">
-<meta name="twitter:card" content="summary"><meta name="twitter:title" content="${esc(full(titleAr))}"><meta name="twitter:description" content="${esc(descAr)}">
+<meta property="og:image" content="${SITE}/og.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="${SITE}/og.png"><meta name="twitter:title" content="${esc(full(titleAr))}"><meta name="twitter:description" content="${esc(descAr)}">
 <meta name="theme-color" content="#E45A1F">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="manifest" href="/site.webmanifest">
