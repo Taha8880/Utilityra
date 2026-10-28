@@ -69,7 +69,7 @@ const RULES = [
   [/password|sha256|jwt/, 'key'], [/uuid|hash|random|binary|base/, 'hash'], [/word-counter|reading|lorem|word-frequency|reverse|find-replace|cleaner|case-conv|slug|number-to-words/, 'type'],
   [/sorter|sort/, 'sort'], [/duplicate/, 'copy'], [/diff|compare/, 'diff'], [/markdown-preview|html-preview/, 'eye'], [/text-to-speech/, 'speaker'],
   [/json|xml|html-|css|csv|sql-format|markdown-table/, 'braces'], [/api-tester/, 'api'], [/^(cron|timestamp|timezone|date-|age-|hijri)/, 'cal'],
-  [/percent|vat|discount/, 'percent'], [/loan|compound|hourly|bmi/, 'coins'], [/statistics/, 'stat'], [/scientific/, 'calc'], [/unit|file-size/, 'ruler'],
+  [/percent|vat|discount/, 'percent'], [/loan|compound|hourly|bmi|zakat|calorie|tip-calc/, 'coins'], [/statistics/, 'stat'], [/scientific/, 'calc'], [/unit|file-size/, 'ruler'],
   [/pdf-merge|pdf-split|pdf-rotate|pdf-page|pdf-to|images-to-pdf/, 'pdf'], [/file-metadata/, 'file'], [/crop/, 'crop'], [/rotate-flip/, 'rotate'], [/watermark|filter/, 'layers'],
   [/compress|resiz|convert|data-uri/, 'image'], [/favicon/, 'star'], [/qr/, 'qr'], [/pomodoro|countdown|typing/, 'clock'], [/ai-decision/, 'layers'], [/ai-game|spin-wheel|dice/, 'zap'], [/team-split/, 'list'], [/roman/, 'hash'], [/morse/, 'zap'], [/random-picker/, 'sparkles'], [/invoice/, 'file'], [/contrast/, 'contrast']
 ];
