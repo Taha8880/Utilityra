@@ -7,7 +7,9 @@ import { join, dirname } from 'node:path';
 import { ICONS, iconFor, CAT_ICON, svg } from './src/icons.mjs';
 import { fileURLToPath } from 'node:url';
 import { CATEGORIES, TOOLS, toolObj } from './src/meta.mjs';
-import { GUIDES } from './src/guides.mjs';
+import { GUIDES as G1 } from './src/guides.mjs';
+import { GUIDES2 } from './src/guides2.mjs';
+const GUIDES = { ...G1, ...GUIDES2 };
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const OUT = join(ROOT, 'dist');
