@@ -225,7 +225,9 @@ async function viaGemini(messages, env, gen = DEFAULT_GEN) {
   for (const model of chain) {
     const generationConfig = { maxOutputTokens: gen.max_tokens, temperature: gen.temperature };
     if (/flash/.test(model)) generationConfig.thinkingConfig = { thinkingBudget: 0 };
-    const res = await fetch(`${gw(env, "google-ai-studio", "https://generativelanguage.googleapis.com")}/v1beta/models/${encodeURIComponent(model)}:generateContent`, { method: "POST", headers: { "x-goog-api-key": geminiKey(env), "content-type": "application/json", ...gwAuth(env) }, body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents, generationConfig }) });
+    let res;
+    try { res = await fetch(`${gw(env, "google-ai-studio", "https://generativelanguage.googleapis.com")}/v1beta/models/${encodeURIComponent(model)}:generateContent`, { method: "POST", headers: { "x-goog-api-key": geminiKey(env), "content-type": "application/json", ...gwAuth(env) }, body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents, generationConfig }), signal: AbortSignal.timeout(gen.strong ? 25000 : 15000) }); }
+    catch (e) { last = Object.assign(new Error("UPSTREAM_TIMEOUT"), { status: 504, detail: `gemini ${model} timeout/${e?.name || "error"}` }); continue; }
     const data = await res.json().catch(() => ({}));
     if (res.ok) {
       const text = (data?.candidates?.[0]?.content?.parts || []).filter((p) => !p.thought).map((p) => p.text || "").join("").trim();
