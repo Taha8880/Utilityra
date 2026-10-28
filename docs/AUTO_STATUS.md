@@ -2,24 +2,25 @@
 
 > تحديث آلي كل 6 ساعات، وعند تغييرات main. الاختبارات المحلية وفحص الموقع الحي نتيجتان منفصلتان.
 
-- آخر تحديث: 2026-10-28 18:51 UTC
-- الحدث: push
+- آخر تحديث: 2026-10-28 18:54 UTC
+- الحدث: schedule
 - الفرع: main
-- Commit: d5da9f773923fd008a1723ee1fbe955247b39b77 (https://github.com/Taha8880/Utilityra/commit/d5da9f773923fd008a1723ee1fbe955247b39b77)
+- Commit: 9e409b16a61d6f48b49a2143bb7ce5f3c76d91eb (https://github.com/Taha8880/Utilityra/commit/9e409b16a61d6f48b49a2143bb7ce5f3c76d91eb)
 - بدأه: Taha8880
 - نتيجة npm test: success
 - نتيجة فحص الموقع الحي: success
-- سجل التشغيل: https://github.com/Taha8880/Utilityra/actions/runs/40749003856
+- سجل التشغيل: https://github.com/Taha8880/Utilityra/actions/runs/40749413370
 
 ## طلبات الدمج المفتوحة وقت آخر تشغيل
+- [#40 — Guides for 26 more tools](https://github.com/Taha8880/Utilityra/pull/40) — فرع: guides2 — آخر تحديث: 2026-10-28T18:53:02Z
 - [#7 — chore(deps): bump actions/upload-artifact from 4 to 7](https://github.com/Taha8880/Utilityra/pull/7) — فرع: dependabot/github_actions/actions/upload-artifact-7 — آخر تحديث: 2026-10-24T01:54:35Z
 - [#3 — build(deps): bump actions/setup-node from 4 to 7](https://github.com/Taha8880/Utilityra/pull/3) — فرع: dependabot/github_actions/actions/setup-node-7 — آخر تحديث: 2026-10-26T20:30:41Z
 - [#2 — chore(deps): bump actions/checkout from 4 to 7](https://github.com/Taha8880/Utilityra/pull/2) — فرع: dependabot/github_actions/actions/checkout-7 — آخر تحديث: 2026-10-26T18:55:13Z
 
 ## الملفات التي تغيرت في هذا الـ commit
 ---
-M	build.mjs
-M	src/assets/css/app.css
+M	docs/AUTO_STATUS.md
+M	docs/LIVE_STATUS.md
 ---
 
 ## نقاط المتابعة — غير مثبتة كمنجزة حتى يظهر دليل
