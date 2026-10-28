@@ -56,7 +56,7 @@ test('every indexable page is in the sitemap and every tool page has FAQ + bread
 });
 
 test("guides are bilingual and aligned with real tools", async () => {
-  const { GUIDES } = await import("../src/guides.mjs");
+  const { GUIDES: G1 } = await import("../src/guides.mjs"); const { GUIDES2 } = await import("../src/guides2.mjs"); const GUIDES = { ...G1, ...GUIDES2 };
   const { TOOLS } = await import("../src/meta.mjs");
   const ids = new Set(TOOLS.map((t) => t[0] || t.id));
   for (const [id, g] of Object.entries(GUIDES)) {
