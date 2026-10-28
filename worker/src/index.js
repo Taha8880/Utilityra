@@ -202,7 +202,7 @@ async function geminiChain(env, strong) {
   const now = Date.now();
   if (!GEMINI_MODELS.list.length || now - GEMINI_MODELS.at > 3_600_000) {
     try {
-      const res = await fetch(`${gw(env, "google-ai-studio", "https://generativelanguage.googleapis.com")}/v1beta/models?pageSize=200`, { headers: { "x-goog-api-key": geminiKey(env), ...gwAuth(env) } });
+      const res = await fetch(`${gw(env, "google-ai-studio", "https://generativelanguage.googleapis.com")}/v1beta/models?pageSize=200`, { headers: { "x-goog-api-key": geminiKey(env), ...gwAuth(env) }, signal: AbortSignal.timeout(8000) });
       const data = await res.json().catch(() => ({}));
       if (res.ok && Array.isArray(data.models)) GEMINI_MODELS = { at: now, list: data.models };
     } catch { /* fall back to static names */ }
@@ -210,6 +210,7 @@ async function geminiChain(env, strong) {
   const found = pickGemini(GEMINI_MODELS.list, strong);
   return found.length ? found : strong ? ["gemini-2.5-pro", "gemini-2.5-flash"] : ["gemini-2.5-flash"];
 }
+const GEMINI_GOOD = {}; export const GEMINI_TRACE = [];
 async function viaGemini(messages, env, gen = DEFAULT_GEN) {
   if (!geminiKey(env)) throw Object.assign(new Error("PROVIDER_NOT_CONFIGURED"), { status: 503 });
   const system = messages.find((m) => m.role === "system")?.content || "";
@@ -220,18 +221,22 @@ async function viaGemini(messages, env, gen = DEFAULT_GEN) {
     if (contents.length && contents[contents.length - 1].role === role) contents[contents.length - 1].parts[0].text += "\n\n" + text; else contents.push({ role, parts: [{ text }] });
   }
   while (contents.length && contents[0].role !== "user") contents.shift();
+  GEMINI_TRACE.length = 0; const t0 = Date.now();
   const chain = await geminiChain(env, gen.strong);
+  GEMINI_TRACE.push(`models-list ${Date.now() - t0}ms`);
+  const gk = gen.strong ? "s" : "f"; if (GEMINI_GOOD[gk] && chain.includes(GEMINI_GOOD[gk])) chain.splice(chain.indexOf(GEMINI_GOOD[gk]), 1), chain.unshift(GEMINI_GOOD[gk]);
   let last;
   for (const model of chain) {
+    const tm = Date.now();
     const generationConfig = { maxOutputTokens: gen.max_tokens, temperature: gen.temperature };
     if (/flash/.test(model)) generationConfig.thinkingConfig = { thinkingBudget: 0 };
     let res;
-    try { res = await fetch(`${gw(env, "google-ai-studio", "https://generativelanguage.googleapis.com")}/v1beta/models/${encodeURIComponent(model)}:generateContent`, { method: "POST", headers: { "x-goog-api-key": geminiKey(env), "content-type": "application/json", ...gwAuth(env) }, body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents, generationConfig }), signal: AbortSignal.timeout(gen.strong ? 25000 : 15000) }); }
-    catch (e) { last = Object.assign(new Error("UPSTREAM_TIMEOUT"), { status: 504, detail: `gemini ${model} timeout/${e?.name || "error"}` }); continue; }
+    try { res = await fetch(`${gw(env, "google-ai-studio", "https://generativelanguage.googleapis.com")}/v1beta/models/${encodeURIComponent(model)}:generateContent`, { method: "POST", headers: { "x-goog-api-key": geminiKey(env), "content-type": "application/json", ...gwAuth(env) }, body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents, generationConfig }), signal: AbortSignal.timeout(gen.strong ? 25000 : 10000) }); }
+    catch (e) { GEMINI_TRACE.push(`${model} timeout ${Date.now() - tm}ms`); delete GEMINI_GOOD[gk]; last = Object.assign(new Error("UPSTREAM_TIMEOUT"), { status: 504, detail: `gemini ${model} timeout/${e?.name || "error"}` }); continue; }
     const data = await res.json().catch(() => ({}));
     if (res.ok) {
       const text = (data?.candidates?.[0]?.content?.parts || []).filter((p) => !p.thought).map((p) => p.text || "").join("").trim();
-      if (text) return text;
+      if (text) { GEMINI_TRACE.push(`${model} ok ${Date.now() - tm}ms`); GEMINI_GOOD[gk] = model; return text; }
       last = Object.assign(new Error("EMPTY_PROVIDER_RESPONSE"), { status: 502, detail: `gemini ${model} empty ${data?.candidates?.[0]?.finishReason || data?.promptFeedback?.blockReason || ""}`.trim() }); continue;
     }
     last = Object.assign(new Error("UPSTREAM_ERROR"), { status: 502, detail: `gemini ${model} ${res.status} ${data?.error?.status || ""} ${String(data?.error?.message || "").slice(0, 120)}`.trim(), cool: res.status === 401 || (res.status === 400 && /API key/i.test(String(data?.error?.message || ""))) });
@@ -375,7 +380,7 @@ export async function probeProviders(env) {
     const t0 = Date.now();
     try {
       const r = await fn([{ role: "user", content: "Reply with the single word: OK" }], env, { ...DEFAULT_GEN, max_tokens: 16, temperature: 0, strong: false });
-      out.push({ provider: name, ok: true, ms: Date.now() - t0, sample: String(typeof r === "string" ? r : r?.answer || r?.text || "").slice(0, 40) });
+      out.push({ provider: name, ok: true, ms: Date.now() - t0, sample: String(typeof r === "string" ? r : r?.answer || r?.text || "").slice(0, 40) + (name === "gemini" && GEMINI_TRACE.length ? " [" + GEMINI_TRACE.join("; ") + "]" : "") });
     } catch (e) {
       out.push({ provider: name, ok: false, ms: Date.now() - t0, error: String(e?.detail || e?.message || "failed").slice(0, 300) });
     }
