@@ -2,14 +2,14 @@
 
 > تحديث آلي كل 6 ساعات، وعند تغييرات main. الاختبارات المحلية وفحص الموقع الحي نتيجتان منفصلتان.
 
-- آخر تحديث: 2026-10-28 12:58 UTC
-- الحدث: schedule
+- آخر تحديث: 2026-10-28 18:51 UTC
+- الحدث: push
 - الفرع: main
-- Commit: 2ba30492d40369a5ed1d77b7706ddf4242ddb67c (https://github.com/Taha8880/Utilityra/commit/2ba30492d40369a5ed1d77b7706ddf4242ddb67c)
+- Commit: d5da9f773923fd008a1723ee1fbe955247b39b77 (https://github.com/Taha8880/Utilityra/commit/d5da9f773923fd008a1723ee1fbe955247b39b77)
 - بدأه: Taha8880
 - نتيجة npm test: success
 - نتيجة فحص الموقع الحي: success
-- سجل التشغيل: https://github.com/Taha8880/Utilityra/actions/runs/40692304221
+- سجل التشغيل: https://github.com/Taha8880/Utilityra/actions/runs/40749003856
 
 ## طلبات الدمج المفتوحة وقت آخر تشغيل
 - [#7 — chore(deps): bump actions/upload-artifact from 4 to 7](https://github.com/Taha8880/Utilityra/pull/7) — فرع: dependabot/github_actions/actions/upload-artifact-7 — آخر تحديث: 2026-10-24T01:54:35Z
@@ -18,8 +18,8 @@
 
 ## الملفات التي تغيرت في هذا الـ commit
 ---
-M	docs/AUTO_STATUS.md
-M	docs/LIVE_STATUS.md
+M	build.mjs
+M	src/assets/css/app.css
 ---
 
 ## نقاط المتابعة — غير مثبتة كمنجزة حتى يظهر دليل
