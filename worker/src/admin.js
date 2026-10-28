@@ -193,7 +193,7 @@ export async function publicConfig(env) {
 }
 
 /* ---------- router ---------- */
-export async function handleAdmin(request, env, url, json, origin, readJson, ask, selfFetch) {
+export async function handleAdmin(request, env, url, json, origin, readJson, ask, selfFetch, probe) {
   const p = url.pathname, m = request.method;
   const needCfg = () => (configured(env) ? null : json({ error: "ADMIN_NOT_CONFIGURED" }, 503, origin));
   if (p === "/api/analytics/event" && m === "POST") {
@@ -239,6 +239,12 @@ export async function handleAdmin(request, env, url, json, origin, readJson, ask
     }
     if (p === "/api/admin/incidents" && m === "GET") return json({ incidents: await listIncidents(env) }, 200, origin);
     if (p === "/api/admin/engineer/run" && m === "POST") { await audit(env, "health_check", "manual run"); return json(await engineerRun(env, url.origin, ask, selfFetch), 200, origin); }
+    if (p === "/api/admin/ai-probe" && m === "POST") {
+      if (!probe) return json({ error: "PROVIDER_NOT_CONFIGURED" }, 503, origin);
+      await audit(env, "ai_probe", "manual");
+      const results = await probe();
+      return json({ ok: results.some((r) => r.ok), configured: results.length, results }, 200, origin);
+    }
     if (p === "/api/admin/assistant" && m === "POST") {
       const b = await readJson(request, 40000);
       if (typeof b.message !== "string" || !b.message.trim()) return json({ error: "EMPTY_MESSAGE" }, 400, origin);

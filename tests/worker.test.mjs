@@ -401,3 +401,10 @@ test('inspect: this site\'s own URL is served in-process (no recursive public su
     assert.equal(publicCalls, 0); assert.equal(j.httpStatus, 200); assert.match(JSON.stringify(j), /<title>Utilityra|lang=/);
   } finally { globalThis.fetch = realFetch; }
 });
+
+test("admin ai-probe reports per-provider results", async () => {
+  const { probeProviders } = await import("../worker/src/index.js");
+  const res = await probeProviders({ AI: { run: async () => ({ response: "OK" }) } });
+  assert.ok(Array.isArray(res) && res.length >= 1);
+  assert.equal(typeof res[0].ok, "boolean");
+});
