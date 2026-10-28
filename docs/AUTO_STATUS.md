@@ -2,14 +2,14 @@
 
 > تحديث آلي كل 6 ساعات، وعند تغييرات main. الاختبارات المحلية وفحص الموقع الحي نتيجتان منفصلتان.
 
-- آخر تحديث: 2026-10-28 09:14 UTC
+- آخر تحديث: 2026-10-28 09:26 UTC
 - الحدث: push
 - الفرع: main
-- Commit: 111450703351d035613df686222dedce24a1044e (https://github.com/Taha8880/Utilityra/commit/111450703351d035613df686222dedce24a1044e)
+- Commit: 9bac1844120c51d13ab8f5ab4fcc24302c6f68d9 (https://github.com/Taha8880/Utilityra/commit/9bac1844120c51d13ab8f5ab4fcc24302c6f68d9)
 - بدأه: Taha8880
 - نتيجة npm test: success
 - نتيجة فحص الموقع الحي: success
-- سجل التشغيل: https://github.com/Taha8880/Utilityra/actions/runs/40662594529
+- سجل التشغيل: https://github.com/Taha8880/Utilityra/actions/runs/40664251009
 
 ## طلبات الدمج المفتوحة وقت آخر تشغيل
 - [#7 — chore(deps): bump actions/upload-artifact from 4 to 7](https://github.com/Taha8880/Utilityra/pull/7) — فرع: dependabot/github_actions/actions/upload-artifact-7 — آخر تحديث: 2026-10-24T01:54:35Z
@@ -18,10 +18,11 @@
 
 ## الملفات التي تغيرت في هذا الـ commit
 ---
-M	build.mjs
-M	src/assets/css/app.css
-A	src/guides.mjs
-M	tests/audit.test.mjs
+A	src/assets/js/tools/09-extra.js
+M	src/assets/og.png
+M	src/meta.mjs
+M	worker/src/knowledge.generated.js
+M	worker/src/sitemap.generated.js
 ---
 
 ## نقاط المتابعة — غير مثبتة كمنجزة حتى يظهر دليل
