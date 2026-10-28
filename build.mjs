@@ -7,6 +7,7 @@ import { join, dirname } from 'node:path';
 import { ICONS, iconFor, CAT_ICON, svg } from './src/icons.mjs';
 import { fileURLToPath } from 'node:url';
 import { CATEGORIES, TOOLS, toolObj } from './src/meta.mjs';
+import { GUIDES } from './src/guides.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const OUT = join(ROOT, 'dist');
@@ -226,6 +227,7 @@ function toolPage(t) {
     [`هل بياناتي آمنة عند استخدام ${t.ar}؟`, `Is my data safe when using ${t.en}?`, pv[0], pv[1]],
     ['هل تعمل الأداة على الهاتف؟', 'Does it work on mobile?', 'نعم، تعمل على الهاتف والحاسوب في أي متصفح حديث، بالعربية والإنجليزية.', 'Yes. It works on phones and desktops in any modern browser, in Arabic and English.']
   ];
+  const G = GUIDES[t.id]; if (G) for (let i = 0; i < G.ar.faq.length; i++) faqs.unshift([G.ar.faq[i][0], G.en.faq[i][0], G.ar.faq[i][1], G.en.faq[i][1]]);
   const faqLd = { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f[1], acceptedAnswer: { '@type': 'Answer', text: f[3] } })) };
   const h = head({ titleAr: `${t.ar} - أداة مجانية أونلاين`, titleEn: `${t.en} - Free Online Tool`, descAr: `${t.ar}: ${t.dAr} مجانًا وبدون تسجيل.`, path: `/tools/${t.id}/`, extra: `<script type="application/ld+json">${JSON.stringify(ld)}</script><script type="application/ld+json">${JSON.stringify(faqLd)}</script><script type="application/ld+json">${JSON.stringify(bc)}</script>` });
   const body = `<main id="main"><div class="wrap">
@@ -235,6 +237,7 @@ function toolPage(t) {
   <div class="note" style="margin-bottom:26px"><span class="ni">${svg(t.cat === 'ai' ? 'sparkles' : 'lock', 'ic sm')}</span><span>${Le(pv[0], pv[1])}</span></div>
   ${adSlot()}
   <section style="margin:36px 0"><h2 style="font-size:26px;margin-bottom:16px">${Le('طريقة الاستخدام', 'How to use')}</h2><div class="how">${how.map((s) => `<div><b>${Le(s[0], s[1])}</b></div>`).join('')}</div></section>
+  ${G ? `<section class="guide" style="margin:36px 0"><h2 style="font-size:26px;margin-bottom:12px">${Le('دليل استخدام ' + t.ar, 'How to use ' + t.en + ': a guide')}</h2><p>${Le(G.ar.intro, G.en.intro)}</p><h3 style="font-size:20px;margin:18px 0 8px">${Le('الخطوات', 'Steps')}</h3><ol>${G.ar.steps.map((x, i) => `<li>${Le(x, G.en.steps[i])}</li>`).join('')}</ol><h3 style="font-size:20px;margin:18px 0 8px">${Le('نصائح', 'Tips')}</h3><ul>${G.ar.tips.map((x, i) => `<li>${Le(x, G.en.tips[i])}</li>`).join('')}</ul></section>` : ''}
   <section class="faq" style="margin:36px 0"><h2 style="font-size:26px;margin-bottom:16px">${Le('أسئلة شائعة', 'FAQ')}</h2>${faqs.map((f) => `<details><summary>${Le(f[0], f[1])}</summary><p>${Le(f[2], f[3])}</p></details>`).join('')}</section>
   <section style="margin:36px 0"><h2 style="font-size:26px;margin-bottom:16px">${Le('أدوات ذات صلة', 'Related tools')}</h2><div class="tgrid">${related.map(toolCard).join('')}</div><p style="margin-top:16px"><a class="btn" href="/category/${c.id}/">${Le('كل أدوات ' + c.ar, 'All ' + c.en)} →</a></p></section>
 </div></main>`;
