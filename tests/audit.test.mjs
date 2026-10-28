@@ -54,3 +54,14 @@ test('every indexable page is in the sitemap and every tool page has FAQ + bread
   }
   assert.deepEqual(missing.slice(0, 10), []);
 });
+
+test("guides are bilingual and aligned with real tools", async () => {
+  const { GUIDES } = await import("../src/guides.mjs");
+  const { TOOLS } = await import("../src/meta.mjs");
+  const ids = new Set(TOOLS.map((t) => t[0] || t.id));
+  for (const [id, g] of Object.entries(GUIDES)) {
+    assert.ok(ids.has(id), "unknown tool " + id);
+    for (const k of ["steps", "tips", "faq"]) assert.equal(g.ar[k].length, g.en[k].length, id + " " + k);
+    assert.ok(g.ar.intro && g.en.intro);
+  }
+});
