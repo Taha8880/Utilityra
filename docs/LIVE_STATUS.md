@@ -1,16 +1,16 @@
-# Utilityra live check — 2026-10-27T21:12:35.967Z
+# Utilityra live check — 2026-10-28T00:12:49.409Z
 
 Site: https://utilityra.tavengers16.workers.dev
 
 | check | path | status | ms | result |
 |---|---|---|---|---|
-| home | `/` | 200 | 235 | PASS |
-| tools index | `/tools/` | 200 | 69 | PASS |
-| tool page | `/tools/word-counter/` | 200 | 40 | PASS |
-| ai tool page | `/tools/ai-summarizer/` | 200 | 73 | PASS |
-| sitemap | `/sitemap.xml` | 200 | 66 | PASS |
-| robots | `/robots.txt` | 200 | 80 | PASS |
-| ads.txt | `/ads.txt` | 200 | 75 | PASS |
-| health | `/health` | 200 | 30 | PASS |
-| 404 | `/definitely-missing-page-xyz/` | 404 | 66 | PASS |
-| legacy alias | `/tools/sort-lines` | 200 | 136 | PASS |
+| home | `/` | 200 | 229 | PASS |
+| tools index | `/tools/` | 200 | 44 | PASS |
+| tool page | `/tools/word-counter/` | 200 | 48 | PASS |
+| ai tool page | `/tools/ai-summarizer/` | 200 | 34 | PASS |
+| sitemap | `/sitemap.xml` | 200 | 58 | PASS |
+| robots | `/robots.txt` | 200 | 50 | PASS |
+| ads.txt | `/ads.txt` | 200 | 36 | PASS |
+| health | `/health` | 200 | 43 | PASS |
+| 404 | `/definitely-missing-page-xyz/` | 404 | 38 | PASS |
+| legacy alias | `/tools/sort-lines` | 200 | 151 | PASS |

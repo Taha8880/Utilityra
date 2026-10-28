@@ -2,24 +2,23 @@
 
 > تحديث آلي كل 6 ساعات، وعند تغييرات main. الاختبارات المحلية وفحص الموقع الحي نتيجتان منفصلتان.
 
-- آخر تحديث: 2026-10-27 21:12 UTC
+- آخر تحديث: 2026-10-28 00:12 UTC
 - الحدث: push
 - الفرع: main
-- Commit: d2a7742cf859f005b37dd7d10ce4b04c52bba06b (https://github.com/Taha8880/Utilityra/commit/d2a7742cf859f005b37dd7d10ce4b04c52bba06b)
+- Commit: 0683dd84c7328b697674d85d1e5efb267b1320e5 (https://github.com/Taha8880/Utilityra/commit/0683dd84c7328b697674d85d1e5efb267b1320e5)
 - بدأه: Taha8880
 - نتيجة npm test: success
 - نتيجة فحص الموقع الحي: success
-- سجل التشغيل: https://github.com/Taha8880/Utilityra/actions/runs/40584788552
+- سجل التشغيل: https://github.com/Taha8880/Utilityra/actions/runs/40607273052
 
 ## طلبات الدمج المفتوحة وقت آخر تشغيل
-- [#29 — Engineer script: Gemini discovery and provider fall-through](https://github.com/Taha8880/Utilityra/pull/29) — فرع: engfix — آخر تحديث: 2026-10-27T20:48:29Z
 - [#7 — chore(deps): bump actions/upload-artifact from 4 to 7](https://github.com/Taha8880/Utilityra/pull/7) — فرع: dependabot/github_actions/actions/upload-artifact-7 — آخر تحديث: 2026-10-24T01:54:35Z
 - [#3 — build(deps): bump actions/setup-node from 4 to 7](https://github.com/Taha8880/Utilityra/pull/3) — فرع: dependabot/github_actions/actions/setup-node-7 — آخر تحديث: 2026-10-26T20:30:41Z
 - [#2 — chore(deps): bump actions/checkout from 4 to 7](https://github.com/Taha8880/Utilityra/pull/2) — فرع: dependabot/github_actions/actions/checkout-7 — آخر تحديث: 2026-10-26T18:55:13Z
 
 ## الملفات التي تغيرت في هذا الـ commit
 ---
-M	build.mjs
+M	scripts/engineer-fix.mjs
 ---
 
 ## نقاط المتابعة — غير مثبتة كمنجزة حتى يظهر دليل
