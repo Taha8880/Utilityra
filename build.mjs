@@ -32,7 +32,8 @@ mkdirSync(join(OUT, 'assets/js'), { recursive: true });
 mkdirSync(join(OUT, 'assets/css'), { recursive: true });
 mkdirSync(join(OUT, 'assets/vendor'), { recursive: true });
 const hash = (s) => createHash('sha1').update(s).digest('hex').slice(0, 8);
-const css = readFileSync(join(ROOT, 'src/assets/css/app.css'), 'utf8');
+const cssSrc = readFileSync(join(ROOT, 'src/assets/css/app.css'), 'utf8');
+const css = cssSrc.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ').replace(/\s*([{};,>])\s*/g, '$1').replace(/;}/g, '}').trim();
 const appJs = readFileSync(join(ROOT, 'src/assets/js/app.js'), 'utf8');
 const toolFiles = readdirSync(join(ROOT, 'src/assets/js/tools')).filter((f) => f.endsWith('.js')).sort();
 const toolsJs = toolFiles.map((f) => readFileSync(join(ROOT, 'src/assets/js/tools', f), 'utf8')).join('\n;\n');
@@ -53,7 +54,7 @@ copyFileSync(join(ROOT, 'src/assets/og.png'), join(OUT, 'og.png'));
 writeFileSync(join(OUT, 'favicon.svg'), decodeURIComponent(FAVICON.split(',')[1]));
 
 const initScript = `<script>(function(){try{var d=document.documentElement,l=localStorage.getItem('ur-lang'),t=localStorage.getItem('ur-theme');if(!l){l='ar'}d.lang=l;d.dir=l==='ar'?'rtl':'ltr';if(t)d.dataset.theme=t}catch(e){}})();window.UTILITYRA=${JSON.stringify({ apiBase: API_BASE, assetBase: '/assets/' })};</script>`;
-const adsHead = ADSENSE ? `<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${esc(ADSENSE)}" crossorigin="anonymous"></script>` : '';
+const adsHead = ADSENSE ? `<meta name="google-adsense-account" content="${esc(ADSENSE)}"><script>(function(){var d=0;function l(){if(d)return;d=1;var s=document.createElement('script');s.async=true;s.crossOrigin='anonymous';s.src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${esc(ADSENSE)}';document.head.appendChild(s)}['scroll','pointerdown','keydown','touchstart'].forEach(function(e){addEventListener(e,l,{once:true,passive:true})});addEventListener('load',function(){setTimeout(l,6000)})})()</script>` : '';
 const gaHead = GA ? `<script async src="https://www.googletagmanager.com/gtag/js?id=${esc(GA)}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${esc(GA)}');</script>` : '';
 
 function head({ titleAr, titleEn, descAr, descEn, path, extra = '', noindex = false }) {
@@ -78,7 +79,7 @@ function head({ titleAr, titleEn, descAr, descEn, path, extra = '', noindex = fa
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preload" as="style" href="${FONTS}" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="${FONTS}"></noscript>
 ${initScript}
-<link rel="stylesheet" href="/assets/css/app.css?v=${V.css}">
+<style>${css}</style>
 ${extra}${gaHead}${adsHead}
 </head>`;
 }
