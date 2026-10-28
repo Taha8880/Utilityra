@@ -290,7 +290,7 @@ function misc() {
 
 function adminPage() {
   const h = head({ titleAr: 'لوحة الإدارة', titleEn: 'Admin', descAr: 'لوحة إدارة Utilityra', path: '/admin/', noindex: true });
-  write('/admin/', page(h, `<main id="main"><div class="wrap"><div class="phead"><span class="label">ADMIN</span><h1>${Le('لوحة الإدارة', 'Admin dashboard')}</h1></div><div id="admin-root"></div></div></main><script src="/assets/js/admin.js?v=${hash(adminJs)}" defer></script>`));
+  write('/admin/', page(h, `<main id="main"><div class="wrap"><div class="phead"><span class="label">ADMIN</span><h1>${Le('لوحة الإدارة', 'Admin dashboard')}</h1></div><div id="admin-root"></div></div></main><script src="/assets/js/index.js?v=${V.idx}"></script><script src="/assets/js/admin.js?v=${hash(adminJs)}" defer></script>`));
 }
 
 
