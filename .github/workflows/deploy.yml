@@ -27,5 +27,5 @@ jobs:
           test -n "$CLOUDFLARE_API_TOKEN" || { echo "::error::Add CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID in Settings > Secrets > Actions"; exit 1; }
           npx wrangler deploy
       - name: Smoke test live site
-        env: { SITE_URL: "${{ vars.SITE_URL }}" }
+        env: { SITE_URL: "${{ vars.SITE_URL }}", GOOGLE_SITE_VERIFICATION: "${{ vars.GOOGLE_SITE_VERIFICATION }}", BING_SITE_VERIFICATION: "${{ vars.BING_SITE_VERIFICATION }}" }
         run: node scripts/monitor.mjs --strict

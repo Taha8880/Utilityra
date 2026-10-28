@@ -64,7 +64,9 @@ function head({ titleAr, titleEn, descAr, descEn, path, extra = '', noindex = fa
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title id="doc-title" data-ar="${esc(full(titleAr))}" data-en="${esc(full(titleEn))}">${esc(full(titleAr))}</title>
 <meta name="description" content="${esc(descAr)}">
-<meta name="robots" content="${noindex ? 'noindex, follow' : 'index, follow, max-image-preview:large'}">
+<meta name="robots" content="${noindex ? 'noindex, follow' : 'index, follow, max-image-preview:large'}">${process.env.GOOGLE_SITE_VERIFICATION ? `
+<meta name="google-site-verification" content="${String(process.env.GOOGLE_SITE_VERIFICATION).replace(/[^\w-]/g, '')}">` : ''}${process.env.BING_SITE_VERIFICATION ? `
+<meta name="msvalidate.01" content="${String(process.env.BING_SITE_VERIFICATION).replace(/[^\w-]/g, '')}">` : ''}
 <link rel="canonical" href="${url}">
 <meta property="og:type" content="website"><meta property="og:site_name" content="Utilityra"><meta property="og:title" content="${esc(full(titleAr))}"><meta property="og:description" content="${esc(descAr)}"><meta property="og:url" content="${url}"><meta property="og:locale" content="ar_AR"><meta property="og:locale:alternate" content="en_US">
 <meta name="twitter:card" content="summary"><meta name="twitter:title" content="${esc(full(titleAr))}"><meta name="twitter:description" content="${esc(descAr)}">
